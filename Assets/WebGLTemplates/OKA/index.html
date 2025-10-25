@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en-us" translate="no">
+<head>
+    <meta charset="utf-8">
+    <meta name="google" content="notranslate">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, max-age=0, must-revalidate">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <title>{{{ PRODUCT_NAME }}}</title>
+    <!--<link rel="shortcut icon" href="TemplateData/favicon.ico">-->
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <link rel="manifest" href="manifest.webmanifest">
+</head>
+<body>
+    <div id="unity-container">
+        <canvas id="unity-canvas" width={{{ WIDTH }}} height={{{ HEIGHT }}} tabindex="-1"></canvas>
+        <div id="unity-loading-bar">
+            <div id="unity-logo"></div>
+            <div class="container">
+                <p class="text" id="loadingText">Now Loading</p>
+                <div id="loading" class="loading-animation"></div>
+            </div>
+            <div id="unity-progress-bar-empty">
+                <div id="unity-progress-bar-full"></div>
+                <div id="unity-progress-bar-border"></div>
+            </div>
+        </div>
+        <div id="unity-warning"> </div>
+        <!--<audio src="/silence.mp3" autoplay muted controls>-->
+    </div>
+
+    <!--<div id="orientation-lock">
+        <div class="orientation-message">
+            Please rotate your device to landscape.
+        </div>
+    </div>-->
+    <div id="rotation-overlay" class="overlay">
+        <div class="iconContainer">
+            <div class="phone">
+                <i class="fa fa-repeat"></i>
+            </div>
+            <p>Rotate your device!</p>
+        </div>
+    </div>
+    <script>
+		/*async function accessAudio() {
+			try {
+				const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+				console.log('Microphone access granted and audio playback started.');
+
+				// Stop all tracks after using the stream
+				stream.getTracks().forEach(function (track) {
+					track.stop();
+				});
+			} catch (error) {
+				console.error('Error accessing microphone:', error);
+				alert('Could not access the microphone. Please check your permissions.');
+			}
+		}*/
+
+        function restartAnimation(element, className) {
+            element.classList.remove(className);
+            // Force reflow
+            void element.offsetWidth;
+            element.classList.add(className);
+        }
+
+        function checkOrientation() {
+            const overlay = document.getElementById('rotation-overlay');
+            const phone = overlay.querySelector('.phone');
+            const icon = overlay.querySelector('.phone i');
+            const text = overlay.querySelector('.iconContainer p');
+
+            if (window.matchMedia("(orientation: portrait)").matches) {
+                overlay.style.display = 'flex';
+
+                // Restart animations
+                restartAnimation(phone, 'phone-animate');
+                restartAnimation(icon, 'icon-animate');
+                restartAnimation(text, 'text-animate');
+            } else {
+                overlay.style.display = 'none';
+
+                // Remove animation classes so they can be re-added next time
+                phone.classList.remove('phone-animate');
+                icon.classList.remove('icon-animate');
+                text.classList.remove('text-animate');
+            }
+        }
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', checkOrientation);
+        window.addEventListener('resize', checkOrientation);
+
+        window.addEventListener("load", function () {
+              //accessAudio();
+            checkOrientation();
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.register("ServiceWorker.js");
+            }
+        });
+
+	  	let unityInstance;
+
+		window.onbeforeunload = function(e) {
+			console.log("Calling OnClose from Browser!");
+			unityInstance.SendMessage('Loader', 'QuitGame');
+			var dialogText = "You game has been saved!  Would you like to continue unloading the page?";
+			e.returnValue = dialogText;
+			return dialogText;
+		};
+
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var warningBanner = document.querySelector("#unity-warning");
+
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+      var config = {
+        dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+        frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_THREADS
+        workerUrl: buildUrl + "/{{{ WORKER_FILENAME }}}",
+#endif
+#if USE_WASM
+        codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#endif
+#if MEMORY_FILENAME
+        memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+        symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        showBanner: unityShowBanner,
+      };
+
+      // By default Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
+
+      loadingBar.style.display = "block";
+
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((instance) => {
+          //loadingBar.style.display = "none";
+		  unityInstance = instance;
+		  unityInstance.SendMessage('Loader', 'LoadGameData');
+        }).catch((message) => {
+          alert(message);
+        });
+      };
+      document.body.appendChild(script);
+
+	  function hiddenLoadingBar() {
+		loadingBar.style.display = "none";
+		console.log("Questions loaded, loading bar hidden.");
+      }
+	  function updateLoadingText(newText) {
+		const loadingTextElement = document.getElementById("loadingText");
+		loadingTextElement.textContent = newText;
+      }
+      function replaceUrlPart() {
+            var currentUrl = window.location.href;
+            var hostname = window.location.origin;
+            var pathAndQuery = currentUrl.slice(hostname.length);
+            var newUrl = hostname + "/" + config.productName;
+            window.history.pushState({ path: newUrl }, '', newUrl);
+       }
+	  function GetHashValue() {
+            var hashValue = window.location.hash; // Get the current hash value
+            if (unityInstance && unityInstance.SendMessage) {
+                unityInstance.SendMessage("Loader", "getHashValue", hashValue);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1684 @@
+{
+  "questions": [
+    {
+      "qid": "p1u1-f1",
+      "questionType": "fillInBlank",
+      "question": "Good morning __ Mr Lam.",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": ","
+    },
+    {
+      "qid": "p1u1-f2",
+      "questionType": "fillInBlank",
+      "question": "How are you __",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": "?"
+    },
+    {
+      "qid": "p1u1-f3",
+      "questionType": "fillInBlank",
+      "question": "My name is John Chan __",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": "."
+    },
+    {
+      "qid": "p1u1-f4",
+      "questionType": "fillInBlank",
+      "question": "I am fine __ thank you.",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": ","
+    },
+    {
+      "qid": "p1u1-f5",
+      "questionType": "fillInBlank",
+      "question": "What is your name __",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": "?"
+    },
+    {
+      "qid": "p1u1-f6",
+      "questionType": "fillInBlank",
+      "question": "Miss Lily Ng is my Chinese teacher __",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": "."
+    },
+    {
+      "qid": "p1u1-f7",
+      "questionType": "fillInBlank",
+      "question": "Can you spell your name, please __",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": "?"
+    },
+    {
+      "qid": "p1u1-f8",
+      "questionType": "fillInBlank",
+      "question": "This is my classmate__ Ken Wong.",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": ","
+    },
+    {
+      "qid": "p1u1-f9",
+      "questionType": "fillInBlank",
+      "question": "T-a-m-m-y__",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": "."
+    },
+    {
+      "qid": "p1u1-f10",
+      "questionType": "fillInBlank",
+      "question": "I go to Smart Primary School __",
+      "answers": [ ",", ".", "?" ],
+      "correctAnswer": "."
+    },
+    {
+      "qid": "p1u6-g1",
+      "questionType": "fillInBlank",
+      "question": "Mrs Poon is tall _____ thin.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u6-g2",
+      "questionType": "fillInBlank",
+      "question": "Anna's hair is long _____ curly.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u6-g3",
+      "questionType": "fillInBlank",
+      "question": "My eyes are big _____ black.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u6-g4",
+      "questionType": "fillInBlank",
+      "question": "The girl is shy _____ quiet.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u6-g5",
+      "questionType": "fillInBlank",
+      "question": "My dad has a round _____ big tummy.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u6-g6",
+      "questionType": "fillInBlank",
+      "question": "Jim is short _____ fat.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u6-g7",
+      "questionType": "fillInBlank",
+      "question": "She has a pink _____ white bag.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u6-g8",
+      "questionType": "fillInBlank",
+      "question": "His arms are long _____ thin.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u6-g9",
+      "questionType": "fillInBlank",
+      "question": "Mom's hands are small _____soft.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u6-g10",
+      "questionType": "fillInBlank",
+      "question": "Grandma is nice _____ fun.",
+      "answers": [ "and" ],
+      "correctAnswer": "and"
+    },
+    {
+      "qid": "p1u8-f1",
+      "questionType": "fillInBlank",
+      "question": "Mimi and Kiki are sisters. ______ have a toy house.",
+      "answers": [ "They", "We", "You" ],
+      "correctAnswer": "They"
+    },
+    {
+      "qid": "p1u8-f2",
+      "questionType": "fillInBlank",
+      "question": "My mom is good. ____ buys toys to me.",
+      "answers": [ "He", "She", "It" ],
+      "correctAnswer": "She"
+    },
+    {
+      "qid": "p1u8-f3",
+      "questionType": "fillInBlank",
+      "question": "I have a dog. _____ is three years old.",
+      "answers": [ "He", "She", "It" ],
+      "correctAnswer": "It"
+    },
+    {
+      "qid": "p1u8-f4",
+      "questionType": "fillInBlank",
+      "question": "Gigi and I are friends. _____ share toys.",
+      "answers": [ "They", "We", "You" ],
+      "correctAnswer": "We"
+    },
+    {
+      "qid": "p1u8-f5",
+      "questionType": "fillInBlank",
+      "question": "Sally loves music. ____ has a big drum.",
+      "answers": [ "He", "She", "It" ],
+      "correctAnswer": "She"
+    },
+    {
+      "qid": "p1u8-f6",
+      "questionType": "fillInBlank",
+      "question": "Ben is my baby brother. ____ can't walk.",
+      "answers": [ "He", "She", "It" ],
+      "correctAnswer": "He"
+    },
+    {
+      "qid": "p1u8-f7",
+      "questionType": "fillInBlank",
+      "question": "Amy and I are classmates. ____ like yo-yos.",
+      "answers": [ "They", "We", "You" ],
+      "correctAnswer": "We"
+    },
+    {
+      "qid": "p1u8-f8",
+      "questionType": "fillInBlank",
+      "question": "Tom likes rockets. ____ has ten.",
+      "answers": [ "He", "She", "It" ],
+      "correctAnswer": "He"
+    },
+    {
+      "qid": "p1u8-f9",
+      "questionType": "fillInBlank",
+      "question": "I love dolls. _____ are cute.",
+      "answers": [ "They", "We", "You" ],
+      "correctAnswer": "They"
+    },
+    {
+      "qid": "p1u8-f10",
+      "questionType": "fillInBlank",
+      "question": "It is my teddy bear. ____ is brown.",
+      "answers": [ "He", "She", "It" ],
+      "correctAnswer": "It"
+    },
+    {
+      "qid": "p1u12-h1",
+      "questionType": "fillInBlank",
+      "question": "There are ______ birds in the tree.",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "some"
+    },
+    {
+      "qid": "p1u12-h2",
+      "questionType": "fillInBlank",
+      "question": "He wants ___ banana cakes.",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "some"
+    },
+    {
+      "qid": "p1u12-h3",
+      "questionType": "fillInBlank",
+      "question": "She is drawing ___ star.",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "a"
+    },
+    {
+      "qid": "p1u12-h4",
+      "questionType": "fillInBlank",
+      "question": "Can I have __ egg?",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "an"
+    },
+    {
+      "qid": "p1u12-h5",
+      "questionType": "fillInBlank",
+      "question": "Is that _____ rabbit?",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "a"
+    },
+    {
+      "qid": "p1u12-h6",
+      "questionType": "fillInBlank",
+      "question": "I have _____ pencils in my bag.",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "some"
+    },
+    {
+      "qid": "p1u12-h7",
+      "questionType": "fillInBlank",
+      "question": "There is ____ lizard on the rock.",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "a"
+    },
+    {
+      "qid": "p1u12-h8",
+      "questionType": "fillInBlank",
+      "question": "Can I pick ___ flower?",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "a"
+    },
+    {
+      "qid": "p1u12-h9",
+      "questionType": "fillInBlank",
+      "question": "I need ___ orange and ___ apple.",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "an"
+    },
+    {
+      "qid": "p1u12-h10",
+      "questionType": "fillInBlank",
+      "question": "Why are there ____ ants?",
+      "answers": [ "a", "an", "some" ],
+      "correctAnswer": "some"
+    },
+    {
+      "qid": "p2u5-h1",
+      "questionType": "fillInBlank",
+      "question": "I don't want to go to the restaurant _____ foot.",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "on"
+    },
+    {
+      "qid": "p2u5-h2",
+      "questionType": "fillInBlank",
+      "question": "Mary is buying stamps _____ the post office.",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "in"
+    },
+    {
+      "qid": "p2u5-h3",
+      "questionType": "fillInBlank",
+      "question": "Can we go to the supermarket _____ minibus?",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "by"
+    },
+    {
+      "qid": "p2u5-h4",
+      "questionType": "fillInBlank",
+      "question": "Alice is playing video games _____ her bed.",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "on"
+    },
+    {
+      "qid": "p2u5-h5",
+      "questionType": "fillInBlank",
+      "question": "They are visiting Lantau Island _____ cable car.",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "by"
+    },
+    {
+      "qid": "p2u5-h6",
+      "questionType": "fillInBlank",
+      "question": "There is an airplane flying _____ the sky.",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "in"
+    },
+    {
+      "qid": "p2u5-h7",
+      "questionType": "fillInBlank",
+      "question": "My sister is going to a cafe _____ Hong Kong Island.",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "on"
+    },
+    {
+      "qid": "p2u5-h8",
+      "questionType": "fillInBlank",
+      "question": "Let's meet _____ the Tai Wai MTR station.",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "in"
+    },
+    {
+      "qid": "p2u5-h9",
+      "questionType": "fillInBlank",
+      "question": "We can go to Central _____ ferry from Tsim Sha Tsui.",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "by"
+    },
+    {
+      "qid": "p2u5-h10",
+      "questionType": "fillInBlank",
+      "question": "You can put some ice _____ the water.",
+      "answers": [ "in", "on", "by" ],
+      "correctAnswer": "in"
+    },
+    {
+      "qid": "p2u6-f1",
+      "questionType": "fillInBlank",
+      "question": "My mom ______ a nurse at Help Clinic.",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "is"
+    },
+    {
+      "qid": "p2u6-f2",
+      "questionType": "fillInBlank",
+      "question": "Billy's dad ______ a policeman.",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "is"
+    },
+    {
+      "qid": "p2u6-f3",
+      "questionType": "fillInBlank",
+      "question": "I ______ seven years old today!",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "am"
+    },
+    {
+      "qid": "p2u6-f4",
+      "questionType": "fillInBlank",
+      "question": "Miss Polly ______ a shopkeeper of a flower shop.",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "is"
+    },
+    {
+      "qid": "p2u6-f5",
+      "questionType": "fillInBlank",
+      "question": "We ______ in the same dancing class.",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "are"
+    },
+    {
+      "qid": "p2u6-f6",
+      "questionType": "fillInBlank",
+      "question": "Heily's two aunts ______ both doctors.",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "are"
+    },
+    {
+      "qid": "p2u6-f7",
+      "questionType": "fillInBlank",
+      "question": "Emily ______ my best friend at school.",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "is"
+    },
+    {
+      "qid": "p2u6-f8",
+      "questionType": "fillInBlank",
+      "question": "Uncle Joe ______ a teacher at Leo's school.",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "is"
+    },
+    {
+      "qid": "p2u6-f9",
+      "questionType": "fillInBlank",
+      "question": "Mr Ho ______ nice school bus driver.",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "is"
+    },
+    {
+      "qid": "p2u6-f10",
+      "questionType": "fillInBlank",
+      "question": "Tina's sister ______ a good vet.",
+      "answers": [ "is", "am", "are" ],
+      "correctAnswer": "is"
+    },
+    {
+      "qid": "p2u11-e1",
+      "questionType": "fillInBlank",
+      "question": "I always wear red and say good words at ____________.",
+      "answers": [ "Mid-Autumn Festival", "Chinese New Year", "Christmas" ],
+      "correctAnswer": "Chinese New Year"
+    },
+    {
+      "qid": "p2u11-e2",
+      "questionType": "fillInBlank",
+      "question": "I love eating sticky rice dumpling at ________________.",
+      "answers": [ "Dragon Boat Festival", "Easter", "Chinese New Year" ],
+      "correctAnswer": "Dragon Boat Festival"
+    },
+    {
+      "qid": "p2u11-e3",
+      "questionType": "fillInBlank",
+      "question": "I always bake gingerbread cookies with my sister at ___________.",
+      "answers": [ "Mid- Autumn Festival", "Chinese New Year", "Christmas" ],
+      "correctAnswer": "Christmas"
+    },
+    {
+      "qid": "p2u11-e4",
+      "questionType": "fillInBlank",
+      "question": "I love coloring my own eggs at ____________.",
+      "answers": [ "Chinese New Year", "Christmas", "Easter" ],
+      "correctAnswer": "Easter"
+    },
+    {
+      "qid": "p2u11-e5",
+      "questionType": "fillInBlank",
+      "question": "I enjoy a picnic outdoors under the full moon at ___________________.",
+      "answers": [ "Mid- Autumn Festival", "Chinese New Year", "Christmas" ],
+      "correctAnswer": "Mid Autumn Festival"
+    },
+    {
+      "qid": "p2u11-e6",
+      "questionType": "fillInBlank",
+      "question": "I love watching the beautiful _________ at the Victoria Harbor.",
+      "answers": [ "red packets", "fireworks", "lanterns" ],
+      "correctAnswer": "fireworks"
+    },
+    {
+      "qid": "p2u11-e7",
+      "questionType": "fillInBlank",
+      "question": "Don’t forget to put a star on top of the ________________.",
+      "answers": [ "moon cakes", "Santa Claus", "Christmas tree" ],
+      "correctAnswer": "Christmas tree"
+    },
+    {
+      "qid": "p2u11-e8",
+      "questionType": "fillInBlank",
+      "question": "I like cartoon _________ that can play music the best.",
+      "answers": [ "relatives", "lanterns", "star fruit" ],
+      "correctAnswer": "lanterns"
+    },
+    {
+      "qid": "p2u11-e9",
+      "questionType": "fillInBlank",
+      "question": "I got a lot of birthday ___________ from my friends and family.",
+      "answers": [ "fireworks", "presents", "chocolate eggs" ],
+      "correctAnswer": "presents"
+    },
+    {
+      "qid": "p2u11-e10",
+      "questionType": "fillInBlank",
+      "question": "I want to try the heavy costume and perform __________ one day.",
+      "answers": [ "dragon boat race", "lion dances", "egg hunt" ],
+      "correctAnswer": "lion dances"
+    },
+    {
+      "qid": "p3u5-f1",
+      "questionType": "fillInBlank",
+      "question": "Can you pass me _________ bread ?",
+      "answers": [ "a cup of", "a piece of", "a slice of", "a can of" ],
+      "correctAnswer": "a slice of"
+    },
+    {
+      "qid": "p3u5-f2",
+      "questionType": "fillInBlank",
+      "question": "She bought  _________  ketchup.",
+      "answers": [ "a glass of", "a plate of", "a bottle of", "a scoop of" ],
+      "correctAnswer": "a bottle of"
+    },
+    {
+      "qid": "p3u5-f3",
+      "questionType": "fillInBlank",
+      "question": "We need _________ milk for breakfast.",
+      "answers": [ "a carton of", "a box of", "a bag of", "a bowl of" ],
+      "correctAnswer": "a carton of"
+    },
+    {
+      "qid": "p3u5-f4",
+      "questionType": "fillInBlank",
+      "question": "He ate ___________ noodles.",
+      "answers": [ "a jar of", "a bowl of", "a loaf of", "a bar of" ],
+      "correctAnswer": "a bowl of"
+    },
+    {
+      "qid": "p3u5-f5",
+      "questionType": "fillInBlank",
+      "question": "They drank _______ tea.",
+      "answers": [ "a cup of", "a plate of", "a can of", "a piece of" ],
+      "correctAnswer": "a cup of"
+    },
+    {
+      "qid": "p3u5-f6",
+      "questionType": "fillInBlank",
+      "question": "There’s _______ cheese in the fridge.",
+      "answers": [ "a block of", "a bunch of", "a carton of", "a packet of" ],
+      "correctAnswer": "a block of"
+    },
+    {
+      "qid": "p3u5-f7",
+      "questionType": "fillInBlank",
+      "question": "Add __________ water to the soup.",
+      "answers": [ "a bar of", "a bag of", "a slice of", "a glass of" ],
+      "correctAnswer": "a glass of"
+    },
+    {
+      "qid": "p3u5-f8",
+      "questionType": "fillInBlank",
+      "question": "She wants ______ jam for toast.",
+      "answers": [ "a jar of", "a bottle of", "a carton of", "a box of" ],
+      "correctAnswer": "a jar of"
+    },
+    {
+      "qid": "p3u5-f9",
+      "questionType": "fillInBlank",
+      "question": "He wants to buy ______ chocolate.",
+      "answers": [ "a bowl", "a bar of", "a loaf of", "a plate of" ],
+      "correctAnswer": "a bar of"
+    },
+    {
+      "qid": "p3u5-f10",
+      "questionType": "fillInBlank",
+      "question": "We need  ________  crisps for snacks.",
+      "answers": [ "a bag of", "a cup of", "a packet of", "a slice of" ],
+      "correctAnswer": "a packet of"
+    },
+    {
+      "qid": "p3Bu1-f1",
+      "questionType": "fillInBlank",
+      "question": "She ___ very happy to see me.",
+      "answers": [ "were", "was", "are", "am" ],
+      "correctAnswer": "was"
+    },
+    {
+      "qid": "p3Bu1-f2",
+      "questionType": "fillInBlank",
+      "question": "He ___ sad to see Miss Chan go.",
+      "answers": [ "was", "were", "be", "are" ],
+      "correctAnswer": "was"
+    },
+    {
+      "qid": "p3Bu1-f3",
+      "questionType": "fillInBlank",
+      "question": "They ____ shocked by the news.",
+      "answers": [ "am", "was", "were", "is" ],
+      "correctAnswer": "were"
+    },
+    {
+      "qid": "p3Bu1-f4",
+      "questionType": "fillInBlank",
+      "question": "I ___ embarrassed when I fell.",
+      "answers": [ "was", "were", "is", "do" ],
+      "correctAnswer": "was"
+    },
+    {
+      "qid": "p3Bu1-f5",
+      "questionType": "fillInBlank",
+      "question": "Jane ___ jealous of her friend's new car.",
+      "answers": [ "am", "was", "are", "be" ],
+      "correctAnswer": "was"
+    },
+    {
+      "qid": "p3Bu1-f6",
+      "questionType": "fillInBlank",
+      "question": "We ___ nervous just now.",
+      "answers": [ "was", "were", "is", "am" ],
+      "correctAnswer": "were"
+    },
+    {
+      "qid": "p3Bu1-f7",
+      "questionType": "fillInBlank",
+      "question": "Mike ___ proud after winning the race.",
+      "answers": [ "was", "were", "will", "am" ],
+      "correctAnswer": "was"
+    },
+    {
+      "qid": "p3Bu1-f8",
+      "questionType": "fillInBlank",
+      "question": "They ____ tired after the long journey.",
+      "answers": [ "was", "be", "their", "were" ],
+      "correctAnswer": "were"
+    },
+    {
+      "qid": "p3Bu1-f9",
+      "questionType": "fillInBlank",
+      "question": "I ___ hungry because I skipped breakfast.",
+      "answers": [ "be", "was", "were", "is" ],
+      "correctAnswer": "was"
+    },
+    {
+      "qid": "p3Bu1-f10",
+      "questionType": "fillInBlank",
+      "question": "She ___ bored during class.",
+      "answers": [ "be", "am", "was", "were" ],
+      "correctAnswer": "was"
+    },
+    {
+      "qid": "p3Bu2-h1",
+      "questionType": "fillInBlank",
+      "question": "The captain took his crew on an adventure and ____ followed him happily.",
+      "answers": [ "them", "their", "they’re", "they" ],
+      "correctAnswer": "they"
+    },
+    {
+      "qid": "p3Bu2-h2",
+      "questionType": "fillInBlank",
+      "question": "The genie happily granted the wish to her and __.",
+      "answers": [ "I", "myself", "me", "mine" ],
+      "correctAnswer": "me"
+    },
+    {
+      "qid": "p3Bu2-h3",
+      "questionType": "fillInBlank",
+      "question": "The witch made a potion for  ___ yesterday.",
+      "answers": [ "her", "she", "hers", "herring" ],
+      "correctAnswer": "her"
+    },
+    {
+      "qid": "p3Bu2-h4",
+      "questionType": "fillInBlank",
+      "question": "The queen sent a message to the ______ last week.",
+      "answers": [ "him", "prince", "he", "his" ],
+      "correctAnswer": "prince"
+    },
+    {
+      "qid": "p3Bu2-h5",
+      "questionType": "fillInBlank",
+      "question": "The pirate drank all the rum and now __ cannot speak clearly.",
+      "answers": [ "he", "his", "they", "him" ],
+      "correctAnswer": "he"
+    },
+    {
+      "qid": "p3Bu2-h6",
+      "questionType": "fillInBlank",
+      "question": "The dwarves saw the giant approaching, so __ began warning everyone.",
+      "answers": [ "they", "him", "them", "his" ],
+      "correctAnswer": "they"
+    },
+    {
+      "qid": "p3Bu2-h7",
+      "questionType": "fillInBlank",
+      "question": "The fairy sang a song so beautiful that ________ began to cry.",
+      "answers": [ "we", "every", "us", "our" ],
+      "correctAnswer": "we"
+    },
+    {
+      "qid": "p3Bu2-h8",
+      "questionType": "fillInBlank",
+      "question": "Everyone cheered for the prince when __ and the princess got married.",
+      "answers": [ "she", "it", "he", "me" ],
+      "correctAnswer": "he"
+    },
+    {
+      "qid": "p3Bu2-h9",
+      "questionType": "fillInBlank",
+      "question": "The wizard just asked ___ a question.",
+      "answers": [ "you", "your", "yours", "u" ],
+      "correctAnswer": "you"
+    },
+    {
+      "qid": "p3Bu2-h10",
+      "questionType": "fillInBlank",
+      "question": "The alien hid in the spaceship so __ can observe the crew members.",
+      "answers": [ "he", "she", "they", "it" ],
+      "correctAnswer": "it"
+    },
+    {
+      "qid": "p3Bu6-f1",
+      "questionType": "fillInBlank",
+      "question": "I think Halloween is ________ than Christmas.",
+      "answers": [ "funnest", "most fun", "funner", "more fun" ],
+      "correctAnswer": "more fun"
+    },
+    {
+      "qid": "p3Bu6-f2",
+      "questionType": "fillInBlank",
+      "question": "Easter is the __________ Festival of them all.",
+      "answers": [ "colorfullest", "colorfuler", "most colorful", "more colorful" ],
+      "correctAnswer": "most colorful"
+    },
+    {
+      "qid": "p3Bu6-f3",
+      "questionType": "fillInBlank",
+      "question": "Mum thinks Autumn leaves are the _________.",
+      "answers": [ "prettiest", "most pretty", "more pretty", "prettier" ],
+      "correctAnswer": "prettiest"
+    },
+    {
+      "qid": "p3Bu6-f4",
+      "questionType": "fillInBlank",
+      "question": "Valentine’s Day is the ____________ festival ever.",
+      "answers": [ "more romantic", "romanticer", "romanticest", "most romantic" ],
+      "correctAnswer": "most romantic"
+    },
+    {
+      "qid": "p3Bu6-f5",
+      "questionType": "fillInBlank",
+      "question": "This year’s Dragon Boat race has been the _________ in years.",
+      "answers": [ "excitingest", "most exciting", "excitinger", "more exciting" ],
+      "correctAnswer": "most exciting"
+    },
+    {
+      "qid": "p3Bu6-f6",
+      "questionType": "fillInBlank",
+      "question": "In our family, Mother’s Day is ___________ than Mum’s birthday.",
+      "answers": [ "most special", "specialer", "more special", "many special" ],
+      "correctAnswer": "more special"
+    },
+    {
+      "qid": "p3Bu6-f7",
+      "questionType": "fillInBlank",
+      "question": "Thanksgiving is one of the ___________ holidays in the USA.",
+      "answers": [ "more important", "importanter", "importantest", "most important" ],
+      "correctAnswer": "most important"
+    },
+    {
+      "qid": "p3Bu6-f8",
+      "questionType": "fillInBlank",
+      "question": "The city seems ____________ on Buddha’s Birthday than on any other day.",
+      "answers": [ "more peaceful", "most peaceful", "peacefuller", "peacefulest" ],
+      "correctAnswer": "more peaceful"
+    },
+    {
+      "qid": "p3Bu6-f9",
+      "questionType": "fillInBlank",
+      "question": "Chinese New Year is the __________ holiday in China.",
+      "answers": [ "most celebrated", "celebrateder", "celebratedest", "more celebrated" ],
+      "correctAnswer": "most celebrated"
+    },
+    {
+      "qid": "p3Bu6-f10",
+      "questionType": "fillInBlank",
+      "question": "I enjoy public holidays _________ school holidays because I can spend time with my family.",
+      "answers": [ "more than", "less than", "least", "most" ],
+      "correctAnswer": "more than"
+    },
+    {
+      "qid": "p4u1-b1",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Karake", "Kurate", "Karate", "Kurake" ],
+      "correctAnswer": "Karate"
+    },
+    {
+      "qid": "p4u1-b2",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Concerto", "Consort", "Consert", "Concert" ],
+      "correctAnswer": "Concert"
+    },
+    {
+      "qid": "p4u1-b3",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Karoake", "Karaoka", "Karaaki", "Karaoke" ],
+      "correctAnswer": "Karaoke"
+    },
+    {
+      "qid": "p4u1-b4",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Hiking", "Hiring", "Hyping", "Hyking" ],
+      "correctAnswer": "Hiking"
+    },
+    {
+      "qid": "p4u1-b5",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Conics", "Comicks", "Comicals", "Comics" ],
+      "correctAnswer": "Comics"
+    },
+    {
+      "qid": "p4u1-b6",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Gym", "Gymnast", "Gymnastics", "Gymnasium" ],
+      "correctAnswer": "Gymnastics"
+    },
+    {
+      "qid": "p4u1-b7",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Barbie", "Barbecue", "Barb", "Barbara" ],
+      "correctAnswer": "Barbecue"
+    },
+    {
+      "qid": "p4u1-b8",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Cardoons", "Cartoons", "Carpoons", "Carnoons" ],
+      "correctAnswer": "Cartoons"
+    },
+    {
+      "qid": "p4u1-b9",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Theatre", "Theeter", "Theatrical", "Teeth" ],
+      "correctAnswer": "Theatre"
+    },
+    {
+      "qid": "p4u1-b10",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Cinematic", "Cinnamon", "Cinema", "Cincinnati" ],
+      "correctAnswer": "Cinema"
+    },
+    {
+      "qid": "p4u1-b11",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Fotos", "Fotose", "Photos", "Photons" ],
+      "correctAnswer": "Photos"
+    },
+    {
+      "qid": "p4u1-b12",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Shopping", "Stopping", "Slopping", "Shropping" ],
+      "correctAnswer": "Shopping"
+    },
+    {
+      "qid": "p4u1-b13",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Newspapers", "Nusepapers", "News", "Newsletters" ],
+      "correctAnswer": "Newspapers"
+    },
+    {
+      "qid": "p4u1-b14",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Muse", "Muzeeyum", "Museum", "Mucus" ],
+      "correctAnswer": "Museum"
+    },
+    {
+      "qid": "p4u1-b15",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Jogging", "Jobbing", "Jotting", "Jossing" ],
+      "correctAnswer": "Jogging"
+    },
+    {
+      "qid": "p4u1-b16",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Fisling", "Fisting", "Fisning", "Fishing" ],
+      "correctAnswer": "Fishing"
+    },
+    {
+      "qid": "p4u1-b17",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Sircus", "Circus", "Circles", "Cirque" ],
+      "correctAnswer": "Circus"
+    },
+    {
+      "qid": "p4u1-b18",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Margarines", "Megalines", "Magazines", "Maggazines" ],
+      "correctAnswer": "Magazines"
+    },
+    {
+      "qid": "p4u1-b19",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Skating", "Skading", "Skaling", "Skaping" ],
+      "correctAnswer": "Skating"
+    },
+    {
+      "qid": "p4u1-b20",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "Sendcastle", "Sundcastle", "Sindcastle", "Sandcastle" ],
+      "correctAnswer": "Sandcastle"
+    },
+    {
+      "qid": "p4u3-e1",
+      "questionType": "fillInBlank",
+      "question": "Peter was too _____ to tie his shoelaces, so he tripped.",
+      "answers": [ "neat", "diligent", "lazy", "calm" ],
+      "correctAnswer": "lazy"
+    },
+    {
+      "qid": "p4u3-e2",
+      "questionType": "fillInBlank",
+      "question": "Dad thought of a ______ way to surprise Mum with a birthday party.",
+      "answers": [ "clever", "shy", "polite", "patient" ],
+      "correctAnswer": "clever"
+    },
+    {
+      "qid": "p4u3-e3",
+      "questionType": "fillInBlank",
+      "question": "It’s not ______ to talk with your mouth full of food.",
+      "answers": [ "politic", "polite", "impolite", "rude" ],
+      "correctAnswer": "polite"
+    },
+    {
+      "qid": "p4u3-e4",
+      "questionType": "fillInBlank",
+      "question": "Lana is very ______ and I trust she will not lie to me.",
+      "answers": [ "silly", "honest", "dishonest", "trusting" ],
+      "correctAnswer": "honest"
+    },
+    {
+      "qid": "p4u3-e5",
+      "questionType": "fillInBlank",
+      "question": "Robert used to be not _______, but he grew up to be a respectful and trustworthy man.",
+      "answers": [ "good", "better", "naughty", "reliable" ],
+      "correctAnswer": "reliable"
+    },
+    {
+      "qid": "p4u3-e6",
+      "questionType": "fillInBlank",
+      "question": "Mum got ________ and spilled her coffee on the floor.",
+      "answers": [ "careful", "careless", "caring", "carefree" ],
+      "correctAnswer": "careless"
+    },
+    {
+      "qid": "p4u3-e7",
+      "questionType": "fillInBlank",
+      "question": "Sally is very ___, and Ms To is trying to bring her out of her shell.",
+      "answers": [ "shy", "sky", "sly", "spy" ],
+      "correctAnswer": "shy"
+    },
+    {
+      "qid": "p4u3-e8",
+      "questionType": "fillInBlank",
+      "question": "George’s putting on a _____ face, but he’s actually scared of performing on stage.",
+      "answers": [ "cowardly", "silly", "brave", "bravado" ],
+      "correctAnswer": "brave"
+    },
+    {
+      "qid": "p4u3-e9",
+      "questionType": "fillInBlank",
+      "question": "Grandpa _________ waited outside for me until the practice was over.",
+      "answers": [ "patient", "patience", "patently", "patiently" ],
+      "correctAnswer": "patiently"
+    },
+    {
+      "qid": "p4u3-e10",
+      "questionType": "fillInBlank",
+      "question": "Yvonne is very _________ in her ability to remember everything.",
+      "answers": [ "confident", "confidence", "confidential", "confiscate" ],
+      "correctAnswer": "confident"
+    },
+    {
+      "qid": "p4u4-f1",
+      "questionType": "fillInBlank",
+      "question": "Fairy tales are ___ than detective stories.",
+      "answers": [ "imaginative", "more imagination", "most imaginative", "more imaginative" ],
+      "correctAnswer": "more imaginative"
+    },
+    {
+      "qid": "p4u4-f2",
+      "questionType": "fillInBlank",
+      "question": "Horror movies are ___ than romantic films.",
+      "answers": [ "more frighten", "more frightening", "most frightening", "frighten" ],
+      "correctAnswer": "more frightening"
+    },
+    {
+      "qid": "p4u4-f3",
+      "questionType": "fillInBlank",
+      "question": "Joke books are ___ than myths.",
+      "answers": [ "least serious", "less seriously", "less serious", "serious" ],
+      "correctAnswer": "less serious"
+    },
+    {
+      "qid": "p4u4-f4",
+      "questionType": "fillInBlank",
+      "question": "This thriller is ___ the adventure story.",
+      "answers": [ "most dramatic than", "more drama than", "more dramatic than", "dramatic" ],
+      "correctAnswer": "more dramatic than"
+    },
+    {
+      "qid": "p4u4-f5",
+      "questionType": "fillInBlank",
+      "question": "Fantasy novels are ___ than history books.",
+      "answers": [ "more amuse", "more amusing", "most amusing", "amusing" ],
+      "correctAnswer": "more amusing"
+    },
+    {
+      "qid": "p4u4-f6",
+      "questionType": "fillInBlank",
+      "question": "The documentary was ___ the fiction movie.",
+      "answers": [ "less boring than", "less bored than", "least boring than", "boring" ],
+      "correctAnswer": "less boring than"
+    },
+    {
+      "qid": "p4u4-f7",
+      "questionType": "fillInBlank",
+      "question": "This myth is ___ that fairy tale.",
+      "answers": [ "more fascinating than", "more fascinate than", "most fascinating than", "fascinating" ],
+      "correctAnswer": "more fascinating than"
+    },
+    {
+      "qid": "p4u4-f8",
+      "questionType": "fillInBlank",
+      "question": "Detective stories are ___ romance novels.",
+      "answers": [ "more popularity than", "more popular than", "most popular than", "popular" ],
+      "correctAnswer": "more popular than"
+    },
+    {
+      "qid": "p4u4-f9",
+      "questionType": "fillInBlank",
+      "question": "The play was ___ the book.",
+      "answers": [ "touching", "less touch than", "least touching than", "less touching than" ],
+      "correctAnswer": "less touching than"
+    },
+    {
+      "qid": "p4u4-f10",
+      "questionType": "fillInBlank",
+      "question": "Science fiction is ___ horror stories.",
+      "answers": [ "most imaginative than", "more imagination than", "more imaginative than", "imaginative" ],
+      "correctAnswer": "more imaginative than"
+    },
+    {
+      "qid": "p4u5-f1",
+      "questionType": "fillInBlank",
+      "question": "We eat mooncakes ___ the Mid-Autumn Festival.",
+      "answers": [ "beside", "under", "during", "above" ],
+      "correctAnswer": "during"
+    },
+    {
+      "qid": "p4u5-f2",
+      "questionType": "fillInBlank",
+      "question": "Children get red packets ___ Chinese New Year.",
+      "answers": [ "over", "under", "in", "at" ],
+      "correctAnswer": "at"
+    },
+    {
+      "qid": "p4u5-f3",
+      "questionType": "fillInBlank",
+      "question": "People sweep graves ___ Ching Ming Festival.",
+      "answers": [ "to", "on", "for", "with" ],
+      "correctAnswer": "on"
+    },
+    {
+      "qid": "p4u5-f4",
+      "questionType": "fillInBlank",
+      "question": "Families reunite ___ Christmas Day.",
+      "answers": [ "on", "in", "above", "during" ],
+      "correctAnswer": "on"
+    },
+    {
+      "qid": "p4u5-f5",
+      "questionType": "fillInBlank",
+      "question": "Dragon boat races happen ___ summer.",
+      "answers": [ "besides", "in", "on", "under" ],
+      "correctAnswer": "in"
+    },
+    {
+      "qid": "p4u5-f6",
+      "questionType": "fillInBlank",
+      "question": "We watch fireworks ___ National Day.",
+      "answers": [ "on", "in", "at", "above" ],
+      "correctAnswer": "on"
+    },
+    {
+      "qid": "p4u5-f7",
+      "questionType": "fillInBlank",
+      "question": "Kids play with lanterns ___ the evening.",
+      "answers": [ "in", "on", "at", "during" ],
+      "correctAnswer": "at"
+    },
+    {
+      "qid": "p4u5-f8",
+      "questionType": "fillInBlank",
+      "question": "Carols are sung ___ December.",
+      "answers": [ "under", "on", "for", "in" ],
+      "correctAnswer": "in"
+    },
+    {
+      "qid": "p4u5-f9",
+      "questionType": "fillInBlank",
+      "question": "People climb hills ___ Chung Yeung Festival.",
+      "answers": [ "under", "during", "beside", "over" ],
+      "correctAnswer": "during"
+    },
+    {
+      "qid": "p4u5-f10",
+      "questionType": "fillInBlank",
+      "question": "Chocolate eggs are eaten ___ Easter.",
+      "answers": [ "above", "on", "with", "at" ],
+      "correctAnswer": "at"
+    },
+    {
+      "qid": "p4u6-f1",
+      "questionType": "fillInBlank",
+      "question": "I rode the Ferris wheel, and my sister did ___.",
+      "answers": [ "too", "either", "and", "but" ],
+      "correctAnswer": "too"
+    },
+    {
+      "qid": "p4u6-f2",
+      "questionType": "fillInBlank",
+      "question": "He didn’t like the haunted house, and I didn’t ___.",
+      "answers": [ "both", "either", "neither", "so" ],
+      "correctAnswer": "either"
+    },
+    {
+      "qid": "p4u6-f3",
+      "questionType": "fillInBlank",
+      "question": "We not only ate popcorn, but cotton candy ___.",
+      "answers": [ "too", "either", "or", "because" ],
+      "correctAnswer": "too"
+    },
+    {
+      "qid": "p4u6-f4",
+      "questionType": "fillInBlank",
+      "question": "______ of us won any prizes at the booth.",
+      "answers": [ "Neither", "Either", "But", "For" ],
+      "correctAnswer": "Neither"
+    },
+    {
+      "qid": "p4u6-f5",
+      "questionType": "fillInBlank",
+      "question": "They didn’t watch the clown show, and we didn’t ___.",
+      "answers": [ "both", "or", "neither", "either" ],
+      "correctAnswer": "either"
+    },
+    {
+      "qid": "p4u6-f6",
+      "questionType": "fillInBlank",
+      "question": "We ____ tried face painting.",
+      "answers": [ "too", "either", "both", "if" ],
+      "correctAnswer": "both"
+    },
+    {
+      "qid": "p4u6-f7",
+      "questionType": "fillInBlank",
+      "question": "Dave likes hot dogs, Ben likes ice cream, and Jill likes ______.",
+      "answers": [ "too", "and", "either", "so" ],
+      "correctAnswer": "either"
+    },
+    {
+      "qid": "p4u6-f8",
+      "questionType": "fillInBlank",
+      "question": "We didn’t buy souvenirs, and they didn’t ___.",
+      "answers": [ "both", "either", "but", "and" ],
+      "correctAnswer": "either"
+    },
+    {
+      "qid": "p4u6-f9",
+      "questionType": "fillInBlank",
+      "question": "They loved ___ the magic tricks and balloon animals.",
+      "answers": [ "too", "either", "or", "both" ],
+      "correctAnswer": "both"
+    },
+    {
+      "qid": "p4u6-f10",
+      "questionType": "fillInBlank",
+      "question": "She entered _______ the maze nor the castle.",
+      "answers": [ "neither", "too", "but", "so" ],
+      "correctAnswer": "neither"
+    },
+    {
+      "qid": "p4Bu1-f1",
+      "questionType": "fillInBlank",
+      "question": "Tomorrow, I will ___ a pizza.",
+      "answers": [ "ate", "eet", "eat", "eating" ],
+      "correctAnswer": "eat"
+    },
+    {
+      "qid": "p4Bu1-f2",
+      "questionType": "fillInBlank",
+      "question": "I will _______ a cake later.",
+      "answers": [ "baking", "bake", "backing", "back" ],
+      "correctAnswer": "bake"
+    },
+    {
+      "qid": "p4Bu1-f3",
+      "questionType": "fillInBlank",
+      "question": "Mom is _______ spaghetti for dinner.",
+      "answers": [ "making", "made", "mading", "macing" ],
+      "correctAnswer": "making"
+    },
+    {
+      "qid": "p4Bu1-f4",
+      "questionType": "fillInBlank",
+      "question": "We're planning to ___ cupcakes for the party.",
+      "answers": [ "buying", "buy", "bying", "by" ],
+      "correctAnswer": "buy"
+    },
+    {
+      "qid": "p4Bu1-f5",
+      "questionType": "fillInBlank",
+      "question": "I'm going to ___ some potatoes.",
+      "answers": [ "fried", "fly", "flied", "fry" ],
+      "correctAnswer": "fry"
+    },
+    {
+      "qid": "p4Bu1-f6",
+      "questionType": "fillInBlank",
+      "question": "I would ____ a hamburger, please.",
+      "answers": [ "lik", "liked", "like", "liking" ],
+      "correctAnswer": "like"
+    },
+    {
+      "qid": "p4Bu1-f7",
+      "questionType": "fillInBlank",
+      "question": "Dad will ______ us how to make pancakes.",
+      "answers": [ "teech", "teach", "teaching", "teached" ],
+      "correctAnswer": "teach"
+    },
+    {
+      "qid": "p4Bu1-f8",
+      "questionType": "fillInBlank",
+      "question": "James will ___ to eat my chips.",
+      "answers": [ "tri", "try", "tried", "trai" ],
+      "correctAnswer": "try"
+    },
+    {
+      "qid": "p4Bu1-f9",
+      "questionType": "fillInBlank",
+      "question": "Sally will ________ how to make egg tarts.",
+      "answers": [ "learns", "learning", "learnt", "learn" ],
+      "correctAnswer": "learn"
+    },
+    {
+      "qid": "p4Bu1-f10",
+      "questionType": "fillInBlank",
+      "question": "Miss Ho will ___ us eat chicken wings next week!",
+      "answers": [ "let", "letting", "lat", "net" ],
+      "correctAnswer": "let"
+    },
+    {
+      "qid": "p4Bu3-h1",
+      "questionType": "fillInBlank",
+      "question": "____ is the length of the ruler?",
+      "answers": [ "Where", "What", "How", "When" ],
+      "correctAnswer": "What"
+    },
+    {
+      "qid": "p4Bu3-h2",
+      "questionType": "fillInBlank",
+      "question": "Do you know ___ heavy my bag is?",
+      "answers": [ "what", "why", "whose", "how" ],
+      "correctAnswer": "how"
+    },
+    {
+      "qid": "p4Bu3-h3",
+      "questionType": "fillInBlank",
+      "question": "Most of Antarctica is _______ no one has gone before.",
+      "answers": [ "where", "how", "who", "whom" ],
+      "correctAnswer": "where"
+    },
+    {
+      "qid": "p4Bu3-h4",
+      "questionType": "fillInBlank",
+      "question": "___ is the fastest boy in your class?",
+      "answers": [ "Who", "What", "Whom", "Whose" ],
+      "correctAnswer": "Who"
+    },
+    {
+      "qid": "p4Bu3-h5",
+      "questionType": "fillInBlank",
+      "question": "Dad knows ___ to measure the width of my room.",
+      "answers": [ "how", "what", "who", "hence" ],
+      "correctAnswer": "how"
+    },
+    {
+      "qid": "p4Bu3-h6",
+      "questionType": "fillInBlank",
+      "question": "Jim wonders ___ buildings are so tall these days.",
+      "answers": [ "where", "when", "why", "while" ],
+      "correctAnswer": "why"
+    },
+    {
+      "qid": "p4Bu3-h7",
+      "questionType": "fillInBlank",
+      "question": "We don't really know ___ deep the ocean is.",
+      "answers": [ "what", "who", "where", "how" ],
+      "correctAnswer": "how"
+    },
+    {
+      "qid": "p4Bu3-h8",
+      "questionType": "fillInBlank",
+      "question": "_____ is the highest point in Hong Kong?",
+      "answers": [ "Why", "Where", "How", "Who" ],
+      "correctAnswer": "Where"
+    },
+    {
+      "qid": "p4Bu3-h9",
+      "questionType": "fillInBlank",
+      "question": "It's embarrassing ____ I'm the shortest kid in the class.",
+      "answers": [ "why", "who", "when", "what" ],
+      "correctAnswer": "when"
+    },
+    {
+      "qid": "p4Bu3-h10",
+      "questionType": "fillInBlank",
+      "question": "___ long is the movie?",
+      "answers": [ "When", "How", "What", "Where" ],
+      "correctAnswer": "How"
+    },
+    {
+      "qid": "p4bu4-b1",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "carfully", "cairfully", "carefully", "carefuly" ],
+      "correctAnswer": "carefully"
+    },
+    {
+      "qid": "p4bu4-b2",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "carelessly", "carelesly", "cairlessly", "carlessly" ],
+      "correctAnswer": "carelessly"
+    },
+    {
+      "qid": "p4bu4-b3",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "happyly", "hapily", "happily", "hapilly" ],
+      "correctAnswer": "happily"
+    },
+    {
+      "qid": "p4bu4-b4",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "satly", "sedly", "saidly", "sadly" ],
+      "correctAnswer": "sadly"
+    },
+    {
+      "qid": "p4bu4-b5",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "lowdly", "lordly", "lodly", "loudly" ],
+      "correctAnswer": "loudly"
+    },
+    {
+      "qid": "p4bu4-b6",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "sofly", "softly", "sofitly", "sofaly" ],
+      "correctAnswer": "softly"
+    },
+    {
+      "qid": "p4bu4-b7",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "politely", "polightly", "politly", "polately" ],
+      "correctAnswer": "politely"
+    },
+    {
+      "qid": "p4bu4-b8",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "roodly", "ruudly", "rudely", "rewdly" ],
+      "correctAnswer": "rudely"
+    },
+    {
+      "qid": "p4bu4-b9",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "kwickly", "quikly", "quirkly", "quickly" ],
+      "correctAnswer": "quickly"
+    },
+    {
+      "qid": "p4bu4-b10",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "slouly", "sloly", "slowly", "sowly" ],
+      "correctAnswer": "slowly"
+    },
+    {
+      "qid": "p4bu4-b11",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "quietly", "kwietly", "cwietly", "quiretly" ],
+      "correctAnswer": "quietly"
+    },
+    {
+      "qid": "p4bu4-b12",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "nosily", "noicily", "noisily", "noisy" ],
+      "correctAnswer": "noisily"
+    },
+    {
+      "qid": "p4bu4-b13",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "pashiently", "pachiently", "patiently", "patently" ],
+      "correctAnswer": "patiently"
+    },
+    {
+      "qid": "p4bu4-b14",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "inpatiently", "impatiently", "implatently", "implicitly" ],
+      "correctAnswer": "impatiently"
+    },
+    {
+      "qid": "p4bu4-b15",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "neatly", "neetly", "needily", "neitly" ],
+      "correctAnswer": "neatly"
+    },
+    {
+      "qid": "p4bu4-b16",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "messyily", "messi", "messily", "messy" ],
+      "correctAnswer": "messily"
+    },
+    {
+      "qid": "p4bu4-b17",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "angryly", "angrily", "angerly", "angerily" ],
+      "correctAnswer": "angrily"
+    },
+    {
+      "qid": "p4bu4-b18",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "sweatly", "swedely", "swetely", "sweetly" ],
+      "correctAnswer": "sweetly"
+    },
+    {
+      "qid": "p4bu4-b19",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "thoughtfully", "thotfully", "thoutfully", "thoughfully" ],
+      "correctAnswer": "thoughtfully"
+    },
+    {
+      "qid": "p4bu4-b20",
+      "questionType": "audio",
+      "question": "",
+      "answers": [ "genrally", "generelly", "generally", "genally" ],
+      "correctAnswer": "generally"
+    },
+    {
+      "qid": "p4Bu5-f1",
+      "questionType": "fillInBlank",
+      "question": "We ___ the museum tomorrow.",
+      "answers": [ "visits", "will visit", "visiting", "visited" ],
+      "correctAnswer": "will visit"
+    },
+    {
+      "qid": "p4Bu5-f2",
+      "questionType": "fillInBlank",
+      "question": "The guide ___ us about the artifacts later.",
+      "answers": [ "telling", "tell", "will tell", "told" ],
+      "correctAnswer": "will tell"
+    },
+    {
+      "qid": "p4Bu5-f3",
+      "questionType": "fillInBlank",
+      "question": "They ___ the exhibition hall first.",
+      "answers": [ "seeing", "sees", "will see", "seen" ],
+      "correctAnswer": "will see"
+    },
+    {
+      "qid": "p4Bu5-f4",
+      "questionType": "fillInBlank",
+      "question": "I ___ a museum pass at the counter.",
+      "answers": [ "will buy", "buys", "buying", "buyed" ],
+      "correctAnswer": "will buy"
+    },
+    {
+      "qid": "p4Bu5-f5",
+      "questionType": "fillInBlank",
+      "question": "She ___ the audio guide service.",
+      "answers": [ "use", "user", "using", "will use" ],
+      "correctAnswer": "will use"
+    },
+    {
+      "qid": "p4Bu5-f6",
+      "questionType": "fillInBlank",
+      "question": "We ___ the interactive zone after lunch.",
+      "answers": [ "trial", "tries", "trying", "will try" ],
+      "correctAnswer": "will try"
+    },
+    {
+      "qid": "p4Bu5-f7",
+      "questionType": "fillInBlank",
+      "question": "The curator ___ a special tour next week.",
+      "answers": [ "will lead", "will led", "leading", "led" ],
+      "correctAnswer": "will lead"
+    },
+    {
+      "qid": "p4Bu5-f8",
+      "questionType": "fillInBlank",
+      "question": "They ___ souvenirs at the shop.",
+      "answers": [ "will gets", "will get", "will getting", "will got" ],
+      "correctAnswer": "will get"
+    },
+    {
+      "qid": "p4Bu5-f9",
+      "questionType": "fillInBlank",
+      "question": "You ___ the escalator to go up.",
+      "answers": [ "will taking", "will takes", "will take", "will took" ],
+      "correctAnswer": "will take"
+    },
+    {
+      "qid": "p4Bu5-f10",
+      "questionType": "fillInBlank",
+      "question": "The theater ___ a film at 2:00.",
+      "answers": [ "will shows", "will showing", "will show", "will showed" ],
+      "correctAnswer": "will show"
+    },
+    {
+      "qid": "p4Bu6-f1",
+      "questionType": "fillInBlank",
+      "question": "I ___ join the school basketball team.",
+      "answers": [ "am going to", "is going", "are going", "be going" ],
+      "correctAnswer": "am going to"
+    },
+    {
+      "qid": "p4Bu6-f2",
+      "questionType": "fillInBlank",
+      "question": "She ___ do more exercise this year.",
+      "answers": [ "going to", "is going to", "are going", "be going" ],
+      "correctAnswer": "is going to"
+    },
+    {
+      "qid": "p4Bu6-f3",
+      "questionType": "fillInBlank",
+      "question": "We ___ keep a diary every day.",
+      "answers": [ "be going", "is going", "am going", "are going to" ],
+      "correctAnswer": "are going to"
+    },
+    {
+      "qid": "p4Bu6-f4",
+      "questionType": "fillInBlank",
+      "question": "Tom ___ tidy his room every Saturday.",
+      "answers": [ "going", "are going", "am going", "is going to" ],
+      "correctAnswer": "is going to"
+    },
+    {
+      "qid": "p4Bu6-f5",
+      "questionType": "fillInBlank",
+      "question": "My friends ___ watch less TV.",
+      "answers": [ "are going to", "is going", "am going", "be going" ],
+      "correctAnswer": "are going to"
+    },
+    {
+      "qid": "p4Bu6-f6",
+      "questionType": "fillInBlank",
+      "question": "You ___ greet your teachers politely.",
+      "answers": [ "are going to", "is going", "am going", "going" ],
+      "correctAnswer": "are going to"
+    },
+    {
+      "qid": "p4Bu6-f7",
+      "questionType": "fillInBlank",
+      "question": "Mom ___ make a healthy lunch.",
+      "answers": [ "am going", "are going", "is going to", "going" ],
+      "correctAnswer": "is going to"
+    },
+    {
+      "qid": "p4Bu6-f8",
+      "questionType": "fillInBlank",
+      "question": "The students ___ do more revision.",
+      "answers": [ "am going", "is going", "are going to", "be going" ],
+      "correctAnswer": "are going to"
+    },
+    {
+      "qid": "p4Bu6-f9",
+      "questionType": "fillInBlank",
+      "question": "I ___ set my alarm clock early.",
+      "answers": [ "is going", "am going to", "are going", "going" ],
+      "correctAnswer": "am going to"
+    },
+    {
+      "qid": "p4Bu6-f10",
+      "questionType": "fillInBlank",
+      "question": "They ___ read more storybooks.",
+      "answers": [ "are going to", "is going", "am going", "be going" ],
+      "correctAnswer": "are going to"
+    },
+    {
+      "qid": "p5u8-h1",
+      "questionType": "fillInBlank",
+      "question": "Kelly saw a woman _____ a gold bracelet on her wrist at the party.",
+      "answers": [ "in", "with", "of" ],
+      "correctAnswer": "with"
+    },
+    {
+      "qid": "p5u8-h2",
+      "questionType": "fillInBlank",
+      "question": "Oh, I think he plays tennis better _____ his lucky headband.",
+      "answers": [ "in", "with", "of" ],
+      "correctAnswer": "with"
+    },
+    {
+      "qid": "p5u8-h3",
+      "questionType": "fillInBlank",
+      "question": "We are going to dress up ______ superhero outfits for the party.",
+      "answers": [ "in", "with", "of" ],
+      "correctAnswer": "in"
+    },
+    {
+      "qid": "p5u8-h4",
+      "questionType": "fillInBlank",
+      "question": "Who is the man _____ a beard near the school gate? Is that your father?",
+      "answers": [ "in", "with", "of" ],
+      "correctAnswer": "with"
+    },
+    {
+      "qid": "p5u8-h5",
+      "questionType": "fillInBlank",
+      "question": "The model walked down the runway _____ a beautiful red dress that everyone loves.",
+      "answers": [ "in", "with", "of" ],
+      "correctAnswer": "in"
+    },
+    {
+      "qid": "p5u8-h6",
+      "questionType": "fillInBlank",
+      "question": "You look great _____ that coat! Where did you buy it?",
+      "answers": [ "in", "with", "of" ],
+      "correctAnswer": "in"
+    },
+    {
+      "qid": "p5u8-h7",
+      "questionType": "fillInBlank",
+      "question": "The cat is sleeping ______ the warm sunlight that comes through the window.",
+      "answers": [ "above", "under", "between" ],
+      "correctAnswer": "under"
+    },
+    {
+      "qid": "p5u8-h8",
+      "questionType": "fillInBlank",
+      "question": "Don't forget to ride the bicycle _____ a helmet. It protects your head.",
+      "answers": [ "in", "with", "of" ],
+      "correctAnswer": "with"
+    },
+    {
+      "qid": "p5u8-h9",
+      "questionType": "fillInBlank",
+      "question": "The game starts ______ 3 PM tomorrow, so don’t be late if you want to cheer for our team!",
+      "answers": [ "on", "in", "at" ],
+      "correctAnswer": "at"
+    },
+    {
+      "qid": "p5u8-h10",
+      "questionType": "fillInBlank",
+      "question": "The children are happily playing _____ their colorful raincoats, jumping in puddles in the rain.",
+      "answers": [ "in", "with", "of" ],
+      "correctAnswer": "in"
+    }
+  ]
+}
