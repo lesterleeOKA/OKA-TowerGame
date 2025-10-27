@@ -39,8 +39,6 @@ public class CharacterController : MonoBehaviour
             //OnMouseExitControlPanel();
         });
         trigger.triggers.Add(entryExit);
-
-        if(WS_Client.)
     }
 
     void Update()
@@ -68,7 +66,15 @@ public class CharacterController : MonoBehaviour
             animator.SetInteger("Direction", 0);
         }
 
-       Debug.Log("player current Position" + transform.position);
+        //Debug.Log("WS player current Position" + WS_Client.GameData.players);
+        Debug.Log("Current Players in join room " + WS_Client.GameData.players.Count);
+        foreach (var player in WS_Client.GameData.players)
+        {
+
+            Vector3 otherPlayerPos = new Vector3(player.position[0], player.position[1], 0);
+            // 在这里可以使用otherPlayerPos进行其他操作，比如显示其他玩家的位置
+            Debug.Log("Current Player " + otherPlayerPos);
+        }
     }
 
     private void FollowMouse()

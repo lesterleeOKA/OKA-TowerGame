@@ -155,11 +155,7 @@ public class WS_Client : MonoBehaviour
         public string[] roomIds;
     }
 
-    // Start is called before the first frame update
-    async void Start()
-    {
-        Connect();
-    }
+    
 
     public static string GetCurrentDomainName
     {
@@ -193,8 +189,12 @@ public class WS_Client : MonoBehaviour
         }
 #endif
     }
+    async void Start()
+    {
+        Connect();
+    }
 
-    async void Connect()
+    public async void Connect()
     {
         // var baseUrl = WEBSHOCKET_URL; // "wss://ws.openknowledge.hk"
         // // *********************************************
@@ -252,7 +252,7 @@ public class WS_Client : MonoBehaviour
                             float destY = player.destination[1];
                             if (player.uid == this.userInfo.uid)
                             {
-                                this.player_id = player_id;
+                                this.player_id = player_id.ToString();
                             }
                             // Debug.Log($"uid: {player.uid}, 玩家 {player.player_id} 的位置: X={posX}, Y={posY},目的地: X={destX}, Y={destY}");
                             // Debug.Log($"my uid: {this.userInfo.uid}, my player_id: {this.player_id}");
@@ -288,20 +288,25 @@ public class WS_Client : MonoBehaviour
         void Update()
         {
     #if !UNITY_WEBGL || UNITY_EDITOR
+            if(websocket == null) return;
             websocket.DispatchMessageQueue();
     #endif
 
-            if (Input.GetKeyDown(KeyCode.J) && !isJoining && Time.time - lastJoinTime > JOIN_COOLDOWN)
+            if (Input.GetKeyDown(KeyCode.J))
             {
-                lastJoinTime = Time.time;
-                isJoining = true;
-                _ = JoinRoomAsync();
+                JoinGameRoom();
             }
-
-
-
-
         }
+
+        public void JoinGameRoom()
+         {
+             if( !isJoining)
+            {
+            lastJoinTime = Time.time;
+            isJoining = true;
+            _ = JoinRoomAsync();
+            }
+         }
 
         // 连接打开后
         private async void OnWebSocketOpen()
