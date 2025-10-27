@@ -12980,7 +12980,7 @@ MonoBehaviour:
   followSpeed: 5
   acc: 2
   controlPanel: {fileID: 875228701}
-  isMouseOverControlPanel: 0
+  isMouseDown: 0
 --- !u!222 &5492270979432391441
 CanvasRenderer:
   m_ObjectHideFlags: 0

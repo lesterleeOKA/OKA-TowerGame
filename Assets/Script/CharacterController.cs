@@ -14,13 +14,12 @@ public class CharacterController : MonoBehaviour
     private Vector3 lastPosition;
     private Transform imageTransform;
     public GameObject controlPanel;
-    public bool isMouseOverControlPanel = false;
+
+    public bool isMouseDown = false; // 新增：标记鼠标是否按下[7](@ref)
 
 
     void Start()
     {
-        //followSpeed = GameManager.Instance.playerSpeed;
-
         animator = GetComponent<Animator>();
         lastPosition = transform.position;
         imageTransform = transform.Find("image");
@@ -29,23 +28,37 @@ public class CharacterController : MonoBehaviour
 
         EventTrigger.Entry entryEnter = new EventTrigger.Entry();
         entryEnter.eventID = EventTriggerType.PointerEnter;
-        entryEnter.callback.AddListener((eventData) => { OnMouseEnterControlPanel(); });
+        entryEnter.callback.AddListener((eventData) => { 
+            // OnMouseEnterControlPanel(); 
+        });
         trigger.triggers.Add(entryEnter);
 
         EventTrigger.Entry entryExit = new EventTrigger.Entry();
         entryExit.eventID = EventTriggerType.PointerExit;
         entryExit.callback.AddListener((eventData) => { 
-            OnMouseExitControlPanel();
-            });
+            //OnMouseExitControlPanel();
+        });
         trigger.triggers.Add(entryExit);
+
+        if(WS_Client.)
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (isMouseOverControlPanel)
+        // 检测鼠标按下[7](@ref)
+        if (Input.GetMouseButtonDown(0))
         {
-            
+            isMouseDown = true;
+        }
+        
+        // 检测鼠标释放[7](@ref)
+        if (Input.GetMouseButtonUp(0))
+        {
+            isMouseDown = false;
+        }
+
+        if (isMouseDown)
+        {
             FollowMouse();
             UpdateAnimation();
         }
@@ -54,19 +67,22 @@ public class CharacterController : MonoBehaviour
             animator.SetFloat("Speed", 0);
             animator.SetInteger("Direction", 0);
         }
+
+       Debug.Log("player current Position" + transform.position);
     }
 
     private void FollowMouse()
     {
+        // 获取鼠标位置并转换为世界坐标[1,7](@ref)
         Vector3 mousePosition = Input.mousePosition;
         mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
         mousePosition.z = transform.position.z;
 
-        //transform.position = Vector3.MoveTowards(transform.position, mousePosition, followSpeed * Time.deltaTime);
-
+        // 计算距离并更新速度
         float distance = Vector3.Distance(transform.position, mousePosition);
-
         currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, followSpeed);
+        
+        // 使用MoveTowards平滑移动[7](@ref)
         transform.position = Vector3.MoveTowards(transform.position, mousePosition, currectSpeed * Time.deltaTime);
     }
 
@@ -78,15 +94,13 @@ public class CharacterController : MonoBehaviour
         float speed = movement.magnitude;
         animator.SetFloat("Speed", speed);
 
-
-
         if (speed > 0.01f)
         {
             if (Mathf.Abs(movement.x) > Mathf.Abs(movement.y))
             {
                 if (movement.x > 0)
                 {
-                    animator.SetInteger("Direction", 1); // �V�k
+                    animator.SetInteger("Direction", 1); // 向右
                     if (imageTransform != null)
                     {
                         imageTransform.localScale = new Vector3(1f, 1f, 1f);
@@ -94,11 +108,10 @@ public class CharacterController : MonoBehaviour
                 }
                 else
                 {
-                    animator.SetInteger("Direction", -1); // �V��
+                    animator.SetInteger("Direction", -1); // 向左
                     if (imageTransform != null)
                     {
-                        imageTransform.localScale = new Vector3(-1f, 1f, 1f); // ���� X �b
-
+                        imageTransform.localScale = new Vector3(-1f, 1f, 1f);
                     }
                 }
             }
@@ -106,17 +119,17 @@ public class CharacterController : MonoBehaviour
             {
                 if (movement.y > 0)
                 {
-                    animator.SetInteger("Direction", 2); // �V�W
+                    animator.SetInteger("Direction", 2); // 向上
                 }
                 else
                 {
-                    animator.SetInteger("Direction", 1); // �V�U
+                    animator.SetInteger("Direction", 1); // 向下
                 }
             }
         }
         else
         {
-            animator.SetInteger("Direction", 0); // �R��
+            animator.SetInteger("Direction", 0); // 停止
         }
     }
 
@@ -130,17 +143,5 @@ public class CharacterController : MonoBehaviour
     {
         animator.ResetTrigger("Correct");
         imageTransform.localScale = new Vector3(1f, 1f, 1f);
-    }
-
-    private void OnMouseEnterControlPanel()
-    {
-        //Debug.Log("Mouse Entered Control Panel");
-        isMouseOverControlPanel = true;
-    }
-
-    private void OnMouseExitControlPanel()
-    {
-        //Debug.Log("Mouse Exited Control Panel");
-        isMouseOverControlPanel = false;
     }
 }
