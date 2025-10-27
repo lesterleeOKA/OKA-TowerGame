@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3860,9 +3859,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2027992704}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a3e78868659b57147ace37807dd74fc0, type: 3}
+  m_Script: {fileID: 11500000, guid: 875967ed28cd34d5eb53ef12d061b3b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  localhostUrl: ws://localhost:8000/
+  developmentUrl: wss://ws.openknowledge.hk:8084
+  productionUrl: wss://ws.openknowledge.hk
 --- !u!1 &2059364962
 GameObject:
   m_ObjectHideFlags: 0
