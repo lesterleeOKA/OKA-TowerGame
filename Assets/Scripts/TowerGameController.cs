@@ -11,8 +11,9 @@ public class TowerGameController : GameBaseController
     public List<CharacterController> characterControllers = new List<CharacterController>();
     private int playerID = 0;
 
-    // Map WS uid -> CharacterController (ensures one GameObject per ws player)
-    private Dictionary<int, CharacterController> playerControllersByUid = new Dictionary<int, CharacterController>();
+    // Map WS player key (string) -> CharacterController (ensures one GameObject per ws player)
+    private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
+
 
     protected override void Awake()
     {
@@ -38,7 +39,7 @@ public class TowerGameController : GameBaseController
         Debug.Log("Current Players in join room " + this.playerNumber);
 
         // Track which uids are currently present this frame
-        var currentUids = new HashSet<int>();
+        var currentKeys = new HashSet<string>();
 
         // Get local player's uid (if available)
         int localUid = -1;
@@ -50,8 +51,8 @@ public class TowerGameController : GameBaseController
         // Create missing players and update positions for existing ones
         foreach (var player in players)
         {
-            int uid = player.uid;
-            currentUids.Add(uid);
+            string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
+            currentKeys.Add(key);
 
             Vector3 otherPlayerPos = Vector3.zero;
             if (player.position != null && player.position.Length >= 2)
@@ -59,40 +60,42 @@ public class TowerGameController : GameBaseController
                 otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
             }
 
-            if (!playerControllersByUid.ContainsKey(uid))
+            if (!playerControllersByKey.ContainsKey(key))
             {
-                // Create once; mark local player if uid matches
-                CreatePlayerFromData(player, otherPlayerPos, uid == localUid);
+                bool isLocal = (player.uid == localUid);
+                CreatePlayerFromData(player, otherPlayerPos, key, isLocal);
             }
             else
             {
-                Debug.Log($"FKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK existing player uid={uid} to {otherPlayerPos}");
-                // Update existing player's position
-                var cc = playerControllersByUid[uid];
+                var cc = playerControllersByKey[key];
                 if (cc != null)
                 {
-                   // cc.transform.localPosition = otherPlayerPos;
+                    // don't override local player's client-controlled transform
+                    if (!(player.uid == localUid && cc.IsLocalPlayer))
+                    {
+                        //cc.transform.position = otherPlayerPos;
+                    }
                 }
             }
         }
 
         // Remove controllers for players who left
-        var toRemove = new List<int>();
-        foreach (var kv in playerControllersByUid)
+        var toRemove = new List<string>();
+        foreach (var kv in playerControllersByKey)
         {
-            if (!currentUids.Contains(kv.Key))
+            if (!currentKeys.Contains(kv.Key))
             {
                 toRemove.Add(kv.Key);
             }
         }
 
-        foreach (var uid in toRemove)
+        foreach (var key in toRemove)
         {
-            RemovePlayer(uid);
+            RemovePlayer(key);
         }
     }
 
-    private void CreatePlayerFromData(WS_Client.PlayerData player, Vector3 startPos, bool isLocal = false)
+    private void CreatePlayerFromData(WS_Client.PlayerData player, Vector3 startPos, string key, bool isLocal = false)
     {
         // Instantiate without parent, set world position, then attach to parent preserving world pos
 
@@ -108,7 +111,7 @@ public class TowerGameController : GameBaseController
         characterController.gameObject.name = "Player_" + uid;
         characterController.UserName = "Player_" + uid;
         characterController.UserId = uid;
-        characterController.gameObject.tag = "MainPlayer";
+        if(isLocal) characterController.gameObject.tag = "MainPlayer";
         this.characterControllers.Add(characterController);
 
         // set world-space start position
@@ -121,24 +124,24 @@ public class TowerGameController : GameBaseController
             Debug.Log($"Local player created for uid={uid}");
         }
 
-        playerControllersByUid[uid] = characterController;
+        playerControllersByKey[key] = characterController;
 
         // keep an incremental id for legacy naming if needed
         this.playerID = Mathf.Max(this.playerID, uid + 1);
         Debug.Log($"Created player GameObject for uid={uid} at {startPos} (isLocal={isLocal})");
     }
 
-    private void RemovePlayer(int uid)
+    private void RemovePlayer(string key)
     {
-        if (playerControllersByUid.TryGetValue(uid, out var cc))
+        if (playerControllersByKey.TryGetValue(key, out var cc))
         {
             if (cc != null)
             {
                 this.characterControllers.Remove(cc);
                 GameObject.Destroy(cc.gameObject);
-                Debug.Log($"Removed player GameObject for uid={uid}");
+                Debug.Log($"[TowerGameController] Removed player GameObject for key={key}");
             }
-            playerControllersByUid.Remove(uid);
+            playerControllersByKey.Remove(key);
         }
     }
 }
