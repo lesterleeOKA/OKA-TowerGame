@@ -1,11 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
-using DG.Tweening;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class CharacterController : MonoBehaviour
+public class CharacterController : UserData
 {
     public float followSpeed = 6f;
     public float acc = 2f;
@@ -13,8 +9,8 @@ public class CharacterController : MonoBehaviour
     private Animator animator;
     private Vector3 lastPosition;
     private Transform imageTransform;
-    public GameObject controlPanel;
 
+    public bool IsLocalPlayer = false; // 新增：标记是否为本地玩家[7](@ref)
     public bool isMouseDown = false; // 新增：标记鼠标是否按下[7](@ref)
 
 
@@ -23,58 +19,49 @@ public class CharacterController : MonoBehaviour
         animator = GetComponent<Animator>();
         lastPosition = transform.position;
         imageTransform = transform.Find("image");
-
-        EventTrigger trigger = controlPanel.AddComponent<EventTrigger>();
-
-        EventTrigger.Entry entryEnter = new EventTrigger.Entry();
-        entryEnter.eventID = EventTriggerType.PointerEnter;
-        entryEnter.callback.AddListener((eventData) => { 
-            // OnMouseEnterControlPanel(); 
-        });
-        trigger.triggers.Add(entryEnter);
-
-        EventTrigger.Entry entryExit = new EventTrigger.Entry();
-        entryExit.eventID = EventTriggerType.PointerExit;
-        entryExit.callback.AddListener((eventData) => { 
-            //OnMouseExitControlPanel();
-        });
-        trigger.triggers.Add(entryExit);
     }
 
     void Update()
     {
-        // 检测鼠标按下[7](@ref)
-        if (Input.GetMouseButtonDown(0))
+        if(IsLocalPlayer)
         {
-            isMouseDown = true;
+            if (Input.GetMouseButtonDown(0))
+            {
+                isMouseDown = true;
+            }
+
+            // 检测鼠标释放[7](@ref)
+            if (Input.GetMouseButtonUp(0))
+            {
+                isMouseDown = false;
+            }
+
+            if (isMouseDown)
+            {
+                FollowMouse();
+                UpdateAnimation();
+            }
+            else
+            {
+                animator.SetFloat("Speed", 0);
+                animator.SetInteger("Direction", 0);
+            }
+
+            WS_Client.PositionData posData = new WS_Client.PositionData
+            {
+                x = this.transform.position.x,
+                y = this.transform.position.y
+            };
+
+            WS_Client.PositionData destData = new WS_Client.PositionData
+            {
+                x = this.transform.position.x,
+                y = this.transform.position.y
+            };
+
+            WS_Client.Instance.UpdateServerPosition(posData, destData);
         }
         
-        // 检测鼠标释放[7](@ref)
-        if (Input.GetMouseButtonUp(0))
-        {
-            isMouseDown = false;
-        }
-
-        if (isMouseDown)
-        {
-            FollowMouse();
-            UpdateAnimation();
-        }
-        else
-        {
-            animator.SetFloat("Speed", 0);
-            animator.SetInteger("Direction", 0);
-        }
-
-        //Debug.Log("WS player current Position" + WS_Client.GameData.players);
-        Debug.Log("Current Players in join room " + WS_Client.GameData.players.Count);
-        foreach (var player in WS_Client.GameData.players)
-        {
-
-            Vector3 otherPlayerPos = new Vector3(player.position[0], player.position[1], 0);
-            // 在这里可以使用otherPlayerPos进行其他操作，比如显示其他玩家的位置
-            Debug.Log("Current Player " + otherPlayerPos);
-        }
     }
 
     private void FollowMouse()

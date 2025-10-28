@@ -20,7 +20,6 @@ public class GameBaseController : MonoBehaviour
 
     protected virtual void Start()
     {
-        if (LoaderConfig.Instance != null) this.playerNumber = LoaderConfig.Instance.PlayerNumbers;
         SetUI.Set(this.TopUILayer, false, 0f);
         SetUI.Set(this.getScorePopup, false, 0f);
         SetUI.Set(this.TopRightUILayer, true, 0f);

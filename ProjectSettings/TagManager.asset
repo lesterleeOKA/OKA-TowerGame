@@ -3,7 +3,20 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - GameBackground
+  - P1_Blood
+  - P2_Blood
+  - P2_Icon
+  - P1_ResultScore
+  - P1_Icon
+  - P2_ResultScore
+  - P2_Score
+  - P1_Score
+  - Word
+  - Obstacle
+  - Submit
+  - MainPlayer
   layers:
   - Default
   - TransparentFX

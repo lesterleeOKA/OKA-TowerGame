@@ -22,6 +22,10 @@ public class CanvasMapPan : MonoBehaviour
     void LateUpdate()
     {
         if(mapRect == null) mapRect = GameObject.FindGameObjectWithTag("GameBackground").GetComponent<RectTransform>();
+        if (playerRect == null) { 
+            if(GameObject.FindGameObjectWithTag("MainPlayer") != null)
+                playerRect = GameObject.FindGameObjectWithTag("MainPlayer").GetComponent<RectTransform>();
+        }
         if (playerRect == null || canvasRect == null) return;
 
         // Player position relative to map center

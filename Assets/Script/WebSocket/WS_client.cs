@@ -29,7 +29,7 @@ public class WS_Client : MonoBehaviour
     }
     WebSocket websocket;
     private string channelId = "towerGame";
-    private string jwt = "bearer eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxMS00MzY0ZTlmYmE3NzA2M2Q4MjdjZWY0NjMzMGYwMjlhZmU2ZTIyNWZhOTk1MGMzMTRiMzRkNjAyNjY5NGUzYWIwIiwiZXhwaXJlcyI6MTc2MzYxMDE0NywidGltZSI6IjIwMjUtMTAtMjEgMTE6NDI6MjciLCJ1aWQiOiI1MTEiLCJ1c2VyX3JvbGUiOiIzIiwic2Nob29sX2lkIjoiMjcyIiwiaXAiOiIxNjkuMjU0LjEyOS40IiwidmVyc2lvbiI6IjIuOC4zNiIsImRldmljZSI6Im1hYyJ9.LT8f4UNEB3nnW6BY2FMPQXZVMUzQ-6NyCJT08gqSx1s";
+    public string jwt = "bearer eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcxNy05ZjY3MjcwZDk1Zjc5NjEzMTMwNzU0MGEyNjUyMDdmN2Q0YWM5ZDU2OTM3OTBiMmNhNjhlNTQ5YzI5NjBkZmM5IiwiZXhwaXJlcyI6MTc2MjIyNDQ0NywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTAtMjggMDI6NDc6MjcgR01UIiwidWlkIjoiNTQzNzE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNiIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.tDcwbbY0OxfSCrrAMcneyvji2u5M7k5M8Moz7JQHiUU";
     private string roomId = "";
     private string player_id = "";
 
@@ -298,18 +298,23 @@ public class WS_Client : MonoBehaviour
             }
         }
 
-        public void JoinGameRoom()
-         {
-             if( !isJoining)
-            {
+    public void JoinGameRoom()
+    {
+        if (websocket == null || websocket.State != WebSocketState.Open)
+        {
+            Debug.LogWarning("WebSocket not connected! Cannot join room.");
+            return;
+        }
+        if (!isJoining)
+        {
             lastJoinTime = Time.time;
             isJoining = true;
             _ = JoinRoomAsync();
-            }
-         }
+        }
+    }
 
-        // 连接打开后
-        private async void OnWebSocketOpen()
+    // 连接打开后
+    private async void OnWebSocketOpen()
         {
             Debug.Log("Connection open!");
             Debug.Log("WebSocket connection established! Attempting to join room...");
