@@ -54,26 +54,27 @@ public class TowerGameController : GameBaseController
             string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
             currentKeys.Add(key);
 
-            Vector3 otherPlayerPos = Vector3.zero;
-            if (player.position != null && player.position.Length >= 2)
-            {
-                otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
-            }
-
+            bool isLocal = (player.uid == localUid);
             if (!playerControllersByKey.ContainsKey(key))
             {
-                bool isLocal = (player.uid == localUid);
-                CreatePlayerFromData(player, otherPlayerPos, key, isLocal);
+                CreatePlayerFromData(player, Vector3.zero, key, isLocal);
             }
-            else
+
+            if (!isLocal)
             {
+                Vector3 otherPlayerPos = Vector3.zero;
+                if (player.position != null && player.position.Length >= 2)
+                {
+                    otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
+                }
+
                 var cc = playerControllersByKey[key];
                 if (cc != null)
                 {
                     // don't override local player's client-controlled transform
-                    if (!(player.uid == localUid && cc.IsLocalPlayer))
+                    if (player.uid != localUid && !cc.IsLocalPlayer)
                     {
-                        //cc.transform.position = otherPlayerPos;
+                         cc.transform.position = otherPlayerPos;
                     }
                 }
             }
@@ -125,6 +126,7 @@ public class TowerGameController : GameBaseController
         }
 
         playerControllersByKey[key] = characterController;
+        characterController.key = key;
 
         // keep an incremental id for legacy naming if needed
         this.playerID = Mathf.Max(this.playerID, uid + 1);

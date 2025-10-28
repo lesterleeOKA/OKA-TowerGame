@@ -10,6 +10,7 @@ public class CharacterController : UserData
     private Vector3 lastPosition;
     private Transform imageTransform;
 
+    public string key = "";
     public bool IsLocalPlayer = false; // 新增：标记是否为本地玩家[7](@ref)
     public bool isMouseDown = false; // 新增：标记鼠标是否按下[7](@ref)
 
@@ -30,7 +31,6 @@ public class CharacterController : UserData
                 isMouseDown = true;
             }
 
-            // 检测鼠标释放[7](@ref)
             if (Input.GetMouseButtonUp(0))
             {
                 isMouseDown = false;
