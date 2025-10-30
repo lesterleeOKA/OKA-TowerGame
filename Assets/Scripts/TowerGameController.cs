@@ -7,13 +7,23 @@ public class TowerGameController : GameBaseController
 {
     public static TowerGameController Instance = null;
     public GameObject playerPrefab;
+    public GameObject questionPrefab;
+    public GameObject answerPrefab;
     public Transform parent;
     public List<CharacterController> characterControllers = new List<CharacterController>();
+    public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
+    public List<WS_Client.AnswerData> answers = new List<WS_Client.AnswerData>();
     private int playerID = 0;
     private float lastLogTime = 0f;
 
     // Map WS player key (string) -> CharacterController (ensures one GameObject per ws player)
     private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
+    
+    // Map question ID -> GameObject
+    private Dictionary<string, GameObject> questionObjectsById = new Dictionary<string, GameObject>();
+    
+    // Map answer ID -> GameObject
+    private Dictionary<string, GameObject> answerObjectsById = new Dictionary<string, GameObject>();
 
 
     protected override void Awake()
@@ -104,6 +114,84 @@ public class TowerGameController : GameBaseController
         {
             RemovePlayer(key);
         }
+
+        // Process questions
+        if (WS_Client.GameData.questions != null)
+        {
+            var currentQuestionIds = new HashSet<string>();
+            
+            for (int i = 0; i < WS_Client.GameData.questions.Count; i++)
+            {
+                var question = WS_Client.GameData.questions[i];
+                currentQuestionIds.Add(question.id);
+                
+                if (!questionObjectsById.ContainsKey(question.id))
+                {
+                    // Create question at a position based on index (spread them out)
+                    Vector3 questionPos = new Vector3(-5f + (i * 3f), 3f, 0f);
+                    CreateQuestionObject(question, questionPos);
+                }
+            }
+            
+            // Remove questions that no longer exist
+            var questionsToRemove = new List<string>();
+            foreach (var kv in questionObjectsById)
+            {
+                if (!currentQuestionIds.Contains(kv.Key))
+                {
+                    questionsToRemove.Add(kv.Key);
+                }
+            }
+            foreach (var id in questionsToRemove)
+            {
+                RemoveQuestionObject(id);
+            }
+        }
+
+        // Process answers
+        if (WS_Client.GameData.answers != null)
+        {
+            var currentAnswerIds = new HashSet<string>();
+            
+            foreach (var answer in WS_Client.GameData.answers)
+            {
+                currentAnswerIds.Add(answer.id);
+                
+                if (!answerObjectsById.ContainsKey(answer.id))
+                {
+                    // Create answer at position from data
+                    Vector3 answerPos = Vector3.zero;
+                    if (answer.position != null && answer.position.Length >= 2)
+                    {
+                        answerPos = new Vector3(answer.position[0], answer.position[1], 0f);
+                    }
+                    CreateAnswerObject(answer, answerPos);
+                }
+                else
+                {
+                    // Update answer position if it exists
+                    var answerObj = answerObjectsById[answer.id];
+                    if (answerObj != null && answer.position != null && answer.position.Length >= 2)
+                    {
+                        answerObj.transform.position = new Vector3(answer.position[0], answer.position[1], 0f);
+                    }
+                }
+            }
+            
+            // Remove answers that no longer exist
+            var answersToRemove = new List<string>();
+            foreach (var kv in answerObjectsById)
+            {
+                if (!currentAnswerIds.Contains(kv.Key))
+                {
+                    answersToRemove.Add(kv.Key);
+                }
+            }
+            foreach (var id in answersToRemove)
+            {
+                RemoveAnswerObject(id);
+            }
+        }
     }
 
     private void CreatePlayerFromData(WS_Client.PlayerData player, Vector3 startPos, string key, bool isLocal = false)
@@ -154,6 +242,77 @@ public class TowerGameController : GameBaseController
                 Debug.Log($"[TowerGameController] Removed player GameObject for key={key}");
             }
             playerControllersByKey.Remove(key);
+        }
+    }
+
+    private void CreateQuestionObject(WS_Client.QuestionData question, Vector3 position)
+    {
+        if (questionPrefab == null)
+        {
+            Debug.LogError("questionPrefab is not assigned!");
+            return;
+        }
+
+        var questionObj = GameObject.Instantiate(questionPrefab, this.parent);
+        questionObj.transform.position = position;
+        questionObj.name = "Question_" + question.id;
+        
+        // Store the question data (you can add a component to store this if needed)
+        // For now, just track the GameObject
+        questionObjectsById[question.id] = questionObj;
+        questions.Add(question);
+        
+        Debug.Log($"Created question GameObject for id={question.id} at {position}. Content: {question.content}");
+    }
+
+    private void RemoveQuestionObject(string id)
+    {
+        if (questionObjectsById.TryGetValue(id, out var questionObj))
+        {
+            if (questionObj != null)
+            {
+                GameObject.Destroy(questionObj);
+                Debug.Log($"[TowerGameController] Removed question GameObject for id={id}");
+            }
+            questionObjectsById.Remove(id);
+            
+            // Remove from list
+            questions.RemoveAll(q => q.id == id);
+        }
+    }
+
+    private void CreateAnswerObject(WS_Client.AnswerData answer, Vector3 position)
+    {
+        if (answerPrefab == null)
+        {
+            Debug.LogError("answerPrefab is not assigned!");
+            return;
+        }
+
+        var answerObj = GameObject.Instantiate(answerPrefab, this.parent);
+        answerObj.transform.position = position;
+        answerObj.name = "Answer_" + answer.id;
+        
+        // Store the answer data
+        answerObjectsById[answer.id] = answerObj;
+        answers.Add(answer);
+        
+        Debug.Log($"Created answer GameObject for id={answer.id} at {position}. Content: {answer.content}, Question: {answer.question_id}");
+    }
+
+    private void RemoveAnswerObject(string id)
+    {
+        if (answerObjectsById.TryGetValue(id, out var answerObj))
+        {
+            if (answerObj != null)
+            {
+                GameObject.Destroy(answerObj);
+                Debug.Log($"[TowerGameController] Removed answer GameObject for id={id}");
+            }
+            answerObjectsById.Remove(id);
+            
+            // Remove from list
+            answers.RemoveAll(a => a.id == id);
         }
     }
 }

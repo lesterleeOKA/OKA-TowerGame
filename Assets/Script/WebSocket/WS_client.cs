@@ -141,6 +141,8 @@ public class WS_Client : MonoBehaviour
     public class RoomGameData
     {
         public List<PlayerData> players;
+        public List<QuestionData> questions;
+        public List<AnswerData> answers;
         public string status;
     }
 
@@ -151,7 +153,44 @@ public class WS_Client : MonoBehaviour
         public int uid;
         public float[] position;
         public float[] destination;
+        public int isAnswerVisible;
+        public string answerContent;
     }
+
+    [System.Serializable]
+    public class QuestionData
+    {
+        public string id;
+        public string content;
+    }
+
+    [System.Serializable]
+    public class AnswerData
+    {
+        public string id;
+        public string content;
+        public string question_id;
+        public float[] position;
+        public int isOnPlayer;
+        public int isSubmitted;
+    }
+
+    // Dummy data for testing (based on expected server format)
+    private List<QuestionData> dummyQuestions = new List<QuestionData>
+    {
+        new QuestionData { id = "Q1", content = "Question 1:XXXXX" },
+        new QuestionData { id = "Q2", content = "Question 2:XXXXX" },
+        new QuestionData { id = "Q3", content = "Question 3:XXXXX" },
+        new QuestionData { id = "Q4", content = "Question 4:XXXXX" }
+    };
+
+    private List<AnswerData> dummyAnswers = new List<AnswerData>
+    {
+        new AnswerData { id = "A1", content = "Answer 1", question_id = "Q1", position = new float[] { -1f, 0f }, isOnPlayer = 0, isSubmitted = 0 },
+        new AnswerData { id = "A2", content = "Answer 2", question_id = "Q2", position = new float[] { 0f, 1f }, isOnPlayer = 0, isSubmitted = 0 },
+        new AnswerData { id = "A3", content = "Answer 3", question_id = "Q3", position = new float[] { 1f, 0f }, isOnPlayer = 0, isSubmitted = 0 },
+        new AnswerData { id = "A4", content = "Answer 4", question_id = "Q4", position = new float[] { 0f, -1f }, isOnPlayer = 0, isSubmitted = 0 }
+    };
 
     // 如果需要处理members，可以定义此类
     [System.Serializable]
@@ -215,6 +254,9 @@ public class WS_Client : MonoBehaviour
     void Start()
     {
         Debug.Log("Connecting to WebSocket...");
+
+        // GameData.questions = dummyQuestions;
+        // GameData.answers = dummyAnswers;
         Connect();
     }
 
@@ -299,21 +341,24 @@ public class WS_Client : MonoBehaviour
                         break;
                     case "SyncRoomData":
                         GameData = message.content.roomGameData;
-                        foreach (var player in GameData.players)
+                        
+                        if (GameData.players != null)
                         {
-                            // 获取当前遍历玩家的位置坐标 [x, y]
-                            int index = GameData.players.IndexOf(player);
-                            float posX = player.position[0];
-                            float posY = player.position[1];
-                            float destX = player.destination[0];
-                            float destY = player.destination[1];
-                            if (player.uid == this.userInfo.uid)
+                            foreach (var player in GameData.players)
                             {
-                                this.player_id = player_id.ToString();
+                                // 获取当前遍历玩家的位置坐标 [x, y]
+                                int index = GameData.players.IndexOf(player);
+                                float posX = player.position[0];
+                                float posY = player.position[1];
+                                float destX = player.destination[0];
+                                float destY = player.destination[1];
+                                if (player.uid == this.userInfo.uid)
+                                {
+                                    this.player_id = player_id.ToString();
+                                }
                             }
-                            // Debug.Log($"uid: {player.uid}, 玩家 {player.player_id} 的位置: X={posX}, Y={posY},目的地: X={destX}, Y={destY}");
-                            Debug.Log($"current list index: {index}, player_id: {player.player_id}, uid: {player.uid}, my uid: {this.userInfo.uid}, my player_id: {this.player_id}");
                         }
+
                         gameDataReceived = true;
                         break;
                     case "ready":
@@ -348,10 +393,10 @@ public class WS_Client : MonoBehaviour
         if (websocket == null) return;
         websocket.DispatchMessageQueue();
 #endif
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            JoinGameRoom();
-        }
+        // if (Input.GetKeyDown(KeyCode.J))
+        // {
+        //     JoinGameRoom();
+        // }
     }
 
     public void JoinGameRoom()

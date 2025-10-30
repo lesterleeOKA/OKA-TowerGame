@@ -9,6 +9,7 @@ public class CharacterController : UserData
     private Animator animator;
     private Vector3 lastPosition;
     private Transform imageTransform;
+    private Transform answerBubbleTransform;
 
     public string key = "";
     public bool IsLocalPlayer = false; // 新增：标记是否为本地玩家[7](@ref)
@@ -20,6 +21,7 @@ public class CharacterController : UserData
         animator = GetComponent<Animator>();
         lastPosition = transform.position;
         imageTransform = transform.Find("image");
+        answerBubbleTransform = transform.Find("AnswerBubble");
     }
 
     void Update()
@@ -62,6 +64,15 @@ public class CharacterController : UserData
             WS_Client.Instance.UpdateServerPosition(posData, destData);
         }
         
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            showAnswerBubble(1);
+        }
+
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            showAnswerBubble(0);
+        }
     }
 
     private void FollowMouse()
@@ -136,5 +147,17 @@ public class CharacterController : UserData
     {
         animator.ResetTrigger("Correct");
         imageTransform.localScale = new Vector3(1f, 1f, 1f);
+    }
+
+    public void showAnswerBubble(int show)
+    {
+        if (show == 1)
+        {
+            answerBubbleTransform.gameObject.SetActive(true);
+        }
+        else
+        {
+            answerBubbleTransform.gameObject.SetActive(false);
+        }
     }
 }
