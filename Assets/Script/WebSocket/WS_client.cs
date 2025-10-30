@@ -369,20 +369,12 @@ public class WS_Client : MonoBehaviour
         Debug.Log("WebSocket connection established! Attempting to join room...");
         try
         {
-            Debug.Log("Connection open!");
-            Debug.Log("WebSocket connection established! Attempting to join room...");
-            try
-            {
-                // await JoinRoom(); // 调用一次 JoinRoom
-                await ListGameRoom();
-                // Automatically join game room after listing rooms
-                JoinGameRoom();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Failed to join room: {ex.Message}");
-            }
-        }catch (Exception ex)
+            // await JoinRoom(); // 调用一次 JoinRoom
+            await ListGameRoom();
+            // Automatically join game room after listing rooms
+            JoinGameRoom();
+        }
+        catch (Exception ex)
         {
             Debug.LogError($"Failed to join room: {ex.Message}");
         }
