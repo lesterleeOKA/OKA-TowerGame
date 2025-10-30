@@ -30,7 +30,8 @@ public class WS_Client : MonoBehaviour
     WebSocket websocket;
     private string channelId = "towerGame";
     //uid = 543717
-    public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcxNy05ZjY3MjcwZDk1Zjc5NjEzMTMwNzU0MGEyNjUyMDdmN2Q0YWM5ZDU2OTM3OTBiMmNhNjhlNTQ5YzI5NjBkZmM5IiwiZXhwaXJlcyI6MTc2MjIyNDQ0NywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTAtMjggMDI6NDc6MjcgR01UIiwidWlkIjoiNTQzNzE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNiIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.tDcwbbY0OxfSCrrAMcneyvji2u5M7k5M8Moz7JQHiUU";
+    // public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcxNy05ZjY3MjcwZDk1Zjc5NjEzMTMwNzU0MGEyNjUyMDdmN2Q0YWM5ZDU2OTM3OTBiMmNhNjhlNTQ5YzI5NjBkZmM5IiwiZXhwaXJlcyI6MTc2MjIyNDQ0NywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTAtMjggMDI6NDc6MjcgR01UIiwidWlkIjoiNTQzNzE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNiIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.tDcwbbY0OxfSCrrAMcneyvji2u5M7k5M8Moz7JQHiUU";
+    public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxMS00MzY0ZTlmYmE3NzA2M2Q4MjdjZWY0NjMzMGYwMjlhZmU2ZTIyNWZhOTk1MGMzMTRiMzRkNjAyNjY5NGUzYWIwIiwiZXhwaXJlcyI6MTc2MzYxMDE0NywidGltZSI6IjIwMjUtMTAtMjEgMTE6NDI6MjciLCJ1aWQiOiI1MTEiLCJ1c2VyX3JvbGUiOiIzIiwic2Nob29sX2lkIjoiMjcyIiwiaXAiOiIxNjkuMjU0LjEyOS40IiwidmVyc2lvbiI6IjIuOC4zNiIsImRldmljZSI6Im1hYyJ9.LT8f4UNEB3nnW6BY2FMPQXZVMUzQ-6NyCJT08gqSx1s";
     private string roomId = "";
     private string player_id = "";
 
@@ -189,7 +190,12 @@ public class WS_Client : MonoBehaviour
         return localhostUrl;
 #else
         string currentDomain = GetCurrentDomainName.ToLower();
-
+        // 优先处理 localhost
+        if (currentDomain == "localhost")
+        {
+            Debug.Log($"Localhost environment detected: {currentDomain}");
+            return localhostUrl;
+        }
         // 环境检测逻辑：如果域名以"dev"开头，则使用开发服务器
         if (currentDomain.StartsWith("dev"))
         {
