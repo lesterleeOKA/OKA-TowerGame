@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -4091,7 +4090,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcwOS02NWViOWFjMDNlYmJlNmUwNTQ5NTBkM2IxODgwMzJhY2Q3MzY4MzBlODM5N2U5ZDM5M2Y2NzAxOWYzZjhmNDZlIiwiZXhwaXJlcyI6MTc2MjIzODAwMiwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTAtMjggMDY6MzM6MjIgR01UIiwidWlkIjoiNTQzNzA5IiwidXNlcl9yb2xlIjoiMyIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNiIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.7zy78SjgaYwmZzvIoG63jqwA2XDRJCWRZInc0gbsWAU
-  localhostUrl: wss://ws.openknowledge.hk:8084
+  localhostUrl: ws://localhost:8000/
   developmentUrl: wss://ws.openknowledge.hk:8084
   productionUrl: wss://ws.openknowledge.hk
 --- !u!1 &2059364962

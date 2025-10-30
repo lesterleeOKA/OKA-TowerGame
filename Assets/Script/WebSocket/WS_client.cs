@@ -101,11 +101,14 @@ public class WS_Client : MonoBehaviour
     [System.Serializable]
     public class WebSocketMessage
     {
+        public string fromWsId;
+        public int fromUid;
         public string messageType;
         public string roomId;
         // 可以根据需要添加其他字段
         public string data;
         public ServerMessageContent content;
+        public long time;
     }
 
     public class PositionData
@@ -122,6 +125,15 @@ public class WS_Client : MonoBehaviour
         // public List<RoomMember> members;
         public string roomId;
         public UserInfo userInfo;
+        public string message;
+        public List<RoomInfo> roomList;
+    }
+
+    [System.Serializable]
+    public class RoomInfo
+    {
+        public string roomId;
+        public int roomMembers;
     }
 
     [System.Serializable]
@@ -157,7 +169,7 @@ public class WS_Client : MonoBehaviour
         public string[] roomIds;
     }
 
-    
+
 
     public static string GetCurrentDomainName
     {
@@ -261,7 +273,21 @@ public class WS_Client : MonoBehaviour
                         Debug.Log("current roomId : " + roomId);
                         break;
                     case "listGameRoom":
-                        Debug.Log("listGameRoom : " + message);
+                        if (message.content.roomList != null)
+                        {
+                            Debug.Log("listGameRoom count: " + message.content.roomList.Count);
+                            foreach (var room in message.content.roomList)
+                            {
+                                Debug.Log($"Room: {room.roomId}, Members: {room.roomMembers}");
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogError("roomList is null!");
+                        }
+                        break;
+                    case "roomFull":
+                        Debug.Log("roomFull : " + message.content.message + " / " + "current roomId : " + roomId);
                         break;
                     case "SyncRoomData":
                         GameData = message.content.roomGameData;
@@ -338,6 +364,10 @@ public class WS_Client : MonoBehaviour
 
     // 连接打开后
     private async void OnWebSocketOpen()
+    {
+        Debug.Log("Connection open!");
+        Debug.Log("WebSocket connection established! Attempting to join room...");
+        try
         {
             Debug.Log("Connection open!");
             Debug.Log("WebSocket connection established! Attempting to join room...");
