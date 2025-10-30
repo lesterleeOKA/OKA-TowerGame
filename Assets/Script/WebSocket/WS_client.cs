@@ -336,10 +336,10 @@ public class WS_Client : MonoBehaviour
 
     void Update()
     {
-    #if !UNITY_WEBGL || UNITY_EDITOR
-            if(websocket == null) return;
-            websocket.DispatchMessageQueue();
-    #endif
+#if !UNITY_WEBGL || UNITY_EDITOR
+        if (websocket == null) return;
+        websocket.DispatchMessageQueue();
+#endif
         if (Input.GetKeyDown(KeyCode.J))
         {
             JoinGameRoom();
@@ -369,23 +369,16 @@ public class WS_Client : MonoBehaviour
         Debug.Log("WebSocket connection established! Attempting to join room...");
         try
         {
-            Debug.Log("Connection open!");
-            Debug.Log("WebSocket connection established! Attempting to join room...");
-            try
-            {
-                // await JoinRoom(); // 调用一次 JoinRoom
-                await ListGameRoom();
-                // Automatically join game room after listing rooms
-                JoinGameRoom();
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Failed to join room: {ex.Message}");
-            }
-        }catch (Exception ex)
+            // await JoinRoom(); // 调用一次 JoinRoom
+            await ListGameRoom();
+            // Automatically join game room after listing rooms
+            JoinGameRoom();
+        }
+        catch (Exception ex)
         {
             Debug.LogError($"Failed to join room: {ex.Message}");
         }
+
     }
 
     public async Task ListGameRoom()
@@ -407,7 +400,7 @@ public class WS_Client : MonoBehaviour
             Debug.Log("J key pressed - joining room...");
             // 这里替换为你的实际加入房间逻辑
             await JoinRoom();
-            Debug.Log("Room joined successfully!");
+            // Debug.Log("Room joined successfully!");
         }
         catch (System.Exception e)
         {
@@ -598,8 +591,8 @@ public class WS_Client : MonoBehaviour
                     Debug.LogWarning(message);
                     break;
                 case "error":
-                Debug.LogError(message);
-                break;
+                    Debug.LogError(message);
+                    break;
                 default:
                     Debug.Log(message);
                     break;
