@@ -29,6 +29,7 @@ public class WS_Client : MonoBehaviour
     }
     WebSocket websocket;
     private string channelId = "towerGame";
+    //uid = 543717
     public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcxNy05ZjY3MjcwZDk1Zjc5NjEzMTMwNzU0MGEyNjUyMDdmN2Q0YWM5ZDU2OTM3OTBiMmNhNjhlNTQ5YzI5NjBkZmM5IiwiZXhwaXJlcyI6MTc2MjIyNDQ0NywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTAtMjggMDI6NDc6MjcgR01UIiwidWlkIjoiNTQzNzE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNiIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.tDcwbbY0OxfSCrrAMcneyvji2u5M7k5M8Moz7JQHiUU";
     private string roomId = "";
     private string player_id = "";
@@ -46,6 +47,7 @@ public class WS_Client : MonoBehaviour
     private float lastJoinTime = 0f;
     private const float JOIN_COOLDOWN = 1f; // 1秒冷却时间
     private UserInfo userInfo;
+    private bool isSendingPosition = false;
 
     // 新增公共属性，作为访问私有字段的受控接口
     public UserInfo pulic_UserInfo
@@ -189,9 +191,29 @@ public class WS_Client : MonoBehaviour
         }
 #endif
     }
-    async void Start()
+
+    void Start()
     {
+        Debug.Log("Connecting to WebSocket...");
         Connect();
+    }
+
+    private void Awake()
+    {
+        Debug.Log("WS_Client Awake");
+        // 确保单例在场景切换时不被销毁，且实例唯一
+        if (_instance != null && _instance != this)
+        {
+            Destroy(this.gameObject);
+        }
+        else
+        {
+            _instance = this;
+            DontDestroyOnLoad(this.gameObject); // 可选：如需跨场景保持连接
+        }
+
+        // 在这里初始化WebSocket连接
+        // InitializeWebSocket();
     }
 
     public async void Connect()
@@ -226,7 +248,7 @@ public class WS_Client : MonoBehaviour
             {
                 // 将字节数组转换为字符串
                 var jsonString = System.Text.Encoding.UTF8.GetString(bytes);
-                Debug.Log("OnMessage! " + jsonString);
+                // debugLogPerSecond("OnMessage! " + jsonString, "debug");
 
                 // 将JSON字符串反序列化为对象
                 WebSocketMessage message = JsonUtility.FromJson<WebSocketMessage>(jsonString);
@@ -242,10 +264,11 @@ public class WS_Client : MonoBehaviour
                         Debug.Log("listGameRoom : " + message);
                         break;
                     case "SyncRoomData":
-                        _gameData = message.content.roomGameData;
-                        foreach (var player in _gameData.players)
+                        GameData = message.content.roomGameData;
+                        foreach (var player in GameData.players)
                         {
                             // 获取当前遍历玩家的位置坐标 [x, y]
+                            int index = GameData.players.IndexOf(player);
                             float posX = player.position[0];
                             float posY = player.position[1];
                             float destX = player.destination[0];
@@ -255,7 +278,7 @@ public class WS_Client : MonoBehaviour
                                 this.player_id = player_id.ToString();
                             }
                             // Debug.Log($"uid: {player.uid}, 玩家 {player.player_id} 的位置: X={posX}, Y={posY},目的地: X={destX}, Y={destY}");
-                            // Debug.Log($"my uid: {this.userInfo.uid}, my player_id: {this.player_id}");
+                            Debug.Log($"current list index: {index}, player_id: {player.player_id}, uid: {player.uid}, my uid: {this.userInfo.uid}, my player_id: {this.player_id}");
                         }
                         gameDataReceived = true;
                         break;
@@ -281,27 +304,27 @@ public class WS_Client : MonoBehaviour
         // Keep sending game data at every 0.1s
         InvokeRepeating("ConstantSyncData", 0.0f, 0.1f);
 
-        // waiting for messages
+        // waiting for messages\
         await websocket.Connect();
     }
 
-        void Update()
-        {
+    void Update()
+    {
     #if !UNITY_WEBGL || UNITY_EDITOR
             if(websocket == null) return;
             websocket.DispatchMessageQueue();
     #endif
-
-            if (Input.GetKeyDown(KeyCode.J))
-            {
-                JoinGameRoom();
-            }
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            JoinGameRoom();
         }
+    }
 
     public void JoinGameRoom()
     {
         if (websocket == null || websocket.State != WebSocketState.Open)
         {
+            Debug.Log(websocket);
             Debug.LogWarning("WebSocket not connected! Cannot join room.");
             return;
         }
@@ -322,6 +345,8 @@ public class WS_Client : MonoBehaviour
             {
                 // await JoinRoom(); // 调用一次 JoinRoom
                 await ListGameRoom();
+                // Automatically join game room after listing rooms
+                JoinGameRoom();
             }
             catch (Exception ex)
             {
@@ -329,211 +354,223 @@ public class WS_Client : MonoBehaviour
             }
         }
 
-        public async Task ListGameRoom()
+    public async Task ListGameRoom()
+    {
+        var msg = new OutMessage
+        {
+            messageType = "listGameRoom",
+            content = new MessageContent { action = "listGameRoom" }
+        };
+
+        string jsonString = JsonUtility.ToJson(msg);
+        await websocket.SendText(jsonString);
+    }
+
+    private async Task JoinRoomAsync()
+    {
+        try
+        {
+            Debug.Log("J key pressed - joining room...");
+            // 这里替换为你的实际加入房间逻辑
+            await JoinRoom();
+            Debug.Log("Room joined successfully!");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Join room failed: {e.Message}");
+        }
+        finally
+        {
+            isJoining = false;
+        }
+    }
+
+    public async Task JoinRoom()
+    {
+        var msg = new OutMessage
+        {
+            messageType = "joinRoom",
+            content = new MessageContent { action = "joinRoom" },
+            roomId = "room1"
+        };
+
+        string jsonString = JsonUtility.ToJson(msg);
+        await websocket.SendText(jsonString);
+    }
+
+    async void SendTest()
+    {
+        var msg = new OutMessage
+        {
+            messageType = "handleMessage",
+            content = new MessageContent { action = "test" }
+        };
+
+        string jsonString = JsonUtility.ToJson(msg);
+        await websocket.SendText(jsonString);
+    }
+
+    async void ConstantSyncData()
+    {
+        if (isSendingPosition) return;
+        // 检查WebSocket连接状态
+        if (websocket?.State != WebSocketState.Open)
+        {
+            debugLogPerSecond("WebSocket未连接，无法发送位置同步数据！", "warning");
+            return;
+        }
+
+        // 检查是否已加入房间
+        if (string.IsNullOrEmpty(roomId) || roomId == "lobby")
+        {
+            debugLogPerSecond("未加入有效房间，跳过位置同步", "debug");
+            return;
+        }
+
+        try
+        {
+            // 1. 从本地GameData中获取当前玩家的数据
+            if (GameData?.players == null)
+            {
+                debugLogPerSecond("GameData或players列表为空，无法同步位置", "warning");
+                return;
+            }
+
+            // 获取当前玩家的UID
+            int currentPlayerUid = this.userInfo.uid;
+
+            // 在本地数据中查找当前玩家
+            PlayerData myPlayer = GameData.players.FirstOrDefault(p => p.uid == currentPlayerUid);
+
+            if (myPlayer == null)
+            {
+                debugLogPerSecond($"在GameData中未找到UID为{currentPlayerUid}的玩家, GameData: {GameData.players}", "warning");
+                return;
+            }
+
+            // 2. 准备位置数据
+            PositionData positionData = new PositionData
+            {
+                x = myPlayer.position[0],
+                y = myPlayer.position[1]
+            };
+
+            PositionData destinationData = new PositionData
+            {
+                x = myPlayer.destination[0],
+                y = myPlayer.destination[1]
+            };
+
+            // 3. 发送位置更新到服务器
+            await UpdateServerPosition(positionData, destinationData);
+
+            debugLogPerSecond($"位置同步发送: 位置({positionData.x:F2}, {positionData.y:F2}) -> 目的地({destinationData.x:F2}, {destinationData.y:F2})", "debug");
+        }
+        catch (System.Exception e)
+        {
+            debugLogPerSecond($"位置同步失败: {e.Message}", "error");
+        }
+        finally
+        {
+            isSendingPosition = false;
+        }
+    }
+
+    public async Task UpdateServerPosition(PositionData position, PositionData destination)
+    {
+        isSendingPosition = true;
+        if (websocket?.State == WebSocketState.Open)
         {
             var msg = new OutMessage
             {
-                messageType = "listGameRoom",
-                content = new MessageContent { action = "listGameRoom" }
+                messageType = "UpdateServerPosition",
+                content = new MessageContent
+                {
+                    action = "UpdateServerPosition",
+                    // 将坐标转换为类似 "[x, y]" 的字符串格式
+                    position = $"[{position.x}, {position.y}]",
+                    destination = $"[{destination.x}, {destination.y}]"
+                }
             };
 
             string jsonString = JsonUtility.ToJson(msg);
             await websocket.SendText(jsonString);
+            debugLogPerSecond($"发送位置更新: {jsonString}", "debug");
         }
-
-        private async Task JoinRoomAsync()
+        else
         {
-            try
-            {
-                Debug.Log("J key pressed - joining room...");
-                // 这里替换为你的实际加入房间逻辑
-                await JoinRoom();
-                Debug.Log("Room joined successfully!");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Join room failed: {e.Message}");
-            }
-            finally
-            {
-                isJoining = false;
-            }
+            debugLogPerSecond("WebSocket未连接！", "warning");
         }
+    }
 
-        public async Task JoinRoom()
+    public void UpdatePlayerPositionInGameData(int playerUid, float[] newPosition, float[] newDestination = null)
+    {
+        // 确保 GameData 和玩家列表不为空
+        if (GameData?.players == null)
         {
-            var msg = new OutMessage
-            {
-                messageType = "joinRoom",
-                content = new MessageContent { action = "joinRoom" },
-                roomId = "room1"
-            };
-
-            string jsonString = JsonUtility.ToJson(msg);
-            await websocket.SendText(jsonString);
+            debugLogPerSecond("尝试更新玩家位置时，GameData 或 players 为 null。", "warning");
+            return;
         }
 
-        async void SendTest()
+        // 查找指定UID的玩家
+        var playerToUpdate = GameData.players.FirstOrDefault(p => p.uid == playerUid);
+        if (playerToUpdate != null)
         {
-            var msg = new OutMessage
+            // 更新玩家位置
+            playerToUpdate.position = newPosition; // 例如 [1.5f, 2.3f]
+
+            // 如果提供了新目的地，则一并更新
+            if (newDestination != null)
             {
-                messageType = "handleMessage",
-                content = new MessageContent { action = "test" }
-            };
+                playerToUpdate.destination = newDestination;
+            }
 
-            string jsonString = JsonUtility.ToJson(msg);
-            await websocket.SendText(jsonString);
+            debugLogPerSecond($"已更新本地玩家数据: UID {playerUid} 位置 -> [{newPosition[0]}, {newPosition[1]}]", "debug");
         }
-
-        async void ConstantSyncData()
+        else
         {
-            // 检查WebSocket连接状态
-            if (websocket?.State != WebSocketState.Open)
-            {
-                Debug.LogWarning("WebSocket未连接，无法发送位置同步数据！");
-                return;
-            }
-
-            // 检查是否已加入房间
-            if (string.IsNullOrEmpty(roomId) || roomId == "lobby")
-            {
-                Debug.Log("未加入有效房间，跳过位置同步");
-                return;
-            }
-
-            try
-            {
-                // 1. 从本地_gameData中获取当前玩家的数据
-                if (_gameData?.players == null)
-                {
-                    Debug.LogWarning("_gameData或players列表为空，无法同步位置");
-                    return;
-                }
-
-                // 获取当前玩家的UID
-                int currentPlayerUid = this.userInfo.uid;
-
-                // 在本地数据中查找当前玩家
-                PlayerData myPlayer = _gameData.players.FirstOrDefault(p => p.uid == currentPlayerUid);
-
-                if (myPlayer == null)
-                {
-                    Debug.LogWarning($"在_gameData中未找到UID为{currentPlayerUid}的玩家");
-                    return;
-                }
-
-                // 2. 准备位置数据
-                PositionData positionData = new PositionData
-                {
-                    x = myPlayer.position[0],
-                    y = myPlayer.position[1]
-                };
-
-                PositionData destinationData = new PositionData
-                {
-                    x = myPlayer.destination[0],
-                    y = myPlayer.destination[1]
-                };
-
-                // 3. 发送位置更新到服务器
-                await UpdateServerPosition(positionData, destinationData);
-
-                Debug.Log($"位置同步发送: 位置({positionData.x:F2}, {positionData.y:F2}) -> 目的地({destinationData.x:F2}, {destinationData.y:F2})");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"位置同步失败: {e.Message}");
-            }
+            debugLogPerSecond($"在 GameData 中未找到 UID 为 {playerUid} 的玩家。", "warning");
         }
-        private void Awake()
+    }
+
+    async void SendWebSocketMessage()
+    {
+        if (websocket.State == WebSocketState.Open)
         {
-            // 确保单例在场景切换时不被销毁，且实例唯一
-            if (_instance != null && _instance != this)
-            {
-                Destroy(this.gameObject);
-            }
-            else
-            {
-                _instance = this;
-                DontDestroyOnLoad(this.gameObject); // 可选：如需跨场景保持连接
-            }
+            // Sending bytes
+            await websocket.Send(new byte[] { 10, 20, 30 });
 
-            // 在这里初始化WebSocket连接
-            // InitializeWebSocket();
+            // Sending plain text
+            await websocket.SendText("plain text message");
         }
-        public async Task UpdateServerPosition(PositionData position, PositionData destination)
+    }
+
+    private async void OnApplicationQuit()
+    {
+        await websocket.Close();
+    }
+
+    private float lastLogTime = 0f;
+    private void debugLogPerSecond(string message, string type)
+    {
+        if (Time.time - lastLogTime >= 1f)
         {
-            if (websocket?.State == WebSocketState.Open)
+            switch (type)
             {
-                var msg = new OutMessage
-                {
-                    messageType = "UpdateServerPosition",
-                    content = new MessageContent
-                    {
-                        action = "UpdateServerPosition",
-                        // 将坐标转换为类似 "[x, y]" 的字符串格式
-                        position = $"[{position.x}, {position.y}]",
-                        destination = $"[{destination.x}, {destination.y}]"
-                    }
-                };
-
-                string jsonString = JsonUtility.ToJson(msg);
-                await websocket.SendText(jsonString);
-                Debug.Log($"发送位置更新: {jsonString}");
+                case "debug":
+                    Debug.Log(message);
+                    break;
+                case "warning":
+                    Debug.LogWarning(message);
+                    break;
+                case "error":
+                Debug.LogError(message);
+                break;
+                default:
+                    Debug.Log(message);
+                    break;
             }
-            else
-            {
-                Debug.LogWarning("WebSocket未连接！");
-            }
+            lastLogTime = Time.time;
         }
-
-        public void UpdatePlayerPositionInGameData(int playerUid, float[] newPosition, float[] newDestination = null)
-        {
-            // 确保 _gameData 和玩家列表不为空
-            if (_gameData?.players == null)
-            {
-                Debug.LogWarning("尝试更新玩家位置时，_gameData 或 players 为 null。");
-                return;
-            }
-
-            // 查找指定UID的玩家
-            var playerToUpdate = _gameData.players.FirstOrDefault(p => p.uid == playerUid);
-            if (playerToUpdate != null)
-            {
-                // 更新玩家位置
-                playerToUpdate.position = newPosition; // 例如 [1.5f, 2.3f]
-
-                // 如果提供了新目的地，则一并更新
-                if (newDestination != null)
-                {
-                    playerToUpdate.destination = newDestination;
-                }
-
-                Debug.Log($"已更新本地玩家数据: UID {playerUid} 位置 -> [{newPosition[0]}, {newPosition[1]}]");
-            }
-            else
-            {
-                Debug.LogWarning($"在 _gameData 中未找到 UID 为 {playerUid} 的玩家。");
-            }
-        }
-
-        async void SendWebSocketMessage()
-        {
-            if (websocket.State == WebSocketState.Open)
-            {
-                // Sending bytes
-                await websocket.Send(new byte[] { 10, 20, 30 });
-
-                // Sending plain text
-                await websocket.SendText("plain text message");
-            }
-        }
-
-        private async void OnApplicationQuit()
-        {
-            await websocket.Close();
-        }
-
-
-
+    }
 }

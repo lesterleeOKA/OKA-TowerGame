@@ -10,6 +10,7 @@ public class TowerGameController : GameBaseController
     public Transform parent;
     public List<CharacterController> characterControllers = new List<CharacterController>();
     private int playerID = 0;
+    private float lastLogTime = 0f;
 
     // Map WS player key (string) -> CharacterController (ensures one GameObject per ws player)
     private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
@@ -36,7 +37,6 @@ public class TowerGameController : GameBaseController
         if (players == null) return;
 
         this.playerNumber = players.Count;
-        Debug.Log("Current Players in join room " + this.playerNumber);
 
         // Track which uids are currently present this frame
         var currentKeys = new HashSet<string>();
@@ -46,6 +46,16 @@ public class TowerGameController : GameBaseController
         if (WS_Client.Instance != null && WS_Client.Instance.pulic_UserInfo != null)
         {
             localUid = WS_Client.Instance.pulic_UserInfo.uid;
+        }
+
+        if (Time.time - lastLogTime >= 2f)
+        {
+            Debug.Log($"Current Players count: {players.Count}");
+            foreach (var p in players)
+            {
+                Debug.Log($"  Player - ID: {p.player_id}, UID: {p.uid}, Pos: [{p.position[0]}, {p.position[1]}], Dest: [{p.destination[0]}, {p.destination[1]}]");
+            }
+            lastLogTime = Time.time;
         }
 
         // Create missing players and update positions for existing ones
