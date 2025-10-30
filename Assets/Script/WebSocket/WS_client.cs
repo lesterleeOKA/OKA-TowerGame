@@ -382,7 +382,11 @@ public class WS_Client : MonoBehaviour
             {
                 Debug.LogError($"Failed to join room: {ex.Message}");
             }
+        }catch (Exception ex)
+        {
+            Debug.LogError($"Failed to join room: {ex.Message}");
         }
+    }
 
     public async Task ListGameRoom()
     {
