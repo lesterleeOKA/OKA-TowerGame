@@ -89,6 +89,7 @@ public class WS_Client : MonoBehaviour
         // public PositionData position;
         public string position;
         public string destination;
+        public string answer_id;
     }
 
     [Serializable]
@@ -231,11 +232,11 @@ public class WS_Client : MonoBehaviour
         string currentDomain = GetCurrentDomainName.ToLower();
 
         // localhost to localhost websocket
-        // if (currentDomain == "localhost")
-        // {
-        //     Debug.Log($"Localhost environment detected: {currentDomain}");
-        //     return localhostUrl;
-        // }
+        if (currentDomain == "localhost")
+        {
+            Debug.Log($"Localhost environment detected: {currentDomain}");
+            return localhostUrl;
+        }
 
         // 环境检测逻辑：如果域名以"dev"开头，则使用开发服务器
         if (currentDomain.StartsWith("dev"))
@@ -393,10 +394,10 @@ public class WS_Client : MonoBehaviour
         if (websocket == null) return;
         websocket.DispatchMessageQueue();
 #endif
-        // if (Input.GetKeyDown(KeyCode.J))
-        // {
-        //     JoinGameRoom();
-        // }
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            updateAnswerOnPlayer("A1");
+        }
     }
 
     public void JoinGameRoom()
@@ -503,7 +504,7 @@ public class WS_Client : MonoBehaviour
         // 检查是否已加入房间
         if (string.IsNullOrEmpty(roomId) || roomId == "lobby")
         {
-            debugLogPerSecond("未加入有效房间，跳过位置同步", "debug");
+            // debugLogPerSecond("未加入有效房间，跳过位置同步", "debug");
             return;
         }
 
@@ -610,6 +611,31 @@ public class WS_Client : MonoBehaviour
         else
         {
             debugLogPerSecond($"在 GameData 中未找到 UID 为 {playerUid} 的玩家。", "warning");
+        }
+    }
+
+    public async Task updateAnswerOnPlayer(string answer_id)
+    {
+        isSendingPosition = true;
+        if (websocket?.State == WebSocketState.Open)
+        {
+            var msg = new OutMessage
+            {
+                messageType = "UpdateAnswerOnPlayer",
+                content = new MessageContent
+                {
+                    action = "UpdateAnswerOnPlayer",
+                    answer_id = answer_id
+                }
+            };
+
+            string jsonString = JsonUtility.ToJson(msg);
+            await websocket.SendText(jsonString);
+            Debug.Log($"玩家取得答案: {jsonString}");
+        }
+        else
+        {
+            Debug.LogWarning("WebSocket未连接！");
         }
     }
 
