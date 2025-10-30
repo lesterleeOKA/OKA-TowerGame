@@ -190,12 +190,14 @@ public class WS_Client : MonoBehaviour
         return localhostUrl;
 #else
         string currentDomain = GetCurrentDomainName.ToLower();
-        // 优先处理 localhost
-        if (currentDomain == "localhost")
-        {
-            Debug.Log($"Localhost environment detected: {currentDomain}");
-            return localhostUrl;
-        }
+
+        // localhost to localhost websocket
+        // if (currentDomain == "localhost")
+        // {
+        //     Debug.Log($"Localhost environment detected: {currentDomain}");
+        //     return localhostUrl;
+        // }
+
         // 环境检测逻辑：如果域名以"dev"开头，则使用开发服务器
         if (currentDomain.StartsWith("dev"))
         {
