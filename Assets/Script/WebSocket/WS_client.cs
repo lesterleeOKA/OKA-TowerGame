@@ -347,19 +347,27 @@ public class WS_Client : MonoBehaviour
                         
                         if (GameData.players != null)
                         {
-                            foreach (var player in GameData.players)
-                            {
-                                // 获取当前遍历玩家的位置坐标 [x, y]
-                                int index = GameData.players.IndexOf(player);
-                                float posX = player.position[0];
-                                float posY = player.position[1];
-                                float destX = player.destination[0];
-                                float destY = player.destination[1];
-                                if (player.uid == this.userInfo.uid)
-                                {
-                                    this.player_id = player_id.ToString();
-                                }
-                            }
+                            // foreach (var player in GameData.players)
+                            // {
+                            //     // 获取当前遍历玩家的位置坐标 [x, y]
+                            //     int index = GameData.players.IndexOf(player);
+                            //     float posX = player.position[0];
+                            //     float posY = player.position[1];
+                            //     float destX = player.destination[0];
+                            //     float destY = player.destination[1];
+                            //     if (player.uid == this.userInfo.uid)
+                            //     {
+                            //         this.player_id = player_id.ToString();
+                            //     }
+                            // }
+
+                            // foreach (var question in GameData.questions) {
+                            //     Debug.Log($"Question - ID: {question.id}, Content: {question.content}");
+                            // }
+
+                            // foreach (var answer in GameData.answers) {
+                            //     Debug.Log($"Answer - ID: {answer.id}, Content: {answer.content}, Question ID: {answer.question_id}, Position: [{answer.position[0]}, {answer.position[1]}], OnPlayer: {answer.isOnPlayer}, Submitted: {answer.isSubmitted}");
+                            // }
                         }
 
                         gameDataReceived = true;
@@ -487,14 +495,31 @@ public class WS_Client : MonoBehaviour
 
     async void SendTest()
     {
-        var msg = new OutMessage
+        // Check if websocket is valid and open before sending
+        if (websocket == null || websocket.State != WebSocketState.Open)
         {
-            messageType = "handleMessage",
-            content = new MessageContent { action = "test" }
-        };
+            return;
+        }
 
-        string jsonString = JsonUtility.ToJson(msg);
-        await websocket.SendText(jsonString);
+        try
+        {
+            var msg = new OutMessage
+            {
+                messageType = "handleMessage",
+                content = new MessageContent { action = "test" }
+            };
+
+            string jsonString = JsonUtility.ToJson(msg);
+            await websocket.SendText(jsonString);
+        }
+        catch (System.ObjectDisposedException)
+        {
+            Debug.LogWarning("WebSocket disposed, cannot send test message");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error sending test message: {e.Message}");
+        }
     }
 
     async void ConstantSyncData()
@@ -553,6 +578,11 @@ public class WS_Client : MonoBehaviour
 
             debugLogPerSecond($"位置同步发送: 位置({positionData.x:F2}, {positionData.y:F2}) -> 目的地({destinationData.x:F2}, {destinationData.y:F2})", "debug");
         }
+        catch (System.ObjectDisposedException)
+        {
+            debugLogPerSecond("WebSocket已关闭，停止位置同步", "warning");
+            isSendingPosition = false;
+        }
         catch (System.Exception e)
         {
             debugLogPerSecond($"位置同步失败: {e.Message}", "error");
@@ -568,21 +598,32 @@ public class WS_Client : MonoBehaviour
         isSendingPosition = true;
         if (websocket?.State == WebSocketState.Open)
         {
-            var msg = new OutMessage
+            try
             {
-                messageType = "UpdateServerPosition",
-                content = new MessageContent
+                var msg = new OutMessage
                 {
-                    action = "UpdateServerPosition",
-                    // 将坐标转换为类似 "[x, y]" 的字符串格式
-                    position = $"[{position.x}, {position.y}]",
-                    destination = $"[{destination.x}, {destination.y}]"
-                }
-            };
+                    messageType = "UpdateServerPosition",
+                    content = new MessageContent
+                    {
+                        action = "UpdateServerPosition",
+                        // 将坐标转换为类似 "[x, y]" 的字符串格式
+                        position = $"[{position.x}, {position.y}]",
+                        destination = $"[{destination.x}, {destination.y}]"
+                    }
+                };
 
-            string jsonString = JsonUtility.ToJson(msg);
-            await websocket.SendText(jsonString);
-            debugLogPerSecond($"发送位置更新: {jsonString}", "debug");
+                string jsonString = JsonUtility.ToJson(msg);
+                await websocket.SendText(jsonString);
+                // debugLogPerSecond($"发送位置更新: {jsonString}", "debug");
+            }
+            catch (System.ObjectDisposedException)
+            {
+                Debug.LogWarning("WebSocket已关闭，无法发送位置更新");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"发送位置更新失败: {e.Message}");
+            }
         }
         else
         {

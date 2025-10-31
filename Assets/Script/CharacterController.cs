@@ -5,6 +5,7 @@ public class CharacterController : UserData
 {
     public float followSpeed = 6f;
     public float acc = 2f;
+    public GameObject answerObject;
     private float currectSpeed = 2f;
     private Animator animator;
     private Vector3 lastPosition;

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 using UnityEngine.SocialPlatforms;
 
 public class TowerGameController : GameBaseController
@@ -10,6 +11,7 @@ public class TowerGameController : GameBaseController
     public GameObject questionPrefab;
     public GameObject answerPrefab;
     public Transform parent;
+    public GameObject YouWin;
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
     public List<WS_Client.AnswerData> answers = new List<WS_Client.AnswerData>();
@@ -60,10 +62,9 @@ public class TowerGameController : GameBaseController
 
         if (Time.time - lastLogTime >= 2f)
         {
-            Debug.Log($"Current Players count: {players.Count}");
             foreach (var p in players)
             {
-                Debug.Log($"  Player - ID: {p.player_id}, UID: {p.uid}, Pos: [{p.position[0]}, {p.position[1]}], Dest: [{p.destination[0]}, {p.destination[1]}]");
+                // Debug.Log($"  Player - ID: {p.player_id}, UID: {p.uid}, Pos: [{p.position[0]}, {p.position[1]}], Dest: [{p.destination[0]}, {p.destination[1]}]");
             }
             lastLogTime = Time.time;
         }
@@ -127,8 +128,10 @@ public class TowerGameController : GameBaseController
                 
                 if (!questionObjectsById.ContainsKey(question.id))
                 {
-                    // Create question at a position based on index (spread them out)
-                    Vector3 questionPos = new Vector3(-5f + (i * 3f), 3f, 0f);
+                    // Create question at a position based on index (spread them out horizontally)
+                    float spacing = 1000f; // Space between questions
+                    float startX = -(WS_Client.GameData.questions.Count - 1) * spacing / 2f; // Center the questions
+                    Vector3 questionPos = new Vector3(startX + (i * spacing), 800f, 0f); // Increased y from 300 to 800
                     CreateQuestionObject(question, questionPos);
                 }
             }
@@ -173,7 +176,16 @@ public class TowerGameController : GameBaseController
                     var answerObj = answerObjectsById[answer.id];
                     if (answerObj != null && answer.position != null && answer.position.Length >= 2)
                     {
-                        answerObj.transform.position = new Vector3(answer.position[0], answer.position[1], 0f);
+                        Vector2 uiPosition = new Vector2(answer.position[0] * 1500f, answer.position[1] * 1500f);
+                        RectTransform rectTransform = answerObj.GetComponent<RectTransform>();
+                        if (rectTransform != null)
+                        {
+                            rectTransform.anchoredPosition = uiPosition;
+                        }
+                        else
+                        {
+                            answerObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, 0f);
+                        }
                     }
                 }
             }
@@ -254,15 +266,44 @@ public class TowerGameController : GameBaseController
         }
 
         var questionObj = GameObject.Instantiate(questionPrefab, this.parent);
-        questionObj.transform.position = position;
         questionObj.name = "Question_" + question.id;
+        
+        // Use RectTransform for UI positioning
+        RectTransform rectTransform = questionObj.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            rectTransform.anchoredPosition = new Vector2(position.x, position.y);
+        }
+        else
+        {
+            // Fallback to world position if not a UI element
+            questionObj.transform.position = position;
+        }
+        
+        // Set text on TextMeshProUGUI component in child
+        TextMeshProUGUI textComponent = questionObj.GetComponentInChildren<TextMeshProUGUI>();
+        if (textComponent != null)
+        {
+            textComponent.text = question.content;
+        }
+        
+        // Add QuestionTrigger component for collision detection
+        QuestionTrigger questionTrigger = questionObj.GetComponent<QuestionTrigger>();
+        if (questionTrigger == null)
+        {
+            questionTrigger = questionObj.AddComponent<QuestionTrigger>();
+        }
+        questionTrigger.questionId = question.id;
+        questionTrigger.questionData = question;
+        Debug.Log($"Added QuestionTrigger component to {question.id}");
+        
+        questionObj.gameObject.SetActive(true);
         
         // Store the question data (you can add a component to store this if needed)
         // For now, just track the GameObject
         questionObjectsById[question.id] = questionObj;
         questions.Add(question);
         
-        Debug.Log($"Created question GameObject for id={question.id} at {position}. Content: {question.content}");
     }
 
     private void RemoveQuestionObject(string id)
@@ -290,14 +331,51 @@ public class TowerGameController : GameBaseController
         }
 
         var answerObj = GameObject.Instantiate(answerPrefab, this.parent);
-        answerObj.transform.position = position;
         answerObj.name = "Answer_" + answer.id;
+        
+        // Scale position for UI (multiply by 500 for canvas coordinates)
+        Vector2 uiPosition = new Vector2(position.x * 1500f, position.y * 1500f);
+        
+        // Use RectTransform for UI positioning
+        RectTransform rectTransform = answerObj.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            rectTransform.anchoredPosition = uiPosition;
+        }
+        else
+        {
+            // Fallback to world position if not a UI element
+            answerObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, position.z);
+        }
+        
+        // Set text on TextMeshProUGUI component in child
+        TextMeshProUGUI textComponent = answerObj.GetComponentInChildren<TextMeshProUGUI>();
+        if (textComponent != null)
+        {
+            textComponent.text = answer.content;
+        }
+        
+        AnswerTrigger answerTrigger = answerObj.GetComponent<AnswerTrigger>();
+        if (answerTrigger == null)
+        {
+            answerTrigger = answerObj.AddComponent<AnswerTrigger>();
+        }
+        answerTrigger.answerId = answer.id;
+        answerTrigger.answerData = answer;
+        
+        // BoxCollider2D boxCollider = answerObj.GetComponent<BoxCollider2D>();
+        // if (boxCollider == null)
+        // {
+        //     boxCollider = answerObj.AddComponent<BoxCollider2D>();
+        // }
+        // boxCollider.isTrigger = true;
+        // boxCollider.size = new Vector2(300f, 120f); 
+        
+        answerObj.gameObject.SetActive(true);
         
         // Store the answer data
         answerObjectsById[answer.id] = answerObj;
         answers.Add(answer);
-        
-        Debug.Log($"Created answer GameObject for id={answer.id} at {position}. Content: {answer.content}, Question: {answer.question_id}");
     }
 
     private void RemoveAnswerObject(string id)
@@ -313,6 +391,63 @@ public class TowerGameController : GameBaseController
             
             // Remove from list
             answers.RemoveAll(a => a.id == id);
+        }
+    }
+
+    public void OnAnswerObjectTrigger(GameObject answerObject, string answerId, WS_Client.AnswerData answerData)
+    {
+        Debug.Log($"Answer {answerId} triggered - Content: {answerData?.content}");
+        
+        // Find and update the answer in GameData
+        if (WS_Client.GameData?.answers != null)
+        {
+            WS_Client.AnswerData answer = WS_Client.GameData.answers.Find(a => a.id == answerId);
+            if (answer != null)
+            {
+                answer.isOnPlayer = 1;
+                Debug.Log($"Set answer {answerId} isOnPlayer to 1");
+                
+                // You can add more logic here:
+                // - Send update to server
+                // - Update UI
+                // - Trigger effects
+            }
+            else
+            {
+                Debug.LogWarning($"Answer {answerId} not found in GameData.answers");
+            }
+        }
+    }
+
+    public void OnQuestionObjectTrigger(GameObject questionObject, string questionId, WS_Client.QuestionData questionData, string answerId, WS_Client.AnswerData answerData)
+    {
+        Debug.Log($"Player submitted answer {answerId} to question {questionId}");
+        
+        // Check if it's correct (already checked in QuestionTrigger, but double-check here)
+        if (answerData.question_id == questionId)
+        {
+            Debug.Log("CORRECT ANSWER!");
+            YouWin.SetActive(true);
+            // You can add logic here:
+            // - Show "You Win!" UI
+            // - Update score
+            // - Send to server
+            // - Play victory animation
+            // - Mark answer as submitted
+            if (WS_Client.GameData?.answers != null)
+            {
+                WS_Client.AnswerData answer = WS_Client.GameData.answers.Find(a => a.id == answerId);
+                if (answer != null)
+                {
+                    answer.isSubmitted = 1;
+                    answer.isOnPlayer = 0; // Remove from player
+                    Debug.Log($"Marked answer {answerId} as submitted");
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Answer {answerId} doesn't match question {questionId}!");
         }
     }
 }
