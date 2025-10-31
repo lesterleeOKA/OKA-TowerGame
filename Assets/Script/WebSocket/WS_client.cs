@@ -37,6 +37,7 @@ public class WS_Client : MonoBehaviour
 
     // const string WEBSHOCKET_URL = "wss://ws.openknowledge.hk:8084";//dev : "wss://ws.openknowledge.hk:8084";  // prod : "wss://ws.openknowledge.hk";
     public string localhostUrl = "ws://localhost:8000/";
+    public string localhostUrl_copy = "ws://localhost:8000/";
     public string developmentUrl = "wss://ws.openknowledge.hk:8084";
     public string productionUrl = "wss://ws.openknowledge.hk";
     const string WS_API_BASE_URL = "https://ws.openknowledge.hk/api/towerGame";//"https://ws.openknowledge.hk:8084/api/metaverse";//"https://ws.openknowledge.hk/api/metaverse";
@@ -399,6 +400,10 @@ public class WS_Client : MonoBehaviour
         {
             updateAnswerOnPlayer("A1");
         }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            resetGame();
+        }
     }
 
     public void JoinGameRoom()
@@ -633,6 +638,30 @@ public class WS_Client : MonoBehaviour
             string jsonString = JsonUtility.ToJson(msg);
             await websocket.SendText(jsonString);
             Debug.Log($"玩家取得答案: {jsonString}");
+        }
+        else
+        {
+            Debug.LogWarning("WebSocket未连接！");
+        }
+    }
+
+    public async Task resetGame()
+    {
+        isSendingPosition = true;
+        if (websocket?.State == WebSocketState.Open)
+        {
+            var msg = new OutMessage
+            {
+                messageType = "resetGame",
+                content = new MessageContent
+                {
+                    action = "resetGame"
+                }
+            };
+
+            string jsonString = JsonUtility.ToJson(msg);
+            await websocket.SendText(jsonString);
+            Debug.Log($"重置游戏: {jsonString}");
         }
         else
         {
