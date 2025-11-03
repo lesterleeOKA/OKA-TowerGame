@@ -1,8 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SocialPlatforms;
+using System.Text;
 
 public class TowerGameController : GameBaseController
 {
@@ -10,13 +12,14 @@ public class TowerGameController : GameBaseController
     public GameObject playerPrefab;
     public GameObject questionPrefab;
     public GameObject answerPrefab;
-    public Transform parent;
+    public Transform globalParent;
     public GameObject YouWin;
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
     public List<WS_Client.AnswerData> answers = new List<WS_Client.AnswerData>();
+    public Camera trackingCamera;
     private int playerID = 0;
-    private float lastLogTime = 0f;
+    public Text debugText;
 
     // Map WS player key (string) -> CharacterController (ensures one GameObject per ws player)
     private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
@@ -26,7 +29,6 @@ public class TowerGameController : GameBaseController
     
     // Map answer ID -> GameObject
     private Dictionary<string, GameObject> answerObjectsById = new Dictionary<string, GameObject>();
-
 
     protected override void Awake()
     {
@@ -38,14 +40,18 @@ public class TowerGameController : GameBaseController
     protected override void Start()
     {
         base.Start();
+        if (!string.IsNullOrEmpty(LoaderConfig.Instance.apiManager.jwt) && WS_Client.Instance != null)
+        {
+            WS_Client.Instance.jwt = LoaderConfig.Instance.apiManager.jwt;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
         // If no data, nothing to do
-        if (WS_Client.GameData == null) return;
-        var players = WS_Client.GameData.players;
+        if (WS_Client.Instance.GameData == null) return;
+        var players = WS_Client.Instance.GameData.players;
         if (players == null) return;
 
         this.playerNumber = players.Count;
@@ -60,18 +66,11 @@ public class TowerGameController : GameBaseController
             localUid = WS_Client.Instance.pulic_UserInfo.uid;
         }
 
-        if (Time.time - lastLogTime >= 2f)
-        {
-            foreach (var p in players)
-            {
-                // Debug.Log($"  Player - ID: {p.player_id}, UID: {p.uid}, Pos: [{p.position[0]}, {p.position[1]}], Dest: [{p.destination[0]}, {p.destination[1]}]");
-            }
-            lastLogTime = Time.time;
-        }
-
+        StringBuilder debugSB = new StringBuilder();
         // Create missing players and update positions for existing ones
         foreach (var player in players)
         {
+            string debugInfo = "";
             string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
             currentKeys.Add(key);
 
@@ -95,11 +94,15 @@ public class TowerGameController : GameBaseController
                     // don't override local player's client-controlled transform
                     if (player.uid != localUid && !cc.IsLocalPlayer)
                     {
-                         cc.transform.position = otherPlayerPos;
+                         cc.transform.localPosition = otherPlayerPos;
                     }
                 }
             }
+            debugInfo += $"Player {player.uid} at ({player.position[0]}, {player.position[1]})\n";
+            debugSB.Append(debugInfo);
         }
+
+        this.debugText.text = debugSB.ToString();
 
         // Remove controllers for players who left
         var toRemove = new List<string>();
@@ -117,20 +120,20 @@ public class TowerGameController : GameBaseController
         }
 
         // Process questions
-        if (WS_Client.GameData.questions != null)
+        if (WS_Client.Instance.GameData.questions != null)
         {
             var currentQuestionIds = new HashSet<string>();
             
-            for (int i = 0; i < WS_Client.GameData.questions.Count; i++)
+            for (int i = 0; i < WS_Client.Instance.GameData.questions.Count; i++)
             {
-                var question = WS_Client.GameData.questions[i];
+                var question = WS_Client.Instance.GameData.questions[i];
                 currentQuestionIds.Add(question.id);
                 
                 if (!questionObjectsById.ContainsKey(question.id))
                 {
                     // Create question at a position based on index (spread them out horizontally)
                     float spacing = 1000f; // Space between questions
-                    float startX = -(WS_Client.GameData.questions.Count - 1) * spacing / 2f; // Center the questions
+                    float startX = -(WS_Client.Instance.GameData.questions.Count - 1) * spacing / 2f; // Center the questions
                     Vector3 questionPos = new Vector3(startX + (i * spacing), 800f, 0f); // Increased y from 300 to 800
                     CreateQuestionObject(question, questionPos);
                 }
@@ -152,11 +155,11 @@ public class TowerGameController : GameBaseController
         }
 
         // Process answers
-        if (WS_Client.GameData.answers != null)
+        if (WS_Client.Instance.GameData.answers != null)
         {
             var currentAnswerIds = new HashSet<string>();
             
-            foreach (var answer in WS_Client.GameData.answers)
+            foreach (var answer in WS_Client.Instance.GameData.answers)
             {
                 currentAnswerIds.Add(answer.id);
                 
@@ -209,8 +212,7 @@ public class TowerGameController : GameBaseController
     private void CreatePlayerFromData(WS_Client.PlayerData player, Vector3 startPos, string key, bool isLocal = false)
     {
         // Instantiate without parent, set world position, then attach to parent preserving world pos
-
-        var characterController = GameObject.Instantiate(this.playerPrefab, this.parent).GetComponent<CharacterController>();
+        var characterController = GameObject.Instantiate(this.playerPrefab, this.globalParent).GetComponent<CharacterController>();
         if (characterController == null)
         {
             Debug.LogError("playerPrefab missing CharacterController component");
@@ -219,6 +221,7 @@ public class TowerGameController : GameBaseController
         }
 
         int uid = player.uid;
+        characterController.detectCamera = this.trackingCamera;
         characterController.gameObject.name = "Player_" + uid;
         characterController.UserName = "Player_" + uid;
         characterController.UserId = uid;
@@ -226,7 +229,7 @@ public class TowerGameController : GameBaseController
         this.characterControllers.Add(characterController);
 
         // set world-space start position
-        characterController.transform.position = startPos;
+        characterController.transform.localPosition = startPos;
 
         // mark local player for client-side control
         characterController.IsLocalPlayer = isLocal;
@@ -265,7 +268,7 @@ public class TowerGameController : GameBaseController
             return;
         }
 
-        var questionObj = GameObject.Instantiate(questionPrefab, this.parent);
+        var questionObj = GameObject.Instantiate(questionPrefab, this.globalParent);
         questionObj.name = "Question_" + question.id;
         
         // Use RectTransform for UI positioning
@@ -330,7 +333,7 @@ public class TowerGameController : GameBaseController
             return;
         }
 
-        var answerObj = GameObject.Instantiate(answerPrefab, this.parent);
+        var answerObj = GameObject.Instantiate(answerPrefab, this.globalParent);
         answerObj.name = "Answer_" + answer.id;
         
         // Scale position for UI (multiply by 500 for canvas coordinates)
@@ -399,9 +402,9 @@ public class TowerGameController : GameBaseController
         Debug.Log($"Answer {answerId} triggered - Content: {answerData?.content}");
         
         // Find and update the answer in GameData
-        if (WS_Client.GameData?.answers != null)
+        if (WS_Client.Instance.GameData?.answers != null)
         {
-            WS_Client.AnswerData answer = WS_Client.GameData.answers.Find(a => a.id == answerId);
+            WS_Client.AnswerData answer = WS_Client.Instance.GameData.answers.Find(a => a.id == answerId);
             if (answer != null)
             {
                 answer.isOnPlayer = 1;
@@ -434,9 +437,9 @@ public class TowerGameController : GameBaseController
             // - Send to server
             // - Play victory animation
             // - Mark answer as submitted
-            if (WS_Client.GameData?.answers != null)
+            if (WS_Client.Instance.GameData?.answers != null)
             {
-                WS_Client.AnswerData answer = WS_Client.GameData.answers.Find(a => a.id == answerId);
+                WS_Client.AnswerData answer = WS_Client.Instance.GameData.answers.Find(a => a.id == answerId);
                 if (answer != null)
                 {
                     answer.isSubmitted = 1;

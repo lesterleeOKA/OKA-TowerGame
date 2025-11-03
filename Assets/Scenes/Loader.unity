@@ -419,7 +419,7 @@ MonoBehaviour:
     gamePreview: {fileID: 0}
     gameExitType: 0
     instructions: {fileID: 0}
-    gameTime: 180
+    gameTime: 999999
     inventory:
       status: 
       data: []
@@ -483,7 +483,7 @@ MonoBehaviour:
         score: 0
         percent: 0
   unitKey: 
-  testURL: 
+  testURL: https://dev.openknowledge.hk/RainbowOne/webapp/2.8/gameFile/OKAGames/TowerGame/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcxNy0xMWMxMTEzYjViZmQ3ZDBhNmJjYjI3ZTM3NTQ3ODZkMmY0MzM4NDhlZTIwNzM1MTc2YTYxNzhjOTgwNzk3YmEzIiwiZXhwaXJlcyI6MTc2Mjc0MjA3OSwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTEtMDMgMDI6MzQ6MzkgR01UIiwidWlkIjoiNTQzNzE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTcyLjE2LjAuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.365OXMUB1QvXVdfs1qhxA6S4izEd_JOgsPQVSqVaUiY
   skipAudioPanel: 0
 --- !u!4 &734659897
 Transform:

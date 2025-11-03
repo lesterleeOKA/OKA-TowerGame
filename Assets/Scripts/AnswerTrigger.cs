@@ -10,7 +10,7 @@ public class AnswerTrigger : MonoBehaviour
     void Update()
     {
         // Look up current answer data from GameData (not the cached copy)
-        WS_Client.AnswerData currentAnswerData = WS_Client.GameData?.answers?.Find(a => a.id == answerId);
+        WS_Client.AnswerData currentAnswerData = WS_Client.Instance.GameData?.answers?.Find(a => a.id == answerId);
         
         if (currentAnswerData != null)
         {

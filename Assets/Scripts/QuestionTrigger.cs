@@ -10,7 +10,7 @@ public class QuestionTrigger : MonoBehaviour
     void Update()
     {
         // Look up current question data from GameData (not the cached copy)
-        WS_Client.QuestionData currentQuestionData = WS_Client.GameData?.questions?.Find(q => q.id == questionId);
+        WS_Client.QuestionData currentQuestionData = WS_Client.Instance.GameData?.questions?.Find(q => q.id == questionId);
         
         if (currentQuestionData != null)
         {

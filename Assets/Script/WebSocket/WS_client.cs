@@ -48,7 +48,7 @@ public class WS_Client : MonoBehaviour
     private bool isJoining = false;
     private float lastJoinTime = 0f;
     private const float JOIN_COOLDOWN = 1f; // 1秒冷却时间
-    private UserInfo userInfo;
+    public UserInfo userInfo;
     private bool isSendingPosition = false;
 
     // 新增公共属性，作为访问私有字段的受控接口
@@ -58,10 +58,10 @@ public class WS_Client : MonoBehaviour
         set { userInfo = value; }
     }
     // 私有静态字段，用于实际存储数据
-    private static RoomGameData _gameData;
+    public RoomGameData _gameData;
 
     // 公共静态属性，供其他类访问
-    public static RoomGameData GameData
+    public RoomGameData GameData
     {
         get { return _gameData; }
         set { _gameData = value; }
@@ -86,8 +86,6 @@ public class WS_Client : MonoBehaviour
     private class MessageContent
     {
         public string action;
-        // public PositionData destination;
-        // public PositionData position;
         public string position;
         public string destination;
         public string answer_id;
@@ -154,6 +152,7 @@ public class WS_Client : MonoBehaviour
         public string player_id;
         public int uid;
         public float[] position;
+        public int dir;
         public float[] destination;
         public int isAnswerVisible;
         public string answerContent;
@@ -564,7 +563,7 @@ public class WS_Client : MonoBehaviour
             PositionData positionData = new PositionData
             {
                 x = myPlayer.position[0],
-                y = myPlayer.position[1]
+                y = myPlayer.position[1],
             };
 
             PositionData destinationData = new PositionData
@@ -606,7 +605,7 @@ public class WS_Client : MonoBehaviour
                     content = new MessageContent
                     {
                         action = "UpdateServerPosition",
-                        // 将坐标转换为类似 "[x, y]" 的字符串格式
+                        // 将坐标转换为类似 "[x, y, dir]" 的字符串格式
                         position = $"[{position.x}, {position.y}]",
                         destination = $"[{destination.x}, {destination.y}]"
                     }
