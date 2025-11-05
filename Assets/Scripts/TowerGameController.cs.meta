@@ -3,7 +3,21 @@ guid: a075bccd26fd5684383cf9f8ec767a50
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - gameTimer: {instanceID: 0}
+  - GameUILayer: {instanceID: 0}
+  - TopUILayer: {instanceID: 0}
+  - TopRightUILayer: {instanceID: 0}
+  - getScorePopup: {instanceID: 0}
+  - wrongPopup: {instanceID: 0}
+  - playerPrefab: {instanceID: 0}
+  - questionPrefab: {instanceID: 0}
+  - answerPrefab: {instanceID: 0}
+  - obstaclePrefab: {instanceID: 0}
+  - globalParent: {instanceID: 0}
+  - YouWin: {instanceID: 0}
+  - trackingCamera: {instanceID: 0}
+  - debugText: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

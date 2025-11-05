@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -4937,6 +4936,7 @@ MonoBehaviour:
   playerPrefab: {fileID: 2199729133312583796, guid: 164f6f1d2e54b3a4584036b5892ec706, type: 3}
   questionPrefab: {fileID: 1839977305}
   answerPrefab: {fileID: 1516595855}
+  obstaclePrefab: {fileID: 3668556306711772515, guid: e6d133f5d65f37141ad7cb7804c5c253, type: 3}
   globalParent: {fileID: 1388269475}
   YouWin: {fileID: 617150445}
   characterControllers: []
@@ -4956,7 +4956,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 875967ed28cd34d5eb53ef12d061b3b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  jwt: 
+  jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxMS00MzY0ZTlmYmE3NzA2M2Q4MjdjZWY0NjMzMGYwMjlhZmU2ZTIyNWZhOTk1MGMzMTRiMzRkNjAyNjY5NGUzYWIwIiwiZXhwaXJlcyI6MTc2MzYxMDE0NywidGltZSI6IjIwMjUtMTAtMjEgMTE6NDI6MjciLCJ1aWQiOiI1MTEiLCJ1c2VyX3JvbGUiOiIzIiwic2Nob29sX2lkIjoiMjcyIiwiaXAiOiIxNjkuMjU0LjEyOS40IiwidmVyc2lvbiI6IjIuOC4zNiIsImRldmljZSI6Im1hYyJ9.LT8f4UNEB3nnW6BY2FMPQXZVMUzQ-6NyCJT08gqSx1s
   localhostUrl: wss://ws.openknowledge.hk:8084
   localhostUrl_copy: ws://localhost:8000/
   developmentUrl: wss://ws.openknowledge.hk:8084
@@ -4977,6 +4977,7 @@ MonoBehaviour:
     players: []
     questions: []
     answers: []
+    obstacles: []
     status: 
 --- !u!1 &2059364962
 GameObject:

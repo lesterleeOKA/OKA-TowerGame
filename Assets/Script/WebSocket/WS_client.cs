@@ -143,6 +143,7 @@ public class WS_Client : MonoBehaviour
         public List<PlayerData> players;
         public List<QuestionData> questions;
         public List<AnswerData> answers;
+        public List<ObstacleData> obstacles;
         public string status;
     }
 
@@ -174,6 +175,12 @@ public class WS_Client : MonoBehaviour
         public float[] position;
         public int isOnPlayer;
         public int isSubmitted;
+    }
+    [System.Serializable]
+    public class ObstacleData
+    {
+        public string id;
+        public float[] position;
     }
 
     // Dummy data for testing (based on expected server format)

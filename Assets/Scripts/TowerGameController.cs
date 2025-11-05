@@ -12,8 +12,10 @@ public class TowerGameController : GameBaseController
     public GameObject playerPrefab;
     public GameObject questionPrefab;
     public GameObject answerPrefab;
+    public GameObject obstaclePrefab;
     public Transform globalParent;
     public GameObject YouWin;
+
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
     public List<WS_Client.AnswerData> answers = new List<WS_Client.AnswerData>();
@@ -23,12 +25,13 @@ public class TowerGameController : GameBaseController
 
     // Map WS player key (string) -> CharacterController (ensures one GameObject per ws player)
     private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
-    
+
     // Map question ID -> GameObject
     private Dictionary<string, GameObject> questionObjectsById = new Dictionary<string, GameObject>();
-    
+
     // Map answer ID -> GameObject
     private Dictionary<string, GameObject> answerObjectsById = new Dictionary<string, GameObject>();
+    private Dictionary<string, GameObject> obstacleObjectsById = new Dictionary<string, GameObject>();
 
     protected override void Awake()
     {
@@ -44,6 +47,7 @@ public class TowerGameController : GameBaseController
         {
             WS_Client.Instance.jwt = LoaderConfig.Instance.apiManager.jwt;
         }
+
     }
 
     // Update is called once per frame
@@ -94,7 +98,7 @@ public class TowerGameController : GameBaseController
                     // don't override local player's client-controlled transform
                     if (player.uid != localUid && !cc.IsLocalPlayer)
                     {
-                         cc.transform.localPosition = otherPlayerPos;
+                        cc.transform.localPosition = otherPlayerPos;
                     }
                 }
             }
@@ -123,12 +127,12 @@ public class TowerGameController : GameBaseController
         if (WS_Client.Instance.GameData.questions != null)
         {
             var currentQuestionIds = new HashSet<string>();
-            
+
             for (int i = 0; i < WS_Client.Instance.GameData.questions.Count; i++)
             {
                 var question = WS_Client.Instance.GameData.questions[i];
                 currentQuestionIds.Add(question.id);
-                
+
                 if (!questionObjectsById.ContainsKey(question.id))
                 {
                     // Create question at a position based on index (spread them out horizontally)
@@ -138,7 +142,7 @@ public class TowerGameController : GameBaseController
                     CreateQuestionObject(question, questionPos);
                 }
             }
-            
+
             // Remove questions that no longer exist
             var questionsToRemove = new List<string>();
             foreach (var kv in questionObjectsById)
@@ -158,11 +162,11 @@ public class TowerGameController : GameBaseController
         if (WS_Client.Instance.GameData.answers != null)
         {
             var currentAnswerIds = new HashSet<string>();
-            
+
             foreach (var answer in WS_Client.Instance.GameData.answers)
             {
                 currentAnswerIds.Add(answer.id);
-                
+
                 if (!answerObjectsById.ContainsKey(answer.id))
                 {
                     // Create answer at position from data
@@ -192,7 +196,7 @@ public class TowerGameController : GameBaseController
                     }
                 }
             }
-            
+
             // Remove answers that no longer exist
             var answersToRemove = new List<string>();
             foreach (var kv in answerObjectsById)
@@ -205,6 +209,76 @@ public class TowerGameController : GameBaseController
             foreach (var id in answersToRemove)
             {
                 RemoveAnswerObject(id);
+            }
+
+        }
+
+        // Process obstacles 
+        if (WS_Client.Instance.GameData.obstacles != null)
+        {
+            var currentObstacleIds = new HashSet<string>();
+
+            // Debug.Log($"=== 障碍物处理开始 ===");
+            // Debug.Log($"当前帧障碍物数量: {WS_Client.Instance.GameData.obstacles.Count}");
+
+            foreach (var obstacle in WS_Client.Instance.GameData.obstacles)
+            {
+                if (string.IsNullOrEmpty(obstacle.id))
+                {
+                    // Debug.LogWarning("跳过ID为空的障碍物");
+                    continue;
+                }
+
+                currentObstacleIds.Add(obstacle.id);
+                //  Debug.Log($"处理障碍物: ID={obstacle.id}, Position=[{obstacle.position?[0]}, {obstacle.position?[1]}]");
+                if (!obstacleObjectsById.ContainsKey(obstacle.id))
+                {
+                    // Create obstacle at position from data - 与answer相同的创建逻辑
+                    // Debug.Log($"创建新障碍物: {obstacle.id}");
+                    Vector3 obstaclePos = Vector3.zero;
+                    if (obstacle.position != null && obstacle.position.Length >= 2)
+                    {
+                        obstaclePos = new Vector3(obstacle.position[0], obstacle.position[1], 0f);
+                    }
+                    CreateObstacleObject(obstacle, obstaclePos);
+                }
+                else
+                {
+                    // Update obstacle position if it exists - 与answer相同的更新逻辑
+                    // Debug.Log($"更新已存在障碍物: {obstacle.id}");
+                    var obstacleObj = obstacleObjectsById[obstacle.id];
+                    if (obstacleObj != null && obstacle.position != null && obstacle.position.Length >= 2)
+                    {
+                        Vector2 uiPosition = new Vector2(obstacle.position[0] * 1500f, obstacle.position[1] * 1500f);
+
+                        RectTransform rectTransform = obstacleObj.GetComponent<RectTransform>();
+                        if (rectTransform != null)
+                        {
+                            rectTransform.anchoredPosition = uiPosition;
+                        }
+                        else
+                        {
+                            obstacleObj.transform.localPosition = new Vector3(uiPosition.x, uiPosition.y, 0f);
+                        }
+
+                        // Debug.Log($"Updated obstacle {obstacle.id} position to ({obstacle.position[0]}, {obstacle.position[1]})");
+                    }
+                }
+            }
+
+            // Remove obstacles that no longer exist - 与answer相同的清理逻辑
+            var obstaclesToRemove = new List<string>();
+            foreach (var kv in obstacleObjectsById)
+            {
+                if (!currentObstacleIds.Contains(kv.Key))
+                {
+                    obstaclesToRemove.Add(kv.Key);
+                }
+            }
+
+            foreach (var id in obstaclesToRemove)
+            {
+                RemoveObstacleObject(id);
             }
         }
     }
@@ -225,7 +299,7 @@ public class TowerGameController : GameBaseController
         characterController.gameObject.name = "Player_" + uid;
         characterController.UserName = "Player_" + uid;
         characterController.UserId = uid;
-        if(isLocal) characterController.gameObject.tag = "MainPlayer";
+        if (isLocal) characterController.gameObject.tag = "MainPlayer";
         this.characterControllers.Add(characterController);
 
         // set world-space start position
@@ -270,7 +344,7 @@ public class TowerGameController : GameBaseController
 
         var questionObj = GameObject.Instantiate(questionPrefab, this.globalParent);
         questionObj.name = "Question_" + question.id;
-        
+
         // Use RectTransform for UI positioning
         RectTransform rectTransform = questionObj.GetComponent<RectTransform>();
         if (rectTransform != null)
@@ -282,14 +356,14 @@ public class TowerGameController : GameBaseController
             // Fallback to world position if not a UI element
             questionObj.transform.position = position;
         }
-        
+
         // Set text on TextMeshProUGUI component in child
         TextMeshProUGUI textComponent = questionObj.GetComponentInChildren<TextMeshProUGUI>();
         if (textComponent != null)
         {
             textComponent.text = question.content;
         }
-        
+
         // Add QuestionTrigger component for collision detection
         QuestionTrigger questionTrigger = questionObj.GetComponent<QuestionTrigger>();
         if (questionTrigger == null)
@@ -299,14 +373,14 @@ public class TowerGameController : GameBaseController
         questionTrigger.questionId = question.id;
         questionTrigger.questionData = question;
         Debug.Log($"Added QuestionTrigger component to {question.id}");
-        
+
         questionObj.gameObject.SetActive(true);
-        
+
         // Store the question data (you can add a component to store this if needed)
         // For now, just track the GameObject
         questionObjectsById[question.id] = questionObj;
         questions.Add(question);
-        
+
     }
 
     private void RemoveQuestionObject(string id)
@@ -319,7 +393,7 @@ public class TowerGameController : GameBaseController
                 Debug.Log($"[TowerGameController] Removed question GameObject for id={id}");
             }
             questionObjectsById.Remove(id);
-            
+
             // Remove from list
             questions.RemoveAll(q => q.id == id);
         }
@@ -335,10 +409,10 @@ public class TowerGameController : GameBaseController
 
         var answerObj = GameObject.Instantiate(answerPrefab, this.globalParent);
         answerObj.name = "Answer_" + answer.id;
-        
+
         // Scale position for UI (multiply by 500 for canvas coordinates)
         Vector2 uiPosition = new Vector2(position.x * 1500f, position.y * 1500f);
-        
+
         // Use RectTransform for UI positioning
         RectTransform rectTransform = answerObj.GetComponent<RectTransform>();
         if (rectTransform != null)
@@ -350,14 +424,14 @@ public class TowerGameController : GameBaseController
             // Fallback to world position if not a UI element
             answerObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, position.z);
         }
-        
+
         // Set text on TextMeshProUGUI component in child
         TextMeshProUGUI textComponent = answerObj.GetComponentInChildren<TextMeshProUGUI>();
         if (textComponent != null)
         {
             textComponent.text = answer.content;
         }
-        
+
         AnswerTrigger answerTrigger = answerObj.GetComponent<AnswerTrigger>();
         if (answerTrigger == null)
         {
@@ -365,7 +439,7 @@ public class TowerGameController : GameBaseController
         }
         answerTrigger.answerId = answer.id;
         answerTrigger.answerData = answer;
-        
+
         // BoxCollider2D boxCollider = answerObj.GetComponent<BoxCollider2D>();
         // if (boxCollider == null)
         // {
@@ -373,9 +447,9 @@ public class TowerGameController : GameBaseController
         // }
         // boxCollider.isTrigger = true;
         // boxCollider.size = new Vector2(300f, 120f); 
-        
+
         answerObj.gameObject.SetActive(true);
-        
+
         // Store the answer data
         answerObjectsById[answer.id] = answerObj;
         answers.Add(answer);
@@ -391,7 +465,7 @@ public class TowerGameController : GameBaseController
                 Debug.Log($"[TowerGameController] Removed answer GameObject for id={id}");
             }
             answerObjectsById.Remove(id);
-            
+
             // Remove from list
             answers.RemoveAll(a => a.id == id);
         }
@@ -400,7 +474,7 @@ public class TowerGameController : GameBaseController
     public void OnAnswerObjectTrigger(GameObject answerObject, string answerId, WS_Client.AnswerData answerData)
     {
         Debug.Log($"Answer {answerId} triggered - Content: {answerData?.content}");
-        
+
         // Find and update the answer in GameData
         if (WS_Client.Instance.GameData?.answers != null)
         {
@@ -409,7 +483,7 @@ public class TowerGameController : GameBaseController
             {
                 answer.isOnPlayer = 1;
                 Debug.Log($"Set answer {answerId} isOnPlayer to 1");
-                
+
                 // You can add more logic here:
                 // - Send update to server
                 // - Update UI
@@ -425,7 +499,7 @@ public class TowerGameController : GameBaseController
     public void OnQuestionObjectTrigger(GameObject questionObject, string questionId, WS_Client.QuestionData questionData, string answerId, WS_Client.AnswerData answerData)
     {
         Debug.Log($"Player submitted answer {answerId} to question {questionId}");
-        
+
         // Check if it's correct (already checked in QuestionTrigger, but double-check here)
         if (answerData.question_id == questionId)
         {
@@ -451,6 +525,49 @@ public class TowerGameController : GameBaseController
         else
         {
             Debug.LogWarning($"Answer {answerId} doesn't match question {questionId}!");
+        }
+    }
+    private void CreateObstacleObject(WS_Client.ObstacleData obstacle, Vector3 position)
+    {
+        if (obstaclePrefab == null)
+        {
+            Debug.LogError("obstaclePrefab is not assigned!");
+            return;
+        }
+
+        var obstacleObj = GameObject.Instantiate(obstaclePrefab, this.globalParent);
+        obstacleObj.name = "Obstacle_" + obstacle.id;
+
+        // 使用与answer完全相同的坐标转换逻辑
+        Vector2 uiPosition = new Vector2(position.x * 1500f, position.y * 1500f);
+
+        // 使用RectTransform进行UI定位 - 与answer相同
+        RectTransform rectTransform = obstacleObj.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            rectTransform.anchoredPosition = uiPosition;
+        }
+        else
+        {
+            // 回退到世界坐标（如果不是UI元素）
+            obstacleObj.transform.localPosition = new Vector3(uiPosition.x, uiPosition.y, 0f);
+        }
+
+        obstacleObj.gameObject.SetActive(true);
+
+        // 存储障碍物数据 - 与answer相同的模式
+        obstacleObjectsById[obstacle.id] = obstacleObj;
+    }
+    private void RemoveObstacleObject(string id)
+    {
+        if (obstacleObjectsById.TryGetValue(id, out var obstacleObj))
+        {
+            if (obstacleObj != null)
+            {
+                GameObject.Destroy(obstacleObj);
+                Debug.Log($"[TowerGameController] Removed obstacle GameObject for id={id}");
+            }
+            obstacleObjectsById.Remove(id);
         }
     }
 }

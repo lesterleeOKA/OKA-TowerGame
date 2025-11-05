@@ -20,24 +20,24 @@ public class Obstacle : MonoBehaviour
     {
         if(this.audioEffect == null) this.audioEffect = GetComponent<AudioSource>();
         // Initialize movement properties
-        this.RandomizeMovement();
+        // this.RandomizeMovement();
     }
 
     void Update()
     {
-        float offset = Mathf.Sin(Time.time * moveSpeed) * moveDistance;
-        Vector2 newPos = startPos + moveDir * offset;
-        if (TryGetComponent<RectTransform>(out var rect))
-            rect.anchoredPosition = newPos;
-        else
-            transform.localPosition = (Vector3)newPos;
+        // float offset = Mathf.Sin(Time.time * moveSpeed) * moveDistance;
+        // Vector2 newPos = startPos + moveDir * offset;
+        // if (TryGetComponent<RectTransform>(out var rect))
+        //     rect.anchoredPosition = newPos;
+        // else
+        //     transform.localPosition = (Vector3)newPos;
     }
 
     // Reset the position and reinitialize movement properties
     public void ResetPosition(Vector2 newStartPos)
     {
         this.startPos = newStartPos;
-        this.RandomizeMovement();
+        // this.RandomizeMovement();
     }
 
     // Randomize movement properties
