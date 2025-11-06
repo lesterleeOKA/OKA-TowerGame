@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class QuestionTrigger : MonoBehaviour
 {
-    public string questionId;
+    public int questionId;
     public WS_Client.QuestionData questionData;
 
     void Update()
@@ -70,12 +70,12 @@ public class QuestionTrigger : MonoBehaviour
                 if (answerTrigger != null && answerTrigger.answerData != null)
                 {
                     // Check if answer matches this question
-                    if (answerTrigger.answerData.question_id == questionId)
+                    if (answerTrigger.answerData.isCorrect == 1)
                     {
-                        Debug.Log($"Correct! Answer {answerTrigger.answerId} matches Question {questionId}");
+                        Debug.Log($"Correct! Answer {answerTrigger.answerId} is correct");
                         
                         // Call TowerGameController with proper parameters
-                        TowerGameController.Instance.OnQuestionObjectTrigger(this.gameObject, questionId, questionData, answerTrigger.answerId, answerTrigger.answerData);
+                        TowerGameController.Instance.OnQuestionObjectTrigger(this.gameObject, questionData, answerTrigger.answerId, answerTrigger.answerData);
                         
                         // Hide answer bubble and clear the answer
                         characterController.showAnswerBubble(0);
@@ -83,7 +83,7 @@ public class QuestionTrigger : MonoBehaviour
                     }
                     else
                     {
-                        Debug.Log($"Wrong! Answer {answerTrigger.answerId} (for Q:{answerTrigger.answerData.question_id}) doesn't match Question {questionId}");
+                        Debug.Log($"Wrong! Answer {answerTrigger.answerId} is incorrect");
                     }
                 }
             }

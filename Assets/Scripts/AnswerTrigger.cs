@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AnswerTrigger : MonoBehaviour
 {
-    public string answerId;
+    public int answerId;
     public WS_Client.AnswerData answerData;
 
     void Update()

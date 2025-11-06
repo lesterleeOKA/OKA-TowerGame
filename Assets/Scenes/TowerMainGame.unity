@@ -3650,14 +3650,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d2be05c0413f96409507bd375a3781b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  answerId: 
+  answerId: 0
   answerData:
-    id: 
+    id: 0
     content: 
-    question_id: 
     position: []
     isOnPlayer: 0
-    isSubmitted: 0
+    isCorrect: 0
 --- !u!1 &1620153708
 GameObject:
   m_ObjectHideFlags: 0
@@ -4978,7 +4977,10 @@ MonoBehaviour:
     questions: []
     answers: []
     obstacles: []
+    teamScore: 
     status: 
+    gameTimer: 0
+    round: 0
 --- !u!1 &2059364962
 GameObject:
   m_ObjectHideFlags: 0

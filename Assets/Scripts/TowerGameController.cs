@@ -27,11 +27,11 @@ public class TowerGameController : GameBaseController
     private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
 
     // Map question ID -> GameObject
-    private Dictionary<string, GameObject> questionObjectsById = new Dictionary<string, GameObject>();
+    private Dictionary<int, GameObject> questionObjectsById = new Dictionary<int, GameObject>();
 
     // Map answer ID -> GameObject
-    private Dictionary<string, GameObject> answerObjectsById = new Dictionary<string, GameObject>();
-    private Dictionary<string, GameObject> obstacleObjectsById = new Dictionary<string, GameObject>();
+    private Dictionary<int, GameObject> answerObjectsById = new Dictionary<int, GameObject>();
+    private Dictionary<int, GameObject> obstacleObjectsById = new Dictionary<int, GameObject>();
 
     protected override void Awake()
     {
@@ -122,29 +122,71 @@ public class TowerGameController : GameBaseController
         {
             RemovePlayer(key);
         }
+    }
+
+    void FixedUpdate()
+    {
+        // If no data, nothing to do
+        if (WS_Client.Instance.GameData == null) return;
+        var players = WS_Client.Instance.GameData.players;
+        if (players == null) return;
 
         // Process questions
-        if (WS_Client.Instance.GameData.questions != null)
+        if (WS_Client.Instance.GameData != null && WS_Client.Instance.GameData.questions != null)
         {
-            var currentQuestionIds = new HashSet<string>();
+            var currentQuestionIds = new HashSet<int>();
+            int currentRound = WS_Client.Instance.GameData.round; // 获取当前轮次(1-10)
 
-            for (int i = 0; i < WS_Client.Instance.GameData.questions.Count; i++)
+            // 只处理当前轮次对应的问题
+            int questionIndex = currentRound - 1; // round 1 对应 questions[0]
+
+            if (questionIndex >= 0 && questionIndex < WS_Client.Instance.GameData.questions.Count)
             {
-                var question = WS_Client.Instance.GameData.questions[i];
+                var question = WS_Client.Instance.GameData.questions[questionIndex];
                 currentQuestionIds.Add(question.id);
 
                 if (!questionObjectsById.ContainsKey(question.id))
                 {
-                    // Create question at a position based on index (spread them out horizontally)
-                    float spacing = 1000f; // Space between questions
-                    float startX = -(WS_Client.Instance.GameData.questions.Count - 1) * spacing / 2f; // Center the questions
-                    Vector3 questionPos = new Vector3(startX + (i * spacing), 800f, 0f); // Increased y from 300 to 800
+                    // 使用问题数据中的位置信息
+                    Vector3 questionPos = Vector3.zero;
+                    if (question.position != null && question.position.Length >= 2)
+                    {
+                        questionPos = new Vector3(question.position[0], question.position[1], 0f);
+                    }
+                    else
+                    {
+                        // 备用位置：根据轮次水平分布
+                        float spacing = 1000f;
+                        float startX = -(WS_Client.Instance.GameData.questions.Count - 1) * spacing / 2f;
+                        questionPos = new Vector3(startX + (questionIndex * spacing), 800f, 0f);
+                    }
+
                     CreateQuestionObject(question, questionPos);
+                    Debug.Log($"Created question for round {currentRound} at position ({questionPos.x}, {questionPos.y})");
+                }
+                else
+                {
+                    // 更新已存在问题对象的位置
+                    var questionObj = questionObjectsById[question.id];
+                    if (questionObj != null && question.position != null && question.position.Length >= 2)
+                    {
+                        Vector2 uiPosition = new Vector2(question.position[0] * 1500f, question.position[1] * 1500f);
+
+                        RectTransform rectTransform = questionObj.GetComponent<RectTransform>();
+                        if (rectTransform != null)
+                        {
+                            rectTransform.anchoredPosition = uiPosition;
+                        }
+                        else
+                        {
+                            questionObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, 0f);
+                        }
+                    }
                 }
             }
 
-            // Remove questions that no longer exist
-            var questionsToRemove = new List<string>();
+            // 移除不属于当前轮次的问题
+            var questionsToRemove = new List<int>();
             foreach (var kv in questionObjectsById)
             {
                 if (!currentQuestionIds.Contains(kv.Key))
@@ -152,16 +194,18 @@ public class TowerGameController : GameBaseController
                     questionsToRemove.Add(kv.Key);
                 }
             }
+
             foreach (var id in questionsToRemove)
             {
                 RemoveQuestionObject(id);
+                Debug.Log($"Removed question from previous round: {id}");
             }
         }
 
         // Process answers
         if (WS_Client.Instance.GameData.answers != null)
         {
-            var currentAnswerIds = new HashSet<string>();
+            var currentAnswerIds = new HashSet<int>();
 
             foreach (var answer in WS_Client.Instance.GameData.answers)
             {
@@ -198,7 +242,7 @@ public class TowerGameController : GameBaseController
             }
 
             // Remove answers that no longer exist
-            var answersToRemove = new List<string>();
+            var answersToRemove = new List<int>();
             foreach (var kv in answerObjectsById)
             {
                 if (!currentAnswerIds.Contains(kv.Key))
@@ -216,14 +260,14 @@ public class TowerGameController : GameBaseController
         // Process obstacles 
         if (WS_Client.Instance.GameData.obstacles != null)
         {
-            var currentObstacleIds = new HashSet<string>();
+            var currentObstacleIds = new HashSet<int>();
 
             // Debug.Log($"=== 障碍物处理开始 ===");
             // Debug.Log($"当前帧障碍物数量: {WS_Client.Instance.GameData.obstacles.Count}");
 
             foreach (var obstacle in WS_Client.Instance.GameData.obstacles)
             {
-                if (string.IsNullOrEmpty(obstacle.id))
+                if (obstacle.id == 0)
                 {
                     // Debug.LogWarning("跳过ID为空的障碍物");
                     continue;
@@ -267,7 +311,7 @@ public class TowerGameController : GameBaseController
             }
 
             // Remove obstacles that no longer exist - 与answer相同的清理逻辑
-            var obstaclesToRemove = new List<string>();
+            var obstaclesToRemove = new List<int>();
             foreach (var kv in obstacleObjectsById)
             {
                 if (!currentObstacleIds.Contains(kv.Key))
@@ -383,7 +427,7 @@ public class TowerGameController : GameBaseController
 
     }
 
-    private void RemoveQuestionObject(string id)
+    private void RemoveQuestionObject(int id)
     {
         if (questionObjectsById.TryGetValue(id, out var questionObj))
         {
@@ -455,7 +499,7 @@ public class TowerGameController : GameBaseController
         answers.Add(answer);
     }
 
-    private void RemoveAnswerObject(string id)
+    private void RemoveAnswerObject(int id)
     {
         if (answerObjectsById.TryGetValue(id, out var answerObj))
         {
@@ -471,7 +515,7 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    public void OnAnswerObjectTrigger(GameObject answerObject, string answerId, WS_Client.AnswerData answerData)
+    public void OnAnswerObjectTrigger(GameObject answerObject, int answerId, WS_Client.AnswerData answerData)
     {
         Debug.Log($"Answer {answerId} triggered - Content: {answerData?.content}");
 
@@ -496,12 +540,12 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    public void OnQuestionObjectTrigger(GameObject questionObject, string questionId, WS_Client.QuestionData questionData, string answerId, WS_Client.AnswerData answerData)
+    public void OnQuestionObjectTrigger(GameObject questionObject, WS_Client.QuestionData questionData, int answerId, WS_Client.AnswerData answerData)
     {
-        Debug.Log($"Player submitted answer {answerId} to question {questionId}");
+        Debug.Log($"Player submitted answer {answerId}");
 
         // Check if it's correct (already checked in QuestionTrigger, but double-check here)
-        if (answerData.question_id == questionId)
+        if (answerData.isCorrect == 1)
         {
             Debug.Log("CORRECT ANSWER!");
             YouWin.SetActive(true);
@@ -516,7 +560,7 @@ public class TowerGameController : GameBaseController
                 WS_Client.AnswerData answer = WS_Client.Instance.GameData.answers.Find(a => a.id == answerId);
                 if (answer != null)
                 {
-                    answer.isSubmitted = 1;
+                    // answer.isSubmitted = 1;
                     answer.isOnPlayer = 0; // Remove from player
                     Debug.Log($"Marked answer {answerId} as submitted");
                 }
@@ -524,7 +568,7 @@ public class TowerGameController : GameBaseController
         }
         else
         {
-            Debug.LogWarning($"Answer {answerId} doesn't match question {questionId}!");
+            Debug.LogWarning($"Answer {answerId} is incorrect!");
         }
     }
     private void CreateObstacleObject(WS_Client.ObstacleData obstacle, Vector3 position)
@@ -558,7 +602,7 @@ public class TowerGameController : GameBaseController
         // 存储障碍物数据 - 与answer相同的模式
         obstacleObjectsById[obstacle.id] = obstacleObj;
     }
-    private void RemoveObstacleObject(string id)
+    private void RemoveObstacleObject(int id)
     {
         if (obstacleObjectsById.TryGetValue(id, out var obstacleObj))
         {

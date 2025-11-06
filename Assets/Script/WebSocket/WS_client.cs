@@ -88,7 +88,7 @@ public class WS_Client : MonoBehaviour
         public string action;
         public string position;
         public string destination;
-        public string answer_id;
+        public int answer_id;
     }
 
     [Serializable]
@@ -128,6 +128,8 @@ public class WS_Client : MonoBehaviour
         public UserInfo userInfo;
         public string message;
         public List<RoomInfo> roomList;
+
+        public string order; // "startGame" , "endGame" , "resetGame" , "nextRound" , "getAnswer" , "submitAnswer"
     }
 
     [System.Serializable]
@@ -143,8 +145,12 @@ public class WS_Client : MonoBehaviour
         public List<PlayerData> players;
         public List<QuestionData> questions;
         public List<AnswerData> answers;
-        public List<ObstacleData> obstacles;
-        public string status;
+        public List<ObstacleData> obstacles; 
+        public List<int> teamScore; // [0,0] 
+        public string status; // waiting / playing
+        public int gameTimer; // 0 - 180
+        public int round; // 1 - 10
+
     }
 
     [System.Serializable]
@@ -162,42 +168,45 @@ public class WS_Client : MonoBehaviour
     [System.Serializable]
     public class QuestionData
     {
-        public string id;
+        public int id;
         public string content;
+        public float[] position;
+        public int score;
     }
 
     [System.Serializable]
     public class AnswerData
     {
-        public string id;
+        public int id;
         public string content;
-        public string question_id;
+        // public string question_id;
         public float[] position;
         public int isOnPlayer;
-        public int isSubmitted;
+        // public int isSubmitted;
+        public int isCorrect;
     }
     [System.Serializable]
     public class ObstacleData
     {
-        public string id;
+        public int id;
         public float[] position;
     }
 
     // Dummy data for testing (based on expected server format)
     private List<QuestionData> dummyQuestions = new List<QuestionData>
     {
-        new QuestionData { id = "Q1", content = "Question 1:XXXXX" },
-        new QuestionData { id = "Q2", content = "Question 2:XXXXX" },
-        new QuestionData { id = "Q3", content = "Question 3:XXXXX" },
-        new QuestionData { id = "Q4", content = "Question 4:XXXXX" }
+        new QuestionData { id = 1, content = "Question 1:XXXXX" },
+        new QuestionData { id = 2, content = "Question 2:XXXXX" },
+        new QuestionData { id = 3, content = "Question 3:XXXXX" },
+        new QuestionData { id = 4, content = "Question 4:XXXXX" }
     };
 
     private List<AnswerData> dummyAnswers = new List<AnswerData>
     {
-        new AnswerData { id = "A1", content = "Answer 1", question_id = "Q1", position = new float[] { -1f, 0f }, isOnPlayer = 0, isSubmitted = 0 },
-        new AnswerData { id = "A2", content = "Answer 2", question_id = "Q2", position = new float[] { 0f, 1f }, isOnPlayer = 0, isSubmitted = 0 },
-        new AnswerData { id = "A3", content = "Answer 3", question_id = "Q3", position = new float[] { 1f, 0f }, isOnPlayer = 0, isSubmitted = 0 },
-        new AnswerData { id = "A4", content = "Answer 4", question_id = "Q4", position = new float[] { 0f, -1f }, isOnPlayer = 0, isSubmitted = 0 }
+        new AnswerData { id = 1, content = "Answer 1", position = new float[] { -1f, 0f }, isOnPlayer = 0},
+        new AnswerData { id = 2, content = "Answer 2", position = new float[] { 0f, 1f }, isOnPlayer = 0},
+        new AnswerData { id = 3, content = "Answer 3", position = new float[] { 1f, 0f }, isOnPlayer = 0},
+        new AnswerData { id = 4, content = "Answer 4", position = new float[] { 0f, -1f }, isOnPlayer = 0}
     };
 
     // 如果需要处理members，可以定义此类
@@ -348,8 +357,13 @@ public class WS_Client : MonoBehaviour
                         Debug.Log("roomFull : " + message.content.message + " / " + "current roomId : " + roomId);
                         break;
                     case "SyncRoomData":
-                        // Debug.Log("OnMessage! " + jsonString);
+                        Debug.Log("OnMessage! " + jsonString);
                         GameData = message.content.roomGameData;
+                        if (!string.IsNullOrEmpty(message.content.order))
+                        {
+                            Debug.LogWarning("Order received: " + message.content.order);
+                            Debug.LogWarning("OnMessage! " + jsonString);
+                        }
                         
                         if (GameData.players != null)
                         {
@@ -412,11 +426,19 @@ public class WS_Client : MonoBehaviour
 #endif
         if (Input.GetKeyDown(KeyCode.G))
         {
-            updateAnswerOnPlayer("A1");
+            updateAnswerOnPlayer(1);
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
             resetGame();
+        }
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            nextRound();
+        }
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            startGame();
         }
     }
 
@@ -667,7 +689,7 @@ public class WS_Client : MonoBehaviour
         }
     }
 
-    public async Task updateAnswerOnPlayer(string answer_id)
+    public async Task updateAnswerOnPlayer(int answer_id)
     {
         isSendingPosition = true;
         if (websocket?.State == WebSocketState.Open)
@@ -691,7 +713,53 @@ public class WS_Client : MonoBehaviour
             Debug.LogWarning("WebSocket未连接！");
         }
     }
+    public async Task startGame()
+    {
+        isSendingPosition = true;
+        if (websocket?.State == WebSocketState.Open)
+        {
+            var msg = new OutMessage
+            {
+                messageType = "startGame",
+                content = new MessageContent
+                {
+                    action = "startGame"
+                }
+            };
 
+            string jsonString = JsonUtility.ToJson(msg);
+            await websocket.SendText(jsonString);
+            Debug.Log($"next Round: {jsonString}");
+        }
+        else
+        {
+            Debug.LogWarning("WebSocket未连接！");
+        }
+    }
+
+    public async Task nextRound()
+    {
+        isSendingPosition = true;
+        if (websocket?.State == WebSocketState.Open)
+        {
+            var msg = new OutMessage
+            {
+                messageType = "nextRound",
+                content = new MessageContent
+                {
+                    action = "nextRound"
+                }
+            };
+
+            string jsonString = JsonUtility.ToJson(msg);
+            await websocket.SendText(jsonString);
+            Debug.Log($"next Round: {jsonString}");
+        }
+        else
+        {
+            Debug.LogWarning("WebSocket未连接！");
+        }
+    }
     public async Task resetGame()
     {
         isSendingPosition = true;
