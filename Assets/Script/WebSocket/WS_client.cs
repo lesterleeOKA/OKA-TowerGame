@@ -129,7 +129,7 @@ public class WS_Client : MonoBehaviour
         public string message;
         public List<RoomInfo> roomList;
 
-        public string order; // "startGame" , "endGame" , "resetGame" , "nextRound" , "getAnswer" , "submitAnswer"
+        public string order; // "startGame" , "endGame" , "resetGame" , "nextRound" , "getAnswer" , "submitCorrectAnswer" , "submitWrongAnswer"
     }
 
     [System.Serializable]
@@ -145,7 +145,7 @@ public class WS_Client : MonoBehaviour
         public List<PlayerData> players;
         public List<QuestionData> questions;
         public List<AnswerData> answers;
-        public List<ObstacleData> obstacles; 
+        public List<ObstacleData> obstacles;
         public List<int> teamScore; // [0,0] 
         public string status; // waiting / playing
         public int gameTimer; // 0 - 180
@@ -364,7 +364,7 @@ public class WS_Client : MonoBehaviour
                             Debug.LogWarning("Order received: " + message.content.order);
                             Debug.LogWarning("OnMessage! " + jsonString);
                         }
-                        
+
                         if (GameData.players != null)
                         {
                             // foreach (var player in GameData.players)
@@ -426,20 +426,29 @@ public class WS_Client : MonoBehaviour
 #endif
         if (Input.GetKeyDown(KeyCode.G))
         {
-            updateAnswerOnPlayer(1);
-        }
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            resetGame();
-        }
-        if (Input.GetKeyDown(KeyCode.N))
-        {
-            nextRound();
+            updateAnswerOnPlayer(1); // 玩家拾取答案
         }
         if (Input.GetKeyDown(KeyCode.S))
         {
-            startGame();
+            submitAnswer(4); // 玩家提交答案
         }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            ready(); // 玩家準備
+        }
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            resetGame(); // for DEV 重置遊戲
+        }
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            nextRound(); // for DEV 下一回合
+        }
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            startGame(); // for DEV 開始遊戲
+        }
+
     }
 
     public void JoinGameRoom()
@@ -713,75 +722,72 @@ public class WS_Client : MonoBehaviour
             Debug.LogWarning("WebSocket未连接！");
         }
     }
-    public async Task startGame()
+
+    public async Task submitAnswer(int answer_id)
     {
         isSendingPosition = true;
         if (websocket?.State == WebSocketState.Open)
         {
             var msg = new OutMessage
             {
-                messageType = "startGame",
+                messageType = "submitAnswer",
                 content = new MessageContent
                 {
-                    action = "startGame"
+                    action = "submitAnswer",
+                    answer_id = answer_id
                 }
             };
 
             string jsonString = JsonUtility.ToJson(msg);
             await websocket.SendText(jsonString);
-            Debug.Log($"next Round: {jsonString}");
+            Debug.Log($"玩家提交答案: {jsonString}");
         }
         else
         {
             Debug.LogWarning("WebSocket未连接！");
         }
+    }
+
+    public async Task sendActicon(string action)
+    {
+        isSendingPosition = true;
+        if (websocket?.State == WebSocketState.Open)
+        {
+            var msg = new OutMessage
+            {
+                messageType = action,
+                content = new MessageContent
+                {
+                    action = action
+                }
+            };
+
+            string jsonString = JsonUtility.ToJson(msg);
+            await websocket.SendText(jsonString);
+            Debug.Log($"sendAction: {jsonString}");
+        }
+        else
+        {
+            Debug.LogWarning("WebSocket未连接！");
+        }
+    }
+
+    public async Task ready()
+    {
+        sendActicon("ready");
+    }
+    public async Task startGame()
+    {
+        sendActicon("startGame");
     }
 
     public async Task nextRound()
     {
-        isSendingPosition = true;
-        if (websocket?.State == WebSocketState.Open)
-        {
-            var msg = new OutMessage
-            {
-                messageType = "nextRound",
-                content = new MessageContent
-                {
-                    action = "nextRound"
-                }
-            };
-
-            string jsonString = JsonUtility.ToJson(msg);
-            await websocket.SendText(jsonString);
-            Debug.Log($"next Round: {jsonString}");
-        }
-        else
-        {
-            Debug.LogWarning("WebSocket未连接！");
-        }
+        sendActicon("nextRound");
     }
     public async Task resetGame()
     {
-        isSendingPosition = true;
-        if (websocket?.State == WebSocketState.Open)
-        {
-            var msg = new OutMessage
-            {
-                messageType = "resetGame",
-                content = new MessageContent
-                {
-                    action = "resetGame"
-                }
-            };
-
-            string jsonString = JsonUtility.ToJson(msg);
-            await websocket.SendText(jsonString);
-            Debug.Log($"重置游戏: {jsonString}");
-        }
-        else
-        {
-            Debug.LogWarning("WebSocket未连接！");
-        }
+        sendActicon("resetGame");
     }
 
     async void SendWebSocketMessage()
