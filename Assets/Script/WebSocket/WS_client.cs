@@ -129,7 +129,7 @@ public class WS_Client : MonoBehaviour
         public string message;
         public List<RoomInfo> roomList;
 
-        public string order; // "startGame" , "endGame" , "resetGame" , "nextRound" , "getAnswer" , "submitCorrectAnswer" , "submitWrongAnswer"
+        public string order; // "addPlayer" , "reconnectPlayer , "removePlayer" , "startGame" , "endGame" , "resetGame" , "nextRound" , "getAnswer" , "submitCorrectAnswer" , "submitWrongAnswer"
     }
 
     [System.Serializable]
@@ -447,6 +447,10 @@ public class WS_Client : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.B))
         {
             startGame(); // for DEV 開始遊戲
+        }
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            JoinGameRoom(); // for DEV JoinRoom
         }
 
     }
