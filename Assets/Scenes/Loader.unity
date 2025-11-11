@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -483,7 +482,7 @@ MonoBehaviour:
         score: 0
         percent: 0
   unitKey: 
-  testURL: https://dev.openknowledge.hk/RainbowOne/webapp/2.8/gameFile/OKAGames/TowerGame/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcxNy0xMWMxMTEzYjViZmQ3ZDBhNmJjYjI3ZTM3NTQ3ODZkMmY0MzM4NDhlZTIwNzM1MTc2YTYxNzhjOTgwNzk3YmEzIiwiZXhwaXJlcyI6MTc2Mjc0MjA3OSwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTEtMDMgMDI6MzQ6MzkgR01UIiwidWlkIjoiNTQzNzE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTcyLjE2LjAuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.365OXMUB1QvXVdfs1qhxA6S4izEd_JOgsPQVSqVaUiY
+  testURL: https://dev.openknowledge.hk/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUyMi0zOWJjMjcxNjlkYTNlODEzMjA2ZTNlNGY1YzllMTVhYzZlYTFjNzBiNzVhNjM3M2I2YjY0MjZhNjEyZTI1ZDdlIiwiZXhwaXJlcyI6MTc2MzQzNDg4MiwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTEtMTEgMDM6MDE6MjIgR01UIiwidWlkIjoiNTIyIiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTcyLjE2LjAuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6Im1hYyJ9.VfsUygrelDvDF-2Ck-YYpe0k3v-86BzqvzzGK8j5LgE
   skipAudioPanel: 0
 --- !u!4 &734659897
 Transform:
