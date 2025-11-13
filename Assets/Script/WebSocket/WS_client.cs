@@ -51,14 +51,18 @@ public class WS_Client : MonoBehaviour
     public UserInfo userInfo;
     private bool isSendingPosition = false;
 
+    // Event system for order changes
+    public delegate void OrderChangedHandler(string newOrder);
+    public event OrderChangedHandler OnOrderChanged;
+
     // 新增公共属性，作为访问私有字段的受控接口
-    public UserInfo pulic_UserInfo
+    public UserInfo public_UserInfo
     {
         get { return userInfo; }
         set { userInfo = value; }
     }
     // 私有静态字段，用于实际存储数据
-    public RoomGameData _gameData;
+    public static RoomGameData _gameData;
 
     // 公共静态属性，供其他类访问
     public RoomGameData GameData
@@ -163,6 +167,7 @@ public class WS_Client : MonoBehaviour
         public float[] destination;
         public int isAnswerVisible;
         public string answerContent;
+        public int answer_id;
     }
 
     [System.Serializable]
@@ -250,19 +255,16 @@ public class WS_Client : MonoBehaviour
         // localhost to localhost websocket
         if (currentDomain == "localhost")
         {
-            Debug.Log($"Localhost environment detected: {currentDomain}");
             return localhostUrl;
         }
 
         // 环境检测逻辑：如果域名以"dev"开头，则使用开发服务器
         if (currentDomain.StartsWith("dev"))
         {
-            Debug.Log($"Development environment detected: {currentDomain}");
             return developmentUrl;
         }
         else
         {
-            Debug.Log($"Production environment detected: {currentDomain}");
             return productionUrl;
         }
 #endif
@@ -270,7 +272,6 @@ public class WS_Client : MonoBehaviour
 
     void Start()
     {
-        Debug.Log("Connecting to WebSocket...");
 
         // GameData.questions = dummyQuestions;
         // GameData.answers = dummyAnswers;
@@ -279,7 +280,6 @@ public class WS_Client : MonoBehaviour
 
     private void Awake()
     {
-        Debug.Log("WS_Client Awake");
         // 确保单例在场景切换时不被销毁，且实例唯一
         if (_instance != null && _instance != this)
         {
@@ -327,7 +327,6 @@ public class WS_Client : MonoBehaviour
             {
                 // 将字节数组转换为字符串
                 var jsonString = System.Text.Encoding.UTF8.GetString(bytes);
-                // debugLogPerSecond("OnMessage! " + jsonString, "debug");
 
                 // 将JSON字符串反序列化为对象
                 WebSocketMessage message = JsonUtility.FromJson<WebSocketMessage>(jsonString);
@@ -357,12 +356,15 @@ public class WS_Client : MonoBehaviour
                         Debug.Log("roomFull : " + message.content.message + " / " + "current roomId : " + roomId);
                         break;
                     case "SyncRoomData":
-                        Debug.Log("OnMessage! " + jsonString);
+                        debugLogPerSecond("OnMessage! " + jsonString, "debug");
                         GameData = message.content.roomGameData;
                         if (!string.IsNullOrEmpty(message.content.order))
                         {
-                            Debug.LogWarning("Order received: " + message.content.order);
-                            Debug.LogWarning("OnMessage! " + jsonString);
+                            // Debug.LogWarning("Order received: " + message.content.order);
+                            // Debug.LogWarning("OnMessage! " + jsonString);
+                            
+                            // Fire the event to notify subscribers
+                            OnOrderChanged?.Invoke(message.content.order);
                         }
 
                         if (GameData.players != null)
@@ -452,7 +454,25 @@ public class WS_Client : MonoBehaviour
         {
             JoinGameRoom(); // for DEV JoinRoom
         }
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            printGameData(); // for DEV printGameData
+        }
 
+    }
+
+    public void printGameData()
+    {
+        if (GameData.players != null) {
+            foreach (var player in GameData.players) {
+                Debug.Log($"printGameData Player: {player.uid} - {player.answer_id} - {player.answerContent} - {player.isAnswerVisible}");
+            }
+        }
+        // if (GameData.questions != null) {
+        //     foreach (var question in GameData.questions) {
+        //         Debug.Log($"Question: {question.id} - {question.content}");
+        //     }
+        // }
     }
 
     public void JoinGameRoom()
@@ -474,8 +494,6 @@ public class WS_Client : MonoBehaviour
     // 连接打开后
     private async void OnWebSocketOpen()
     {
-        Debug.Log("Connection open!");
-        Debug.Log("WebSocket connection established! Attempting to join room...");
         try
         {
             // await JoinRoom(); // 调用一次 JoinRoom
@@ -655,7 +673,6 @@ public class WS_Client : MonoBehaviour
 
                 string jsonString = JsonUtility.ToJson(msg);
                 await websocket.SendText(jsonString);
-                // debugLogPerSecond($"发送位置更新: {jsonString}", "debug");
             }
             catch (System.ObjectDisposedException)
             {
@@ -744,7 +761,6 @@ public class WS_Client : MonoBehaviour
 
             string jsonString = JsonUtility.ToJson(msg);
             await websocket.SendText(jsonString);
-            Debug.Log($"玩家提交答案: {jsonString}");
         }
         else
         {
@@ -814,7 +830,7 @@ public class WS_Client : MonoBehaviour
     private float lastLogTime = 0f;
     private void debugLogPerSecond(string message, string type)
     {
-        if (Time.time - lastLogTime >= 1f)
+        if (Time.time - lastLogTime >= 2f)
         {
             switch (type)
             {

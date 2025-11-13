@@ -31,12 +31,19 @@ public class CharacterController : UserData
     {
         if(IsLocalPlayer)
         {
-            if (Input.GetMouseButtonDown(0))
+            // Handle both mouse and touch input
+            if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
             {
                 isMouseDown = true;
             }
 
-            if (Input.GetMouseButtonUp(0))
+            if (Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
+            {
+                isMouseDown = false;
+            }
+
+            // Also set isMouseDown to false if no touches are detected
+            if (Input.touchCount == 0 && !Input.GetMouseButton(0))
             {
                 isMouseDown = false;
             }
@@ -82,14 +89,25 @@ public class CharacterController : UserData
     private void FollowMouse()
     {
         if(this.detectCamera == null) this.detectCamera = Camera.main;
-        Vector3 mousePosition = Input.mousePosition;
-        mousePosition = this.detectCamera.ScreenToWorldPoint(mousePosition);
-        mousePosition.z = transform.position.z;
+        
+        // Get input position from touch or mouse
+        Vector3 inputPosition;
+        if (Input.touchCount > 0)
+        {
+            inputPosition = Input.GetTouch(0).position;
+        }
+        else
+        {
+            inputPosition = Input.mousePosition;
+        }
+        
+        inputPosition = this.detectCamera.ScreenToWorldPoint(inputPosition);
+        inputPosition.z = transform.position.z;
 
-        float distance = Vector3.Distance(transform.position, mousePosition);
+        float distance = Vector3.Distance(transform.position, inputPosition);
         currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, followSpeed);
         
-        transform.position = Vector3.MoveTowards(transform.position, mousePosition, currectSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, inputPosition, currectSpeed * Time.deltaTime);
     }
 
     private void UpdateAnimation()

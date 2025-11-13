@@ -29,7 +29,6 @@ public class QuestionTrigger : MonoBehaviour
         // Check if the colliding object is a player
         if (other.CompareTag("MainPlayer") || other.CompareTag("Player"))
         {
-            Debug.Log($"Player entered question trigger: {questionId} - {questionData?.content}");
             OnPlayerEnterQuestion(other.gameObject);
         }
     }
@@ -43,20 +42,8 @@ public class QuestionTrigger : MonoBehaviour
         }
     }
 
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        // Check if the colliding object is a player
-        if (other.CompareTag("MainPlayer") || other.CompareTag("Player"))
-        {
-            Debug.Log($"Player exited question trigger: {questionId} - {questionData?.content}");
-            OnPlayerExitQuestion(other.gameObject);
-        }
-    }
-
     private void OnPlayerEnterQuestion(GameObject player)
     {
-        // Custom logic when player enters the question area
-        Debug.Log($"Player {player.name} is now on question {questionId}");
         
         // Get CharacterController component
         CharacterController characterController = player.GetComponent<CharacterController>();
@@ -69,54 +56,22 @@ public class QuestionTrigger : MonoBehaviour
                 AnswerTrigger answerTrigger = characterController.answerObject.GetComponent<AnswerTrigger>();
                 if (answerTrigger != null && answerTrigger.answerData != null)
                 {
-                    // Check if answer matches this question
-                    if (answerTrigger.answerData.isCorrect == 1)
-                    {
-                        Debug.Log($"Correct! Answer {answerTrigger.answerId} is correct");
+                    WS_Client.Instance.submitAnswer(answerTrigger.answerId);
                         
-                        // Call TowerGameController with proper parameters
-                        TowerGameController.Instance.OnQuestionObjectTrigger(this.gameObject, questionData, answerTrigger.answerId, answerTrigger.answerData);
-                        
-                        // Hide answer bubble and clear the answer
-                        characterController.showAnswerBubble(0);
-                        characterController.answerObject = null;
-                    }
-                    else
-                    {
-                        Debug.Log($"Wrong! Answer {answerTrigger.answerId} is incorrect");
+                    characterController.showAnswerBubble(0);
+                    characterController.answerObject = null;
+
+                    if (WS_Client.Instance.GameData.players != null) {
+                        WS_Client.PlayerData clientPlayer = WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid);
+                        if (clientPlayer != null) {
+                            clientPlayer.answer_id = 0;
+                            clientPlayer.answerContent = "";
+                            clientPlayer.isAnswerVisible = 0;
+                        }
                     }
                 }
             }
-            Debug.Log($"Player entered question area: {questionData?.content}");
         }
-        else
-        {
-            Debug.LogWarning($"Player {player.name} does not have a CharacterController component!");
-        }
-        
-        // You can add more logic here:
-        // - Show question UI
-        // - Display question content
-        // - Update server that player is viewing this question
-    }
-
-    private void OnPlayerExitQuestion(GameObject player)
-    {
-        // Custom logic when player exits the question area
-        Debug.Log($"Player {player.name} left question {questionId}");
-        
-        // Get CharacterController component
-        CharacterController characterController = player.GetComponent<CharacterController>();
-        if (characterController != null)
-        {
-            // Hide question bubble or UI
-            // characterController.showQuestionBubble(0);
-            Debug.Log($"Player left question area");
-        }
-        
-        // You can add more logic here:
-        // - Hide question UI
-        // - Update server that player left this question
     }
 }
 

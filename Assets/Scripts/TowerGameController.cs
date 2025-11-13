@@ -11,10 +11,13 @@ public class TowerGameController : GameBaseController
     public static TowerGameController Instance = null;
     public GameObject playerPrefab;
     public GameObject questionPrefab;
+    // public GameObject questionUIText;
+    public GameObject onTopUI;
     public GameObject answerPrefab;
     public GameObject obstaclePrefab;
     public Transform globalParent;
     public GameObject YouWin;
+    public GameObject YouLose;
 
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
@@ -48,6 +51,60 @@ public class TowerGameController : GameBaseController
             WS_Client.Instance.jwt = LoaderConfig.Instance.apiManager.jwt;
         }
 
+        // Subscribe to the order changed event
+        if (WS_Client.Instance != null)
+        {
+            WS_Client.Instance.OnOrderChanged += HandleOrderChanged;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // Unsubscribe to prevent memory leaks
+        if (WS_Client.Instance != null)
+        {
+            WS_Client.Instance.OnOrderChanged -= HandleOrderChanged;
+        }
+    }
+
+    // This method will be called whenever the order changes
+    private void HandleOrderChanged(string newOrder)
+    {
+        Debug.Log($"Order changed to: {newOrder}");
+        
+        // Handle different order types
+        switch (newOrder)
+        {
+            case "addPlayer":
+                // Add your logic here
+                break;
+            case "removePlayer":
+                // Add your logic here
+                break;
+            case "startGame":
+                // Add your logic here
+                break;
+            case "endGame":
+                // Add your logic here
+                break;
+            case "resetGame":
+                // Add your logic here
+                break;
+            case "nextRound":
+                // Add your logic here
+                break;
+            case "getAnswer":
+                // Add your logic here
+                break;
+            case "submitCorrectAnswer":
+                submitCorrectAnswerHandler();
+                break;
+            case "submitWrongAnswer":
+                submitWrongAnswerHandler();
+                break;
+            default:
+                break;
+        }
     }
 
     // Update is called once per frame
@@ -65,9 +122,9 @@ public class TowerGameController : GameBaseController
 
         // Get local player's uid (if available)
         int localUid = -1;
-        if (WS_Client.Instance != null && WS_Client.Instance.pulic_UserInfo != null)
+        if (WS_Client.Instance != null && WS_Client.Instance.public_UserInfo != null)
         {
-            localUid = WS_Client.Instance.pulic_UserInfo.uid;
+            localUid = WS_Client.Instance.public_UserInfo.uid;
         }
 
         StringBuilder debugSB = new StringBuilder();
@@ -199,6 +256,19 @@ public class TowerGameController : GameBaseController
             {
                 RemoveQuestionObject(id);
                 Debug.Log($"Removed question from previous round: {id}");
+            }
+
+            if (WS_Client.Instance.GameData.players != null) {
+                foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
+                    if (player.uid == WS_Client.Instance.public_UserInfo.uid) {
+                        continue;
+                    }
+                    CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
+                    if (characterController != null) {
+                        characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.answer_id != 0);
+                        characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = player.answer_id != 0 ? WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id).content : "";
+                    }
+                }
             }
         }
 
@@ -386,6 +456,12 @@ public class TowerGameController : GameBaseController
             return;
         }
 
+        if (question.content == null)
+        {
+            Debug.LogError("question.content is null!");
+            return;
+        }
+
         var questionObj = GameObject.Instantiate(questionPrefab, this.globalParent);
         questionObj.name = "Question_" + question.id;
 
@@ -402,11 +478,12 @@ public class TowerGameController : GameBaseController
         }
 
         // Set text on TextMeshProUGUI component in child
-        TextMeshProUGUI textComponent = questionObj.GetComponentInChildren<TextMeshProUGUI>();
-        if (textComponent != null)
-        {
-            textComponent.text = question.content;
-        }
+        // TextMeshProUGUI textComponent = questionObj.GetComponentInChildren<TextMeshProUGUI>();
+        // Debug.Log($"question.content: {question.content}");
+        // if (textComponent != null)
+        // {
+        //     textComponent.text = question.content;
+        // }
 
         // Add QuestionTrigger component for collision detection
         QuestionTrigger questionTrigger = questionObj.GetComponent<QuestionTrigger>();
@@ -419,6 +496,12 @@ public class TowerGameController : GameBaseController
         Debug.Log($"Added QuestionTrigger component to {question.id}");
 
         questionObj.gameObject.SetActive(true);
+
+        // questionUIText.GetComponent<TextMeshProUGUI>().text = question.content;
+        onTopUI.GetComponent<CanvasGroup>().alpha = 1;
+        GameObject bg_FillInBlank = onTopUI.transform.Find("Bg/QABoard/bg_FillInBlank").gameObject;
+        bg_FillInBlank.GetComponent<CanvasGroup>().alpha = 1;
+        bg_FillInBlank.GetComponentInChildren<TextMeshProUGUI>().text = question.content;
 
         // Store the question data (you can add a component to store this if needed)
         // For now, just track the GameObject
@@ -506,7 +589,6 @@ public class TowerGameController : GameBaseController
             if (answerObj != null)
             {
                 GameObject.Destroy(answerObj);
-                Debug.Log($"[TowerGameController] Removed answer GameObject for id={id}");
             }
             answerObjectsById.Remove(id);
 
@@ -528,6 +610,20 @@ public class TowerGameController : GameBaseController
                 answer.isOnPlayer = 1;
                 Debug.Log($"Set answer {answerId} isOnPlayer to 1");
 
+                // Send update to server so it syncs with all players
+                WS_Client.Instance.updateAnswerOnPlayer(answerId);
+
+                // if (WS_Client.Instance.GameData.players != null) {
+                //     WS_Client.PlayerData player = WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid);
+                //     Debug.Log($"GameData player 1: {player?.uid} - {player?.answer_id} - {player?.answerContent} - {player?.isAnswerVisible}");
+                //     if (player != null) {
+                //         player.answer_id = answerId;
+                //         player.answerContent = answerData.content;
+                //         player.isAnswerVisible = 1;
+                //     }
+                //     Debug.Log($"GameData player 2: {player?.uid} - {player?.answer_id} - {player?.answerContent} - {player?.isAnswerVisible}");
+                // }
+
                 // You can add more logic here:
                 // - Send update to server
                 // - Update UI
@@ -540,37 +636,6 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    public void OnQuestionObjectTrigger(GameObject questionObject, WS_Client.QuestionData questionData, int answerId, WS_Client.AnswerData answerData)
-    {
-        Debug.Log($"Player submitted answer {answerId}");
-
-        // Check if it's correct (already checked in QuestionTrigger, but double-check here)
-        if (answerData.isCorrect == 1)
-        {
-            Debug.Log("CORRECT ANSWER!");
-            YouWin.SetActive(true);
-            // You can add logic here:
-            // - Show "You Win!" UI
-            // - Update score
-            // - Send to server
-            // - Play victory animation
-            // - Mark answer as submitted
-            if (WS_Client.Instance.GameData?.answers != null)
-            {
-                WS_Client.AnswerData answer = WS_Client.Instance.GameData.answers.Find(a => a.id == answerId);
-                if (answer != null)
-                {
-                    // answer.isSubmitted = 1;
-                    answer.isOnPlayer = 0; // Remove from player
-                    Debug.Log($"Marked answer {answerId} as submitted");
-                }
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"Answer {answerId} is incorrect!");
-        }
-    }
     private void CreateObstacleObject(WS_Client.ObstacleData obstacle, Vector3 position)
     {
         if (obstaclePrefab == null)
@@ -609,9 +674,32 @@ public class TowerGameController : GameBaseController
             if (obstacleObj != null)
             {
                 GameObject.Destroy(obstacleObj);
-                Debug.Log($"[TowerGameController] Removed obstacle GameObject for id={id}");
             }
             obstacleObjectsById.Remove(id);
         }
+    }
+
+    private IEnumerator HideYouWinAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        YouWin.SetActive(false);
+    }
+
+    private IEnumerator HideYouLoseAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        YouLose.SetActive(false);
+    }
+
+    private void submitCorrectAnswerHandler()
+    {
+        YouWin.SetActive(true);
+        StartCoroutine(HideYouWinAfterDelay(3f));
+    }
+
+    private void submitWrongAnswerHandler()
+    {
+        YouLose.SetActive(true);
+        StartCoroutine(HideYouLoseAfterDelay(3f));
     }
 }

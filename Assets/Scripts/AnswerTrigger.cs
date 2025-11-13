@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class AnswerTrigger : MonoBehaviour
 {
@@ -27,7 +28,6 @@ public class AnswerTrigger : MonoBehaviour
         // Check if the colliding object is a player
         if (other.CompareTag("MainPlayer") || other.CompareTag("Player"))
         {
-            Debug.Log($"Player entered answer trigger: {answerId} - {answerData?.content}");
             OnPlayerEnterAnswer(other.gameObject);
         }
     }
@@ -41,20 +41,10 @@ public class AnswerTrigger : MonoBehaviour
         }
     }
 
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        // Check if the colliding object is a player
-        if (other.CompareTag("MainPlayer") || other.CompareTag("Player"))
-        {
-            // Debug.Log($"Player exited answer trigger: {answerId} - {answerData?.content}");
-            // OnPlayerExitAnswer(other.gameObject);
-        }
-    }
 
     private void OnPlayerEnterAnswer(GameObject player)
     {
         // Custom logic when player enters the answer area
-        // Debug.Log($"Player {player.name} is now on answer {answerId}");
         
         // Show answer bubble on the player
         CharacterController characterController = player.GetComponent<CharacterController>();
@@ -62,7 +52,7 @@ public class AnswerTrigger : MonoBehaviour
         {
             characterController.showAnswerBubble(1);
             characterController.answerObject = this.gameObject;
-            // Debug.Log($"Showed answer bubble for player {player.name}");
+            characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = answerData.content;
             if (TowerGameController.Instance != null)
             {
                 TowerGameController.Instance.OnAnswerObjectTrigger(this.gameObject, answerId, answerData);
@@ -80,22 +70,5 @@ public class AnswerTrigger : MonoBehaviour
         // - Update server that player is on this answer
         // - Allow player to pick up/select the answer with a key press
     }
-
-    // private void OnPlayerExitAnswer(GameObject player)
-    // {
-    //     // Custom logic when player exits the answer area
-    //     Debug.Log($"Player {player.name} left answer {answerId}");
-        
-    //     // Hide answer bubble on the player
-    //     CharacterController characterController = player.GetComponent<CharacterController>();
-    //     if (characterController != null)
-    //     {
-    //         characterController.showAnswerBubble(0);
-    //         Debug.Log($"Hid answer bubble for player {player.name}");
-    //     }
-        
-    //     // You can add more logic here:
-    //     // - Update server that player left this answer
-    // }
 }
 

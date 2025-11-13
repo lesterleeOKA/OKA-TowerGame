@@ -426,7 +426,7 @@ MonoBehaviour:
     retry_times: 3
     helpItemTypeOfId: 4
     returnUrl: 
-    showFPS: 0
+    showFPS: 1
     qa_font_alignment: 1
     playerNumber: 1
     lang: 0
