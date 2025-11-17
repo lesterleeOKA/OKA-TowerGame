@@ -28,13 +28,6 @@ public class TowerGameController : GameBaseController
 
     // Map WS player key (string) -> CharacterController (ensures one GameObject per ws player)
     private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
-    
-    // Map player uid -> CharacterController for fast O(1) lookups
-    private Dictionary<int, CharacterController> playerControllersByUid = new Dictionary<int, CharacterController>();
-    
-    // Cache AnswerBubble components to avoid expensive lookups (Transform.Find, GetComponentInChildren)
-    private Dictionary<int, Transform> answerBubbleTransforms = new Dictionary<int, Transform>();
-    private Dictionary<int, TextMeshProUGUI> answerBubbleTextComponents = new Dictionary<int, TextMeshProUGUI>();
 
     // Map question ID -> GameObject
     private Dictionary<int, GameObject> questionObjectsById = new Dictionary<int, GameObject>();
@@ -45,17 +38,7 @@ public class TowerGameController : GameBaseController
 
     protected override void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(this.gameObject);
-        }
-        else
-        {
-            Destroy(this.gameObject);
-            return;
-        }
-        
+        if (Instance == null) Instance = this;
         base.Awake();
     }
 
@@ -102,7 +85,7 @@ public class TowerGameController : GameBaseController
                 // Add your logic here
                 break;
             case "endGame":
-                base.endGame();
+                // Add your logic here
                 break;
             case "resetGame":
                 // Add your logic here
@@ -127,14 +110,9 @@ public class TowerGameController : GameBaseController
     // Update is called once per frame
     void Update()
     {
-        // Cache frequently accessed properties
-        var wsInstance = WS_Client.Instance;
-        if (wsInstance == null) return;
-        
-        var gameData = wsInstance.GameData;
-        if (gameData == null) return;
-        
-        var players = gameData.players;
+        // If no data, nothing to do
+        if (WS_Client.Instance.GameData == null) return;
+        var players = WS_Client.Instance.GameData.players;
         if (players == null) return;
 
         this.playerNumber = players.Count;
@@ -144,12 +122,12 @@ public class TowerGameController : GameBaseController
 
         // Get local player's uid (if available)
         int localUid = -1;
-        var publicUserInfo = wsInstance.public_UserInfo;
-        if (publicUserInfo != null)
+        if (WS_Client.Instance != null && WS_Client.Instance.public_UserInfo != null)
         {
-            localUid = publicUserInfo.uid;
+            localUid = WS_Client.Instance.public_UserInfo.uid;
         }
 
+        StringBuilder debugSB = new StringBuilder();
         // Create missing players and update positions for existing ones
         foreach (var player in players)
         {
@@ -181,7 +159,11 @@ public class TowerGameController : GameBaseController
                     }
                 }
             }
+            debugInfo += $"Player {player.uid} at ({player.position[0]}, {player.position[1]})\n";
+            debugSB.Append(debugInfo);
         }
+
+        this.debugText.text = debugSB.ToString();
 
         // Remove controllers for players who left
         var toRemove = new List<string>();
@@ -201,33 +183,23 @@ public class TowerGameController : GameBaseController
 
     void FixedUpdate()
     {
-        // Cache frequently accessed properties
-        var wsInstance = WS_Client.Instance;
-        if (wsInstance == null) return;
-        
-        var gameData = wsInstance.GameData;
-        if (gameData == null) return;
-        
-        var players = gameData.players;
+        // If no data, nothing to do
+        if (WS_Client.Instance.GameData == null) return;
+        var players = WS_Client.Instance.GameData.players;
         if (players == null) return;
-        
-        var publicUserInfo = wsInstance.public_UserInfo;
-        var answers = gameData.answers;
-        var obstacles = gameData.obstacles;
 
         // Process questions
-        var questions = gameData.questions;
-        if (questions != null)
+        if (WS_Client.Instance.GameData != null && WS_Client.Instance.GameData.questions != null)
         {
             var currentQuestionIds = new HashSet<int>();
-            int currentRound = gameData.round; // 获取当前轮次(1-10)
+            int currentRound = WS_Client.Instance.GameData.round; // 获取当前轮次(1-10)
 
             // 只处理当前轮次对应的问题
             int questionIndex = currentRound - 1; // round 1 对应 questions[0]
 
-            if (questionIndex >= 0 && questionIndex < questions.Count)
+            if (questionIndex >= 0 && questionIndex < WS_Client.Instance.GameData.questions.Count)
             {
-                var question = questions[questionIndex];
+                var question = WS_Client.Instance.GameData.questions[questionIndex];
                 currentQuestionIds.Add(question.id);
 
                 if (!questionObjectsById.ContainsKey(question.id))
@@ -242,7 +214,7 @@ public class TowerGameController : GameBaseController
                     {
                         // 备用位置：根据轮次水平分布
                         float spacing = 1000f;
-                        float startX = -(questions.Count - 1) * spacing / 2f;
+                        float startX = -(WS_Client.Instance.GameData.questions.Count - 1) * spacing / 2f;
                         questionPos = new Vector3(startX + (questionIndex * spacing), 800f, 0f);
                     }
 
@@ -286,42 +258,26 @@ public class TowerGameController : GameBaseController
                 Debug.Log($"Removed question from previous round: {id}");
             }
 
-            if (players != null) {
-                // Create answer dictionary for fast lookups
-                var answerDict = new Dictionary<int, WS_Client.AnswerData>();
-                if (answers != null) {
-                    foreach (var answer in answers) {
-                        answerDict[answer.id] = answer;
-                    }
-                }
-                
-                foreach (WS_Client.PlayerData player in players) {
-                    if (publicUserInfo != null && player.uid == publicUserInfo.uid) {
+            if (WS_Client.Instance.GameData.players != null) {
+                foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
+                    if (player.uid == WS_Client.Instance.public_UserInfo.uid) {
                         continue;
                     }
-                    
-                    // Use cached dictionaries instead of expensive Find() operations
-                    if (playerControllersByUid.TryGetValue(player.uid, out var characterController)) {
-                        if (answerBubbleTransforms.TryGetValue(player.uid, out var answerBubble)) {
-                            answerBubble.gameObject.SetActive(player.answer_id != 0);
-                            
-                            if (player.answer_id != 0 && answerBubbleTextComponents.TryGetValue(player.uid, out var textComponent)) {
-                                if (answerDict.TryGetValue(player.answer_id, out var answerData)) {
-                                    textComponent.text = answerData.content;
-                                }
-                            }
-                        }
+                    CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
+                    if (characterController != null) {
+                        characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.answer_id != 0);
+                        characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = player.answer_id != 0 ? WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id).content : "";
                     }
                 }
             }
         }
 
         // Process answers
-        if (answers != null)
+        if (WS_Client.Instance.GameData.answers != null)
         {
             var currentAnswerIds = new HashSet<int>();
 
-            foreach (var answer in answers)
+            foreach (var answer in WS_Client.Instance.GameData.answers)
             {
                 currentAnswerIds.Add(answer.id);
 
@@ -372,14 +328,14 @@ public class TowerGameController : GameBaseController
         }
 
         // Process obstacles 
-        if (obstacles != null)
+        if (WS_Client.Instance.GameData.obstacles != null)
         {
             var currentObstacleIds = new HashSet<int>();
 
             // Debug.Log($"=== 障碍物处理开始 ===");
-            // Debug.Log($"当前帧障碍物数量: {obstacles.Count}");
+            // Debug.Log($"当前帧障碍物数量: {WS_Client.Instance.GameData.obstacles.Count}");
 
-            foreach (var obstacle in obstacles)
+            foreach (var obstacle in WS_Client.Instance.GameData.obstacles)
             {
                 if (obstacle.id == 0)
                 {
@@ -471,20 +427,7 @@ public class TowerGameController : GameBaseController
         }
 
         playerControllersByKey[key] = characterController;
-        playerControllersByUid[uid] = characterController;
         characterController.key = key;
-        
-        // Cache AnswerBubble components for performance
-        Transform answerBubble = characterController.transform.Find("AnswerBubble");
-        if (answerBubble != null)
-        {
-            answerBubbleTransforms[uid] = answerBubble;
-            TextMeshProUGUI textComponent = answerBubble.GetComponentInChildren<TextMeshProUGUI>();
-            if (textComponent != null)
-            {
-                answerBubbleTextComponents[uid] = textComponent;
-            }
-        }
 
         // keep an incremental id for legacy naming if needed
         this.playerID = Mathf.Max(this.playerID, uid + 1);
@@ -497,11 +440,7 @@ public class TowerGameController : GameBaseController
         {
             if (cc != null)
             {
-                int uid = cc.UserId;
                 this.characterControllers.Remove(cc);
-                playerControllersByUid.Remove(uid);
-                answerBubbleTransforms.Remove(uid);
-                answerBubbleTextComponents.Remove(uid);
                 GameObject.Destroy(cc.gameObject);
                 Debug.Log($"[TowerGameController] Removed player GameObject for key={key}");
             }
