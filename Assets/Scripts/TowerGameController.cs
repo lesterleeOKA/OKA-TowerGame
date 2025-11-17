@@ -38,8 +38,16 @@ public class TowerGameController : GameBaseController
 
     protected override void Awake()
     {
-        if (Instance == null) Instance = this;
-        base.Awake();
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(this.gameObject);
+        }
+        else
+        {
+            Destroy(this.gameObject);
+            return;
+        }
     }
 
     // Start is called before the first frame update
@@ -85,7 +93,7 @@ public class TowerGameController : GameBaseController
                 // Add your logic here
                 break;
             case "endGame":
-                // Add your logic here
+                base.endGame();
                 break;
             case "resetGame":
                 // Add your logic here

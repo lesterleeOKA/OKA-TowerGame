@@ -162,12 +162,14 @@ public class WS_Client : MonoBehaviour
     {
         public string player_id;
         public int uid;
+        public string status;
         public float[] position;
-        public int dir;
+        // public int dir;
         public float[] destination;
         public int isAnswerVisible;
         public string answerContent;
         public int answer_id;
+        public int score;
     }
 
     [System.Serializable]
@@ -768,7 +770,7 @@ public class WS_Client : MonoBehaviour
         }
     }
 
-    public async Task sendActicon(string action)
+    public async Task sendAction(string action)
     {
         isSendingPosition = true;
         if (websocket?.State == WebSocketState.Open)
@@ -794,20 +796,20 @@ public class WS_Client : MonoBehaviour
 
     public async Task ready()
     {
-        sendActicon("ready");
+        sendAction("ready");
     }
     public async Task startGame()
     {
-        sendActicon("startGame");
+        sendAction("startGame");
     }
 
     public async Task nextRound()
     {
-        sendActicon("nextRound");
+        sendAction("nextRound");
     }
     public async Task resetGame()
     {
-        sendActicon("resetGame");
+        sendAction("resetGame");
     }
 
     async void SendWebSocketMessage()
@@ -825,6 +827,18 @@ public class WS_Client : MonoBehaviour
     private async void OnApplicationQuit()
     {
         await websocket.Close();
+    }
+
+    public void setReady(bool state) {
+        string newStatus = state ? "ready" : "waiting";
+        if (GameData != null && GameData.players != null) {
+            PlayerData player = GameData.players.FirstOrDefault(p => p.uid == public_UserInfo.uid);
+            if (player != null) {
+                Debug.Log("setReady: " + newStatus);
+                player.status = newStatus;
+                // sendAction("ready");
+            }
+        }
     }
 
     private float lastLogTime = 0f;
