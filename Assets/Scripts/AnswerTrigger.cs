@@ -48,6 +48,11 @@ public class AnswerTrigger : MonoBehaviour
         
         // Show answer bubble on the player
         CharacterController characterController = player.GetComponent<CharacterController>();
+        if (characterController.UserId != WS_Client.Instance.public_UserInfo.uid)
+        {
+            return;
+        }
+        
         if (characterController != null)
         {
             characterController.showAnswerBubble(1);

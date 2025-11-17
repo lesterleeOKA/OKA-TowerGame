@@ -34,6 +34,10 @@ public class WS_Client : MonoBehaviour
     public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxMS00MzY0ZTlmYmE3NzA2M2Q4MjdjZWY0NjMzMGYwMjlhZmU2ZTIyNWZhOTk1MGMzMTRiMzRkNjAyNjY5NGUzYWIwIiwiZXhwaXJlcyI6MTc2MzYxMDE0NywidGltZSI6IjIwMjUtMTAtMjEgMTE6NDI6MjciLCJ1aWQiOiI1MTEiLCJ1c2VyX3JvbGUiOiIzIiwic2Nob29sX2lkIjoiMjcyIiwiaXAiOiIxNjkuMjU0LjEyOS40IiwidmVyc2lvbiI6IjIuOC4zNiIsImRldmljZSI6Im1hYyJ9.LT8f4UNEB3nnW6BY2FMPQXZVMUzQ-6NyCJT08gqSx1s";
     private string roomId = "";
     private string player_id = "";
+    
+    // Position update throttling
+    private float[] lastSentPosition = null;
+    private const float POSITION_UPDATE_THRESHOLD = 0.01f; // Only send if moved more than this distance
 
     // const string WEBSHOCKET_URL = "wss://ws.openknowledge.hk:8084";//dev : "wss://ws.openknowledge.hk:8084";  // prod : "wss://ws.openknowledge.hk";
     public string localhostUrl = "ws://localhost:8000/";
@@ -162,12 +166,14 @@ public class WS_Client : MonoBehaviour
     {
         public string player_id;
         public int uid;
+        public string status;
         public float[] position;
-        public int dir;
         public float[] destination;
+        // public int dir;
         public int isAnswerVisible;
         public string answerContent;
         public int answer_id;
+        public int score;
     }
 
     [System.Serializable]
@@ -632,10 +638,31 @@ public class WS_Client : MonoBehaviour
                 y = myPlayer.destination[1]
             };
 
-            // 3. 发送位置更新到服务器
-            await UpdateServerPosition(positionData, destinationData);
+            // 3. Check if position changed enough to warrant an update
+            bool shouldUpdate = false;
+            if (lastSentPosition == null)
+            {
+                shouldUpdate = true;
+                lastSentPosition = new float[2];
+            }
+            else
+            {
+                float deltaX = Mathf.Abs(positionData.x - lastSentPosition[0]);
+                float deltaY = Mathf.Abs(positionData.y - lastSentPosition[1]);
+                if (deltaX > POSITION_UPDATE_THRESHOLD || deltaY > POSITION_UPDATE_THRESHOLD)
+                {
+                    shouldUpdate = true;
+                }
+            }
 
-            debugLogPerSecond($"位置同步发送: 位置({positionData.x:F2}, {positionData.y:F2}) -> 目的地({destinationData.x:F2}, {destinationData.y:F2})", "debug");
+            // 4. 只在位置变化足够大时发送更新到服务器
+            if (shouldUpdate)
+            {
+                await UpdateServerPosition(positionData, destinationData);
+                lastSentPosition[0] = positionData.x;
+                lastSentPosition[1] = positionData.y;
+                debugLogPerSecond($"位置同步发送: 位置({positionData.x:F2}, {positionData.y:F2}) -> 目的地({destinationData.x:F2}, {destinationData.y:F2})", "debug");
+            }
         }
         catch (System.ObjectDisposedException)
         {
@@ -768,7 +795,7 @@ public class WS_Client : MonoBehaviour
         }
     }
 
-    public async Task sendActicon(string action)
+    public async Task sendAction(string action)
     {
         isSendingPosition = true;
         if (websocket?.State == WebSocketState.Open)
@@ -794,20 +821,20 @@ public class WS_Client : MonoBehaviour
 
     public async Task ready()
     {
-        sendActicon("ready");
+        sendAction("ready");
     }
     public async Task startGame()
     {
-        sendActicon("startGame");
+        sendAction("startGame");
     }
 
     public async Task nextRound()
     {
-        sendActicon("nextRound");
+        sendAction("nextRound");
     }
     public async Task resetGame()
     {
-        sendActicon("resetGame");
+        sendAction("resetGame");
     }
 
     async void SendWebSocketMessage()
@@ -819,6 +846,18 @@ public class WS_Client : MonoBehaviour
 
             // Sending plain text
             await websocket.SendText("plain text message");
+        }
+    }
+
+    public void setReady(bool state) {
+        string newStatus = state ? "ready" : "waiting";
+        if (GameData != null && GameData.players != null) {
+            PlayerData player = GameData.players.FirstOrDefault(p => p.uid == public_UserInfo.uid);
+            if (player != null) {
+                Debug.Log("setReady: " + newStatus);
+                player.status = newStatus;
+                // sendAction("ready");
+            }
         }
     }
 

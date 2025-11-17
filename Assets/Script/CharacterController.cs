@@ -15,7 +15,8 @@ public class CharacterController : UserData
     public int direction = 0;
     public string key = "";
     public bool IsLocalPlayer = false; 
-    public bool isMouseDown = false; 
+    public bool isMouseDown = false;
+    private Camera cachedCamera; // Cache camera reference 
 
 
     void Start()
@@ -24,7 +25,9 @@ public class CharacterController : UserData
         lastPosition = transform.position;
         imageTransform = transform.Find("image");
         answerBubbleTransform = transform.Find("AnswerBubble");
-
+        
+        // Cache camera reference to avoid repeated lookups
+        cachedCamera = detectCamera != null ? detectCamera : Camera.main;
     }
 
     void Update()
@@ -58,19 +61,14 @@ public class CharacterController : UserData
                 animator.SetInteger("Direction", 0);
             }
 
-            WS_Client.PositionData posData = new WS_Client.PositionData
+            // Update GameData position instead of sending WebSocket every frame
+            // Let WS_Client.ConstantSyncData() handle the actual syncing (runs every 0.1s)
+            var wsInstance = WS_Client.Instance;
+            if (wsInstance != null && wsInstance.GameData != null && wsInstance.public_UserInfo != null)
             {
-                x = this.transform.localPosition.x,
-                y = this.transform.localPosition.y,
-            };
-
-            WS_Client.PositionData destData = new WS_Client.PositionData
-            {
-                x = this.transform.localPosition.x,
-                y = this.transform.localPosition.y,
-            };
-
-            WS_Client.Instance.UpdateServerPosition(posData, destData);
+                float[] currentPos = new float[] { this.transform.localPosition.x, this.transform.localPosition.y };
+                wsInstance.UpdatePlayerPositionInGameData(wsInstance.public_UserInfo.uid, currentPos, currentPos);
+            }
         }
         
         if (Input.GetKeyDown(KeyCode.J))
@@ -88,7 +86,8 @@ public class CharacterController : UserData
 
     private void FollowMouse()
     {
-        if(this.detectCamera == null) this.detectCamera = Camera.main;
+        // Use cached camera instead of checking every frame
+        if(cachedCamera == null) cachedCamera = detectCamera != null ? detectCamera : Camera.main;
         
         // Get input position from touch or mouse
         Vector3 inputPosition;
@@ -101,10 +100,9 @@ public class CharacterController : UserData
             inputPosition = Input.mousePosition;
         }
         
-        inputPosition = this.detectCamera.ScreenToWorldPoint(inputPosition);
+        inputPosition = cachedCamera.ScreenToWorldPoint(inputPosition);
         inputPosition.z = transform.position.z;
 
-        float distance = Vector3.Distance(transform.position, inputPosition);
         currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, followSpeed);
         
         transform.position = Vector3.MoveTowards(transform.position, inputPosition, currectSpeed * Time.deltaTime);
