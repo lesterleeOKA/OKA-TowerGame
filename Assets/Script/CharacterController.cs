@@ -4,10 +4,10 @@ using UnityEngine;
 public class CharacterController : UserData
 {
     public Camera detectCamera;
-    public float followSpeed = 6f;
-    public float acc = 2f;
+    public float followSpeed = 800f;
+    public float acc = 320f;
     public GameObject answerObject;
-    private float currectSpeed = 2f;
+    private float currectSpeed = 320f;
     private Animator animator;
     private Vector3 lastPosition;
     private Transform imageTransform;
@@ -15,6 +15,7 @@ public class CharacterController : UserData
     public int direction = 0;
     public string key = "";
     public bool IsLocalPlayer = false; 
+    private Vector3 localDestination = Vector3.zero;
     public bool isMouseDown = false; 
 
 
@@ -48,9 +49,9 @@ public class CharacterController : UserData
                 isMouseDown = false;
             }
 
-            if (isMouseDown)
+            if (isMouseDown) 
             {
-                FollowMouse();
+                calLocalDestination();
             }
             else
             {
@@ -66,28 +67,17 @@ public class CharacterController : UserData
 
             WS_Client.PositionData destData = new WS_Client.PositionData
             {
-                x = this.transform.localPosition.x,
-                y = this.transform.localPosition.y,
+                x = localDestination.x,
+                y = localDestination.y,
             };
 
             WS_Client.Instance.UpdateServerPosition(posData, destData);
         }
-        
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            showAnswerBubble(1);
-        }
 
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            showAnswerBubble(0);
-        }
-
-        this.UpdateAnimation();
+        FollowLocalDestination();
     }
 
-    private void FollowMouse()
-    {
+    private void calLocalDestination() {
         if(this.detectCamera == null) this.detectCamera = Camera.main;
         
         // Get input position from touch or mouse
@@ -100,61 +90,87 @@ public class CharacterController : UserData
         {
             inputPosition = Input.mousePosition;
         }
-        
-        inputPosition = this.detectCamera.ScreenToWorldPoint(inputPosition);
-        inputPosition.z = transform.position.z;
 
-        float distance = Vector3.Distance(transform.position, inputPosition);
-        currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, followSpeed);
+        // Convert screen position to world position
+        // Set z to the distance from camera to the character's plane
+        inputPosition.z = detectCamera.WorldToScreenPoint(transform.position).z;
+        inputPosition = detectCamera.ScreenToWorldPoint(inputPosition);
+
+        // Convert world position to local position (relative to parent)
+        if (transform.parent != null)
+        {
+            localDestination = transform.parent.InverseTransformPoint(inputPosition);
+        }
+        else
+        {
+            localDestination = inputPosition;
+        }
         
-        transform.position = Vector3.MoveTowards(transform.position, inputPosition, currectSpeed * Time.deltaTime);
+        // Maintain the character's local z position
+        localDestination.z = transform.localPosition.z;
+    }
+
+    public void setLocalDestination(Vector3 destination)
+    {
+        localDestination = destination;
+    }
+
+    private void FollowLocalDestination()
+    {
+        float distance = Vector3.Distance(transform.localPosition, localDestination);
+
+        // if (distance > 1000f)
+        // {
+        //     transform.localPosition = new Vector3(localDestination.x, localDestination.y, 0.1f);
+        // }
+        // else if (distance > 0.01f)
+        if (distance > 0.01f)
+        {
+            currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, followSpeed);
+            transform.localPosition = Vector3.MoveTowards(transform.localPosition, localDestination, currectSpeed * Time.deltaTime);
+        }
+        UpdateAnimation();
     }
 
     private void UpdateAnimation()
     {
-        Vector3 movement = transform.localPosition - lastPosition;
-        lastPosition = transform.localPosition;
+        Vector3 movement = localDestination - transform.localPosition;
 
         float speed = movement.magnitude;
         animator.SetFloat("Speed", speed);
 
-       // Debug.Log("Speed:" + speed);
+    //    Debug.Log("Speed:" + speed);
 
-        if (speed > 0.01f)
+        if (speed > 0f)
         {
-            //Debug.Log("movement x:" + Mathf.Abs(movement.x));
-            //Debug.Log("movement y:" + Mathf.Abs(movement.y));
+            // Debug.Log("movement x:" + movement.x);
+            // Debug.Log("movement y:" + Mathf.Abs(movement.y));
 
-            if (Mathf.Abs(movement.x) > Mathf.Abs(movement.y))
+            if (movement.x > 0)
             {
-                if (movement.x > 0)
+                this.direction = 2; // 向右
+                if (imageTransform != null)
                 {
-                    this.direction = 1; // 向右
-                    if (imageTransform != null)
-                    {
-                        imageTransform.localScale = new Vector3(1f, 1f, 1f);
-                    }
+                    imageTransform.localScale = new Vector3(1f, 1f, 1f);
                 }
-                else
+            } else {
+                this.direction = 1;// 向左
+                if (imageTransform != null)
                 {
-                    this.direction = -1;// 向左
-                    if (imageTransform != null)
-                    {
-                        imageTransform.localScale = new Vector3(-1f, 1f, 1f);
-                    }
+                    imageTransform.localScale = new Vector3(-1f, 1f, 1f);
                 }
             }
-            else
-            {
-                if (movement.y > 0)
-                {
-                    this.direction = 2;// 向上
-                }
-                else
-                {
-                    this.direction = 1;// 向下
-                }
-            }
+            // else
+            // {
+            //     if (movement.y > 0)
+            //     {
+            //         this.direction = 2;// 向上
+            //     }
+            //     else
+            //     {
+            //         this.direction = 1;// 向下
+            //     }
+            // }
         }
         else
         {

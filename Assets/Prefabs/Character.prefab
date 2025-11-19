@@ -65,8 +65,8 @@ MonoBehaviour:
   retry: 0
   numberOfRetry: 3
   detectCamera: {fileID: 0}
-  followSpeed: 5
-  acc: 2
+  followSpeed: 800
+  acc: 320
   answerObject: {fileID: 0}
   direction: 0
   key: 

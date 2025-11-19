@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SocialPlatforms;
+using UnityEngine.SceneManagement;
 using System.Text;
 
 public class TowerGameController : GameBaseController
@@ -15,6 +16,7 @@ public class TowerGameController : GameBaseController
     public GameObject onTopUI;
     public GameObject answerPrefab;
     public GameObject obstaclePrefab;
+    public GameObject readyButton;
     public Transform globalParent;
     public GameObject YouWin;
     public GameObject YouLose;
@@ -35,6 +37,7 @@ public class TowerGameController : GameBaseController
     // Map answer ID -> GameObject
     private Dictionary<int, GameObject> answerObjectsById = new Dictionary<int, GameObject>();
     private Dictionary<int, GameObject> obstacleObjectsById = new Dictionary<int, GameObject>();
+    private HashSet<string> currentKeys = new HashSet<string>();
 
     protected override void Awake()
     {
@@ -64,6 +67,10 @@ public class TowerGameController : GameBaseController
         {
             WS_Client.Instance.OnOrderChanged += HandleOrderChanged;
         }
+
+        if (WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid).status != "playing") {
+            readyButton.SetActive(true);
+        }
     }
 
     private void OnDestroy()
@@ -90,9 +97,12 @@ public class TowerGameController : GameBaseController
                 // Add your logic here
                 break;
             case "startGame":
-                // Add your logic here
+                readyButton.SetActive(false);
+                StartGame.Instance.startGameSequence();
                 break;
             case "endGame":
+                readyButton.SetActive(true);
+                onTopUI.GetComponent<CanvasGroup>().alpha = 0;
                 base.endGame();
                 break;
             case "resetGame":
@@ -123,11 +133,6 @@ public class TowerGameController : GameBaseController
         var players = WS_Client.Instance.GameData.players;
         if (players == null) return;
 
-        this.playerNumber = players.Count;
-
-        // Track which uids are currently present this frame
-        var currentKeys = new HashSet<string>();
-
         // Get local player's uid (if available)
         int localUid = -1;
         if (WS_Client.Instance != null && WS_Client.Instance.public_UserInfo != null)
@@ -135,57 +140,35 @@ public class TowerGameController : GameBaseController
             localUid = WS_Client.Instance.public_UserInfo.uid;
         }
 
-        StringBuilder debugSB = new StringBuilder();
         // Create missing players and update positions for existing ones
         foreach (var player in players)
         {
-            string debugInfo = "";
             string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
-            currentKeys.Add(key);
 
             bool isLocal = (player.uid == localUid);
             if (!playerControllersByKey.ContainsKey(key))
             {
-                CreatePlayerFromData(player, Vector3.zero, key, isLocal);
+                Vector3 location = new Vector3(player.position[0], player.position[1], 0f);
+                CreatePlayerFromData(player, location, key, isLocal);
+                currentKeys.Add(key);
             }
 
             if (!isLocal)
             {
-                Vector3 otherPlayerPos = Vector3.zero;
-                if (player.position != null && player.position.Length >= 2)
-                {
-                    otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
-                }
-
+                Vector3 otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
                 var cc = playerControllersByKey[key];
-                if (cc != null)
-                {
-                    // don't override local player's client-controlled transform
-                    if (player.uid != localUid && !cc.IsLocalPlayer)
-                    {
-                        cc.transform.localPosition = otherPlayerPos;
-                    }
-                }
+                if (cc) cc.setLocalDestination(otherPlayerPos);
             }
-            debugInfo += $"Player {player.uid} at ({player.position[0]}, {player.position[1]})\n";
-            debugSB.Append(debugInfo);
         }
 
-        this.debugText.text = debugSB.ToString();
-
         // Remove controllers for players who left
-        var toRemove = new List<string>();
+        // var toRemove = new List<string>();
         foreach (var kv in playerControllersByKey)
         {
             if (!currentKeys.Contains(kv.Key))
             {
-                toRemove.Add(kv.Key);
+                RemovePlayer(kv.Key);
             }
-        }
-
-        foreach (var key in toRemove)
-        {
-            RemovePlayer(key);
         }
     }
 
@@ -227,7 +210,6 @@ public class TowerGameController : GameBaseController
                     }
 
                     CreateQuestionObject(question, questionPos);
-                    Debug.Log($"Created question for round {currentRound} at position ({questionPos.x}, {questionPos.y})");
                 }
                 else
                 {
@@ -251,19 +233,12 @@ public class TowerGameController : GameBaseController
             }
 
             // 移除不属于当前轮次的问题
-            var questionsToRemove = new List<int>();
             foreach (var kv in questionObjectsById)
             {
                 if (!currentQuestionIds.Contains(kv.Key))
                 {
-                    questionsToRemove.Add(kv.Key);
+                    RemoveQuestionObject(kv.Key);
                 }
-            }
-
-            foreach (var id in questionsToRemove)
-            {
-                RemoveQuestionObject(id);
-                Debug.Log($"Removed question from previous round: {id}");
             }
 
             if (WS_Client.Instance.GameData.players != null) {
@@ -320,19 +295,13 @@ public class TowerGameController : GameBaseController
             }
 
             // Remove answers that no longer exist
-            var answersToRemove = new List<int>();
             foreach (var kv in answerObjectsById)
             {
                 if (!currentAnswerIds.Contains(kv.Key))
                 {
-                    answersToRemove.Add(kv.Key);
+                    RemoveAnswerObject(kv.Key);
                 }
             }
-            foreach (var id in answersToRemove)
-            {
-                RemoveAnswerObject(id);
-            }
-
         }
 
         // Process obstacles 
@@ -389,19 +358,14 @@ public class TowerGameController : GameBaseController
             }
 
             // Remove obstacles that no longer exist - 与answer相同的清理逻辑
-            var obstaclesToRemove = new List<int>();
             foreach (var kv in obstacleObjectsById)
             {
                 if (!currentObstacleIds.Contains(kv.Key))
                 {
-                    obstaclesToRemove.Add(kv.Key);
+                    RemoveObstacleObject(kv.Key);
                 }
             }
 
-            foreach (var id in obstaclesToRemove)
-            {
-                RemoveObstacleObject(id);
-            }
         }
     }
 
@@ -709,5 +673,9 @@ public class TowerGameController : GameBaseController
     {
         YouLose.SetActive(true);
         StartCoroutine(HideYouLoseAfterDelay(3f));
+    }
+
+    public void reloadScene() {
+        SceneManager.LoadScene(1);
     }
 }

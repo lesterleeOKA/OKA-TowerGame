@@ -358,7 +358,7 @@ public class WS_Client : MonoBehaviour
                         Debug.Log("roomFull : " + message.content.message + " / " + "current roomId : " + roomId);
                         break;
                     case "SyncRoomData":
-                        debugLogPerSecond("OnMessage! " + jsonString, "debug");
+                        // debugLogPerSecond("OnMessage! " + jsonString, "debug");
                         GameData = message.content.roomGameData;
                         if (!string.IsNullOrEmpty(message.content.order))
                         {
@@ -413,12 +413,13 @@ public class WS_Client : MonoBehaviour
             }
         };
 
+        Debug.Log("Connect");
         // Keep sending messages at every 5s
         InvokeRepeating("SendTest", 0.0f, 5f);
-        // Keep sending game data at every 0.1s
+        // // Keep sending game data at every 0.1s
         InvokeRepeating("ConstantSyncData", 0.0f, 0.1f);
 
-        // waiting for messages\
+        // // waiting for messages\
         await websocket.Connect();
     }
 
@@ -589,14 +590,14 @@ public class WS_Client : MonoBehaviour
         // 检查WebSocket连接状态
         if (websocket?.State != WebSocketState.Open)
         {
-            debugLogPerSecond("WebSocket未连接，无法发送位置同步数据！", "warning");
+            Debug.Log("WebSocket未连接，无法发送位置同步数据！");
             return;
         }
 
         // 检查是否已加入房间
         if (string.IsNullOrEmpty(roomId) || roomId == "lobby")
         {
-            // debugLogPerSecond("未加入有效房间，跳过位置同步", "debug");
+            // Debug.Log("未加入有效房间，跳过位置同步", "debug");
             return;
         }
 
@@ -605,7 +606,7 @@ public class WS_Client : MonoBehaviour
             // 1. 从本地GameData中获取当前玩家的数据
             if (GameData?.players == null)
             {
-                debugLogPerSecond("GameData或players列表为空，无法同步位置", "warning");
+                Debug.Log("GameData或players列表为空，无法同步位置");
                 return;
             }
 
@@ -617,7 +618,7 @@ public class WS_Client : MonoBehaviour
 
             if (myPlayer == null)
             {
-                debugLogPerSecond($"在GameData中未找到UID为{currentPlayerUid}的玩家, GameData: {GameData.players}", "warning");
+                Debug.Log($"在GameData中未找到UID为{currentPlayerUid}的玩家, GameData: {GameData.players}");
                 return;
             }
 
@@ -635,18 +636,20 @@ public class WS_Client : MonoBehaviour
             };
 
             // 3. 发送位置更新到服务器
+            Debug.Log("positionData: " + positionData.x + " " + positionData.y + " " + destinationData.x + " " + destinationData.y);
+            // Debug.Log($"位置同步发送: 位置({positionData.x:F2}, {positionData.y:F2}) -> 目的地({destinationData.x:F2}, {destinationData.y:F2})", "debug");
             await UpdateServerPosition(positionData, destinationData);
 
-            debugLogPerSecond($"位置同步发送: 位置({positionData.x:F2}, {positionData.y:F2}) -> 目的地({destinationData.x:F2}, {destinationData.y:F2})", "debug");
         }
         catch (System.ObjectDisposedException)
         {
-            debugLogPerSecond("WebSocket已关闭，停止位置同步", "warning");
+            Debug.Log("WebSocket已关闭，停止位置同步");
             isSendingPosition = false;
         }
         catch (System.Exception e)
         {
-            debugLogPerSecond($"位置同步失败: {e.Message}", "error");
+            Debug.Log($"位置同步失败: {e.Message}");
+            isSendingPosition = false;
         }
         finally
         {
@@ -687,7 +690,7 @@ public class WS_Client : MonoBehaviour
         }
         else
         {
-            debugLogPerSecond("WebSocket未连接！", "warning");
+            Debug.Log("WebSocket未连接！");
         }
     }
 
@@ -696,7 +699,7 @@ public class WS_Client : MonoBehaviour
         // 确保 GameData 和玩家列表不为空
         if (GameData?.players == null)
         {
-            debugLogPerSecond("尝试更新玩家位置时，GameData 或 players 为 null。", "warning");
+            Debug.Log("尝试更新玩家位置时，GameData 或 players 为 null。");
             return;
         }
 
@@ -713,11 +716,11 @@ public class WS_Client : MonoBehaviour
                 playerToUpdate.destination = newDestination;
             }
 
-            debugLogPerSecond($"已更新本地玩家数据: UID {playerUid} 位置 -> [{newPosition[0]}, {newPosition[1]}]", "debug");
+            Debug.Log($"已更新本地玩家数据: UID {playerUid} 位置 -> [{newPosition[0]}, {newPosition[1]}]");
         }
         else
         {
-            debugLogPerSecond($"在 GameData 中未找到 UID 为 {playerUid} 的玩家。", "warning");
+            Debug.Log($"在 GameData 中未找到 UID 为 {playerUid} 的玩家。");
         }
     }
 
@@ -830,38 +833,38 @@ public class WS_Client : MonoBehaviour
     }
 
     public void setReady(bool state) {
-        string newStatus = state ? "ready" : "waiting";
-        if (GameData != null && GameData.players != null) {
-            PlayerData player = GameData.players.FirstOrDefault(p => p.uid == public_UserInfo.uid);
-            if (player != null) {
-                Debug.Log("setReady: " + newStatus);
-                player.status = newStatus;
-                // sendAction("ready");
-            }
-        }
+        // string newStatus = state ? "ready" : "waiting";
+        // if (GameData != null && GameData.players != null) {
+        //     PlayerData player = GameData.players.FirstOrDefault(p => p.uid == public_UserInfo.uid);
+        //     if (player != null) {
+        //         Debug.Log("setReady: " + newStatus);
+        //         player.status = newStatus;
+                sendAction("ready");
+        //     }
+        // }
     }
 
     private float lastLogTime = 0f;
-    private void debugLogPerSecond(string message, string type)
-    {
-        if (Time.time - lastLogTime >= 2f)
-        {
-            switch (type)
-            {
-                case "debug":
-                    Debug.Log(message);
-                    break;
-                case "warning":
-                    Debug.LogWarning(message);
-                    break;
-                case "error":
-                    Debug.LogError(message);
-                    break;
-                default:
-                    Debug.Log(message);
-                    break;
-            }
-            lastLogTime = Time.time;
-        }
-    }
+    // private void debugLogPerSecond(string message, string type)
+    // {
+    //     if (Time.time - lastLogTime >= 2f)
+    //     {
+    //         switch (type)
+    //         {
+    //             case "debug":
+    //                 Debug.Log(message);
+    //                 break;
+    //             case "warning":
+    //                 Debug.LogWarning(message);
+    //                 break;
+    //             case "error":
+    //                 Debug.LogError(message);
+    //                 break;
+    //             default:
+    //                 Debug.Log(message);
+    //                 break;
+    //         }
+    //         lastLogTime = Time.time;
+    //     }
+    // }
 }

@@ -5409,6 +5409,7 @@ MonoBehaviour:
   onTopUI: {fileID: 1620153708}
   answerPrefab: {fileID: 1516595855}
   obstaclePrefab: {fileID: 3668556306711772515, guid: e6d133f5d65f37141ad7cb7804c5c253, type: 3}
+  readyButton: {fileID: 965468766}
   globalParent: {fileID: 1388269475}
   YouWin: {fileID: 617150445}
   YouLose: {fileID: 105608703}
@@ -7091,10 +7092,10 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: GameBaseController, Assembly-CSharp
-        m_MethodName: retryGame
-        m_Mode: 1
+      - m_Target: {fileID: 2850077684485109559}
+        m_TargetAssemblyTypeName: UnityEngine.CanvasGroup, UnityEngine
+        m_MethodName: set_alpha
+        m_Mode: 4
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

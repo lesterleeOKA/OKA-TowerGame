@@ -36,9 +36,9 @@ public class GameBaseController : MonoBehaviour
 
     public virtual void endGame()
     {
-        SetUI.Set(this.TopUILayer, false, 0f);
+        // SetUI.Set(this.TopUILayer, false, 0f);
         // SetUI.Set(this.GameUILayer, false, 0f);
-        SetUI.Set(this.TopRightUILayer, false, 0f);
+        // SetUI.Set(this.TopRightUILayer, false, 0f);
         for (int i = 0; i < WS_Client.Instance.GameData.players.Count; i++) {
             this.endGamePage.updateFinalScore(i, WS_Client.Instance.GameData.players[i].score);
         }
