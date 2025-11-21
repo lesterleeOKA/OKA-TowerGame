@@ -703,9 +703,46 @@ namespace NativeWebSocket
 
         public async Task Close()
         {
-            if (State == WebSocketState.Open)
+            // defensive: nothing to do if socket was never created
+            if (m_Socket == null)
+                return;
+
+            // guard against accessing state on a disposed socket
+            try
             {
-                await m_Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, m_CancellationToken);
+                var netState = m_Socket.State;
+                if (netState == System.Net.WebSockets.WebSocketState.Open ||
+                    netState == System.Net.WebSockets.WebSocketState.CloseReceived ||
+                    netState == System.Net.WebSockets.WebSocketState.CloseSent)
+                {
+                    try
+                    {
+                        // use a fresh token to avoid OperationCanceledException from a cancelled token source
+                        await m_Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None).ConfigureAwait(false);
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // socket (or its underlying stream) already disposed, nothing to do
+                        Debug.LogWarning("[WebSocket] CloseAsync failed: socket already disposed.");
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Debug.LogWarning("[WebSocket] CloseAsync cancelled.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogWarning($"[WebSocket] CloseAsync exception: {ex.Message}");
+                    }
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // socket object already disposed; swallow silently
+                Debug.LogWarning("[WebSocket] Close skipped: socket already disposed.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[WebSocket] Error while checking socket state before Close: {ex.Message}");
             }
         }
     }

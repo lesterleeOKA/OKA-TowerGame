@@ -38,6 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -5409,7 +5410,6 @@ MonoBehaviour:
   onTopUI: {fileID: 1620153708}
   answerPrefab: {fileID: 1516595855}
   obstaclePrefab: {fileID: 3668556306711772515, guid: e6d133f5d65f37141ad7cb7804c5c253, type: 3}
-  readyButton: {fileID: 965468766}
   globalParent: {fileID: 1388269475}
   YouWin: {fileID: 617150445}
   YouLose: {fileID: 105608703}
@@ -5447,6 +5447,7 @@ MonoBehaviour:
     wsId: 
     channelId: 
     roomIds: []
+  readyButton: {fileID: 965468766}
 --- !u!1 &2059364962
 GameObject:
   m_ObjectHideFlags: 0
@@ -9790,7 +9791,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -264, y: -134}
+  m_AnchoredPosition: {x: -264, y: -200}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2684836878502817478
@@ -17911,7 +17912,7 @@ MonoBehaviour:
   m_StartCorner: 0
   m_StartAxis: 0
   m_CellSize: {x: 140, y: 148}
-  m_Spacing: {x: 20, y: 0}
+  m_Spacing: {x: 20, y: 20}
   m_Constraint: 1
   m_ConstraintCount: 3
 --- !u!225 &7739941143962278923

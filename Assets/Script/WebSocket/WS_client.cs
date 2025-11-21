@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using NativeWebSocket;
@@ -54,6 +53,7 @@ public class WS_Client : MonoBehaviour
     // Event system for order changes
     public delegate void OrderChangedHandler(string newOrder);
     public event OrderChangedHandler OnOrderChanged;
+    public GameObject readyButton;
 
     // 新增公共属性，作为访问私有字段的受控接口
     public UserInfo public_UserInfo
@@ -277,7 +277,42 @@ public class WS_Client : MonoBehaviour
 
         // GameData.questions = dummyQuestions;
         // GameData.answers = dummyAnswers;
-        Connect();
+        this.Connect(()=>
+        {
+            try
+            {
+                // Defensive checks: ensure GameData, players and user info exist before accessing
+                if (this.GameData?.players == null || this.public_UserInfo == null)
+                {
+                    Debug.LogWarning("WS_Client: GameData.players or public_UserInfo is null, skipping ready button activation.");
+                    return;
+                }
+
+                var me = this.GameData.players.Find(p => p.uid == this.public_UserInfo.uid);
+                if (me == null)
+                {
+                    Debug.LogWarning($"WS_Client: local player (uid={this.public_UserInfo.uid}) not found in GameData.players.");
+                    return;
+                }
+
+                if (me.status != "playing")
+                {
+                    // UnityEngine.Object equality works for destroyed Unity objects:
+                    if (this.readyButton != null)
+                    {
+                        this.readyButton.SetActive(true);
+                    }
+                    else
+                    {
+                        Debug.LogWarning("WS_Client: readyButton is null or has been destroyed; cannot SetActive.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"WS_Client: exception in onConnect callback: {ex.Message}");
+            }
+        });
     }
 
     private void Awake()
@@ -297,7 +332,7 @@ public class WS_Client : MonoBehaviour
         // InitializeWebSocket();
     }
 
-    public async void Connect()
+    public async void Connect(Action onConnectCompleted = null)
     {
         // var baseUrl = WEBSHOCKET_URL; // "wss://ws.openknowledge.hk"
         // // *********************************************
@@ -421,6 +456,8 @@ public class WS_Client : MonoBehaviour
 
         // // waiting for messages\
         await websocket.Connect();
+
+        onConnectCompleted?.Invoke();
     }
 
     void Update()
