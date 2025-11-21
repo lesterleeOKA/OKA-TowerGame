@@ -90,6 +90,7 @@ public class TowerGameController : GameBaseController
         {
             case "addPlayer":
             case "removePlayer":
+            case "reconnectPlayer":
                 SyncPlayers();
                 break;
             case "startGame":

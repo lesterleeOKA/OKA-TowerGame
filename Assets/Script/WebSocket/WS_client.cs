@@ -373,7 +373,7 @@ public class WS_Client : MonoBehaviour
                 {
                     case "roomInfo":
                         roomId = message.roomId;
-                        Debug.Log("current roomId : " + roomId);
+                        Debug.Log("current roomId : " + roomId);                       
                         break;
                     case "listGameRoom":
                         if (message.content.roomList != null)
