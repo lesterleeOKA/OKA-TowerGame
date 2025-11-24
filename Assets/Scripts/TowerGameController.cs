@@ -678,4 +678,17 @@ public class TowerGameController : GameBaseController
     public void reloadScene() {
         SceneManager.LoadScene(1);
     }
+
+    public void quitGame() {
+        #if UNITY_EDITOR
+            // In Unity Editor, stop Play mode
+            UnityEditor.EditorApplication.isPlaying = false;
+        #elif UNITY_WEBGL
+            // For WebGL builds, use JavaScript to close the browser tab
+            Application.ExternalEval("window.close();");
+        #else
+            // For standalone builds, quit the application
+            Application.Quit();
+        #endif
+    }
 }
