@@ -38,6 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
+  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -482,7 +483,7 @@ MonoBehaviour:
         score: 0
         percent: 0
   unitKey: 
-  testURL: https://dev.openknowledge.hk/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUyMi0zOWJjMjcxNjlkYTNlODEzMjA2ZTNlNGY1YzllMTVhYzZlYTFjNzBiNzVhNjM3M2I2YjY0MjZhNjEyZTI1ZDdlIiwiZXhwaXJlcyI6MTc2MzQzNDg4MiwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTEtMTEgMDM6MDE6MjIgR01UIiwidWlkIjoiNTIyIiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTcyLjE2LjAuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6Im1hYyJ9.VfsUygrelDvDF-2Ck-YYpe0k3v-86BzqvzzGK8j5LgE
+  testURL: https://dev.openknowledge.hk/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcyMS00NTkwZGQ3NTdhOTU2NWJlMWYyYTk3ZDk2MmU3ODBkOWI5ZDE2MTIzZTM0NmY4ODE1MDgwMDI3ZTU3YjQxNDMwIiwiZXhwaXJlcyI6MTc2NDMwOTkxOSwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTEtMjEgMDY6MDU6MTkgR01UIiwidWlkIjoiNTQzNzIxIiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuMiIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.CkRDSAzzT2NrGtg3HLeWouoEfI0IJ06joTlaujWDk_o
   skipAudioPanel: 0
 --- !u!4 &734659897
 Transform:
@@ -783,7 +784,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_Text
-      value: v1.12
+      value: v1.03
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_FontData.m_Font

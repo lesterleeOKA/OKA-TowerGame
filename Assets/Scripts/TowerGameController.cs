@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.SocialPlatforms;
 using UnityEngine.SceneManagement;
-using System.Text;
 
 public class TowerGameController : GameBaseController
 {
@@ -16,7 +14,6 @@ public class TowerGameController : GameBaseController
     public GameObject onTopUI;
     public GameObject answerPrefab;
     public GameObject obstaclePrefab;
-    public GameObject readyButton;
     public Transform globalParent;
     public GameObject YouWin;
     public GameObject YouLose;
@@ -68,9 +65,10 @@ public class TowerGameController : GameBaseController
             WS_Client.Instance.OnOrderChanged += HandleOrderChanged;
         }
 
+        /*// change ready button to WS_Client's ready button
         if (WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid).status != "playing") {
             readyButton.SetActive(true);
-        }
+        }*/
     }
 
     private void OnDestroy()
@@ -91,17 +89,16 @@ public class TowerGameController : GameBaseController
         switch (newOrder)
         {
             case "addPlayer":
-                // Add your logic here
-                break;
             case "removePlayer":
-                // Add your logic here
+            case "reconnectPlayer":
+                SyncPlayers();
                 break;
             case "startGame":
-                readyButton.SetActive(false);
+                WS_Client.Instance.readyButton.SetActive(false);
                 StartGame.Instance.startGameSequence();
                 break;
             case "endGame":
-                readyButton.SetActive(true);
+                WS_Client.Instance.readyButton.SetActive(true);
                 onTopUI.GetComponent<CanvasGroup>().alpha = 0;
                 base.endGame();
                 break;
@@ -125,17 +122,19 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    // Update is called once per frame
-    void Update()
+    private void SyncPlayers()
     {
-        // If no data, nothing to do
-        if (WS_Client.Instance.GameData == null) return;
+        // Defensive checks
+        if (WS_Client.Instance == null || WS_Client.Instance.GameData == null) return;
         var players = WS_Client.Instance.GameData.players;
         if (players == null) return;
 
+        // Clear currentKeys so we rebuild it from the authoritative GameData
+        currentKeys.Clear();
+
         // Get local player's uid (if available)
         int localUid = -1;
-        if (WS_Client.Instance != null && WS_Client.Instance.public_UserInfo != null)
+        if (WS_Client.Instance.public_UserInfo != null)
         {
             localUid = WS_Client.Instance.public_UserInfo.uid;
         }
@@ -150,26 +149,47 @@ public class TowerGameController : GameBaseController
             {
                 Vector3 location = new Vector3(player.position[0], player.position[1], 0f);
                 CreatePlayerFromData(player, location, key, isLocal);
-                currentKeys.Add(key);
             }
 
+            // mark as present for this cycle
+            currentKeys.Add(key);
+
+            // update non-local players' destination
             if (!isLocal)
             {
-                Vector3 otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
-                var cc = playerControllersByKey[key];
-                if (cc) cc.setLocalDestination(otherPlayerPos);
+                if (playerControllersByKey.TryGetValue(key, out var cc))
+                {
+                    if (cc != null)
+                    {
+                        Vector3 otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
+                        cc.setLocalDestination(otherPlayerPos);
+                    }
+                }
             }
         }
 
-        // Remove controllers for players who left
-        // var toRemove = new List<string>();
+        // Remove controllers for players who left (keys not present in currentKeys)
+        // Collect keys to remove to avoid modifying dictionary during iteration
+        var toRemove = new List<string>();
         foreach (var kv in playerControllersByKey)
         {
             if (!currentKeys.Contains(kv.Key))
             {
-                RemovePlayer(kv.Key);
+                toRemove.Add(kv.Key);
             }
         }
+
+        foreach (var key in toRemove)
+        {
+            RemovePlayer(key);
+        }
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        // If no data, nothing to do
+        SyncPlayers();
     }
 
     void FixedUpdate()
@@ -392,7 +412,7 @@ public class TowerGameController : GameBaseController
         characterController.transform.localPosition = startPos;
 
         // mark local player for client-side control
-        characterController.IsLocalPlayer = isLocal;
+        characterController.setLocalPlayer(isLocal);
         if (isLocal)
         {
             Debug.Log($"Local player created for uid={uid}");

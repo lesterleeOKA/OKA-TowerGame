@@ -5,6 +5,7 @@ public class ResponsiveUI : MonoBehaviour
 {
     private RectTransform rectTransform;
     public RectTransform parentRect;
+    public bool usereferenceResolution = true;
 
     void Awake()
     {
@@ -42,7 +43,10 @@ public class ResponsiveUI : MonoBehaviour
         }
         else
         {
-            this.rectTransform.sizeDelta = referenceResolution;
+            if(this.usereferenceResolution)
+                this.rectTransform.sizeDelta = referenceResolution;
+            else
+                this.rectTransform.sizeDelta = new Vector2(sizeDelta.x, referenceResolution.y);
         }
     }
 }

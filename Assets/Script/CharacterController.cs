@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class CharacterController : UserData
 {
@@ -17,7 +20,7 @@ public class CharacterController : UserData
     public bool IsLocalPlayer = false; 
     private Vector3 localDestination = Vector3.zero;
     public bool isMouseDown = false; 
-
+    public CanvasGroup localPlayer;
 
     void Start()
     {
@@ -25,13 +28,59 @@ public class CharacterController : UserData
         lastPosition = transform.position;
         imageTransform = transform.Find("image");
         answerBubbleTransform = transform.Find("AnswerBubble");
+    }
 
+    public void setLocalPlayer(bool _isLocalPlayer = false)
+    {
+        this.IsLocalPlayer = _isLocalPlayer;
+        SetUI.Set(this.localPlayer, _isLocalPlayer);
+    }
+
+    //Fixed the touch and mouse click conflict with UI Buttons
+    private bool IsPointerOverUIButton()
+    {
+        if (EventSystem.current == null) return false;
+
+        PointerEventData pointerData = new PointerEventData(EventSystem.current);
+        if (Input.touchCount > 0)
+        {
+            pointerData.position = Input.GetTouch(0).position;
+        }
+        else
+        {
+            pointerData.position = Input.mousePosition;
+        }
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        foreach (var r in results)
+        {
+            if (r.gameObject == null) continue;
+            // check for Button component on the hit GameObject or any parent
+            if (r.gameObject.GetComponent<Button>() != null)
+                return true;
+            // sometimes the Button component is on a parent; walk up
+            Transform t = r.gameObject.transform;
+            while (t.parent != null)
+            {
+                t = t.parent;
+                if (t.GetComponent<Button>() != null) return true;
+            }
+        }
+
+        return false;
     }
 
     void Update()
     {
-        if(IsLocalPlayer)
+        if(this.IsLocalPlayer)
         {
+            if (this.IsPointerOverUIButton())
+            {
+                return;
+            }
+
             // Handle both mouse and touch input
             if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
             {
