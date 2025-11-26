@@ -1,9 +1,19 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+
+// Class to hold all costume textures for a single costume
+[System.Serializable]
+public class CostumeTextures
+{
+    public Texture2D standTexture;
+    public Texture2D walkTexture;
+    public Texture2D jumpTexture;
+}
 
 public class TowerGameController : GameBaseController
 {
@@ -24,6 +34,13 @@ public class TowerGameController : GameBaseController
     public Camera trackingCamera;
     private int playerID = 0;
     public Text debugText;
+
+    private string costumeDataJson = "";
+    public string accountCostumeId = ""; // ID of the costume currently equipped by the account
+    public Dictionary<string, CostumeTextures> costumeTexturesById = new Dictionary<string, CostumeTextures>(); // costume_id -> CostumeTextures (stand, walk, jump)
+    public Dictionary<string, CostumeData> costumeDataById = new Dictionary<string, CostumeData>(); // costume_id -> CostumeData
+    public bool finishLoading = false; // Set to true after costume data and account costume ID are loaded
+    private int loadingImagesCount = 0; // Track how many images are currently loading
 
     // Map WS player key (string) -> CharacterController (ensures one GameObject per ws player)
     private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
@@ -65,10 +82,221 @@ public class TowerGameController : GameBaseController
             WS_Client.Instance.OnOrderChanged += HandleOrderChanged;
         }
 
+        // Wait for starwishApiCaller to be ready before fetching costume data
+        StartCoroutine(WaitForStarwishApi());
+
         /*// change ready button to WS_Client's ready button
         if (WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid).status != "playing") {
             readyButton.SetActive(true);
         }*/
+    }
+
+    private IEnumerator WaitForStarwishApi()
+    {
+        while (LoaderConfig.Instance == null || LoaderConfig.Instance.apiManager == null)
+        {
+            yield return null;
+        }
+
+        // Fetch both costume data and account costume ID in parallel
+        Task task1 = fetchCostumeData();
+        Task task2 = fetchAccountCostumeId();
+        
+        // Wait for both tasks to complete
+        yield return new WaitUntil(() => task1.IsCompleted && task2.IsCompleted);
+        
+        finishLoading = true;
+    }
+
+    protected async Task fetchAccountCostumeId() {
+        try 
+        {
+            string jsonResponse = await LoaderConfig.Instance.apiManager.StarwishApi("get", "accounts/current");
+            
+            // Parse the JSON response
+            if (!string.IsNullOrEmpty(jsonResponse))
+            {
+                try
+                {
+                    StarwishPartyAccountResponse accountResponse = JsonUtility.FromJson<StarwishPartyAccountResponse>(jsonResponse);
+                    
+                    if (accountResponse != null && 
+                        accountResponse.data != null && 
+                        accountResponse.data.equipped_costume_data != null && 
+                        !string.IsNullOrEmpty(accountResponse.data.equipped_costume_data.costume_id))
+                    {
+                        accountCostumeId = accountResponse.data.equipped_costume_data.costume_id;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("No equipped costume found in account response");
+                    }
+                }
+                catch (System.Exception parseEx)
+                {
+                    Debug.LogError($"Failed to parse account data JSON: {parseEx.Message}");
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to fetch account costume ID: {ex.Message}");
+        }
+    }
+    protected async Task fetchCostumeData() {
+        try 
+        {
+            // Wait for APIManager to be initialized
+            if (LoaderConfig.Instance == null || LoaderConfig.Instance.apiManager == null)
+            {
+                Debug.LogError("LoaderConfig.Instance.apiManager is null. Make sure LoaderConfig is properly initialized.");
+                return;
+            }
+
+            string jsonResponse = await LoaderConfig.Instance.apiManager.StarwishApi("get", "costumes");
+            costumeDataJson = jsonResponse;
+            Debug.Log($"costumeData loaded: {costumeDataJson}");
+
+            // Parse JSON to get all costumes
+            if (!string.IsNullOrEmpty(costumeDataJson))
+            {
+                try
+                {
+                    CostumeListResponse costumeResponse = JsonUtility.FromJson<CostumeListResponse>(costumeDataJson);
+                    
+                    if (costumeResponse != null && 
+                        costumeResponse.data != null && 
+                        costumeResponse.data.Length > 0)
+                    {
+                        
+                        // Store costume data and start loading images for each costume
+                        foreach (CostumeData costume in costumeResponse.data)
+                        {
+                            if (costume != null && !string.IsNullOrEmpty(costume.costume_id))
+                            {
+                                // Store costume data
+                                costumeDataById[costume.costume_id] = costume;
+                                
+                                // Initialize CostumeTextures object for this costume
+                                if (!costumeTexturesById.ContainsKey(costume.costume_id))
+                                {
+                                    costumeTexturesById[costume.costume_id] = new CostumeTextures();
+                                }
+                                
+                                // Load stand image
+                                if (!string.IsNullOrEmpty(costume.img_src_stand))
+                                {
+                                    loadingImagesCount++;
+                                    StartCoroutine(LoadCostumeImage(
+                                        costume.costume_id, 
+                                        costume.img_src_stand, 
+                                        "stand"
+                                    ));
+                                }
+                                
+                                // Load walk image
+                                if (!string.IsNullOrEmpty(costume.img_src_walk))
+                                {
+                                    loadingImagesCount++;
+                                    StartCoroutine(LoadCostumeImage(
+                                        costume.costume_id, 
+                                        costume.img_src_walk, 
+                                        "walk"
+                                    ));
+                                }
+                                
+                                // Load jump image
+                                if (!string.IsNullOrEmpty(costume.img_src_jump))
+                                {
+                                    loadingImagesCount++;
+                                    StartCoroutine(LoadCostumeImage(
+                                        costume.costume_id, 
+                                        costume.img_src_jump, 
+                                        "jump"
+                                    ));
+                                }
+                            }
+                        }
+                        
+                        // Wait for all images to finish loading
+                        Debug.Log($"Started loading {loadingImagesCount} costume images. Waiting for completion...");
+                        int maxWaitSeconds = 30; // Maximum wait time
+                        float waitedTime = 0f;
+                        while (loadingImagesCount > 0 && waitedTime < maxWaitSeconds)
+                        {
+                            await Task.Delay(100); // Wait 100ms between checks
+                            waitedTime += 0.1f;
+                        }
+                        
+                        if (loadingImagesCount > 0)
+                        {
+                            Debug.LogWarning($"Timed out waiting for costume images. {loadingImagesCount} images still loading.");
+                        }
+                        else
+                        {
+                            Debug.Log("All costume images loaded successfully!");
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning("No costume data found in response");
+                    }
+                }
+                catch (System.Exception parseEx)
+                {
+                    Debug.LogError($"Failed to parse costume data JSON: {parseEx.Message}");
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to fetch costume data: {ex.Message}");
+        }
+    }
+
+    private IEnumerator LoadCostumeImage(string costumeId, string imageUrl, string imageType)
+    {
+        using (UnityEngine.Networking.UnityWebRequest request = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(imageUrl))
+        {
+            // Set certificate handler to bypass SSL issues if needed
+            request.certificateHandler = new WebRequestSkipCert();
+            
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+            {
+                Texture2D loadedTexture = UnityEngine.Networking.DownloadHandlerTexture.GetContent(request);
+                
+                // Store the texture in the appropriate field based on imageType
+                if (costumeTexturesById.ContainsKey(costumeId))
+                {
+                    CostumeTextures costumeTextures = costumeTexturesById[costumeId];
+                    
+                    switch (imageType.ToLower())
+                    {
+                        case "stand":
+                            costumeTextures.standTexture = loadedTexture;
+                            break;
+                        case "walk":
+                            costumeTextures.walkTexture = loadedTexture;
+                            break;
+                        case "jump":
+                            costumeTextures.jumpTexture = loadedTexture;
+                            break;
+                        default:
+                            Debug.LogWarning($"Unknown image type '{imageType}' for costume ID {costumeId}");
+                            break;
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogError($"Failed to load costume {imageType} image for ID {costumeId}: {request.error}");
+            }
+            
+            // Decrement the loading counter
+            loadingImagesCount--;
+        }
     }
 
     private void OnDestroy()
@@ -189,7 +417,47 @@ public class TowerGameController : GameBaseController
     void Update()
     {
         // If no data, nothing to do
-        SyncPlayers();
+        if (finishLoading) SyncPlayers();
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            // printCostumeData(); // for DEV printCostumeData
+            printGameData(); // for DEV printCostumeData
+        }
+    }
+
+    void printGameData() {
+        // Debug.Log($"=== Game Data ===");
+        // Debug.Log($"Players: {WS_Client.Instance.GameData.players.Count}");
+        // Debug.Log($"Questions: {WS_Client.Instance.GameData.questions.Count}");
+        // Debug.Log($"Answers: {WS_Client.Instance.GameData.answers.Count}");
+        // Debug.Log($"Obstacles: {WS_Client.Instance.GameData.obstacles.Count}");
+        // Debug.Log($"=== End Game Data ===");
+    }
+
+    void printCostumeData()
+    {
+        Debug.Log($"=== Costume Data ({costumeDataById.Count} costumes loaded) ===");
+        
+        foreach (var kvp in costumeDataById)
+        {
+            string costumeId = kvp.Key;
+            CostumeData costume = kvp.Value;
+            
+            bool isEquipped = costumeId == accountCostumeId;
+            // Check if textures are loaded
+            if (costumeTexturesById.ContainsKey(costumeId))
+            {
+                CostumeTextures textures = costumeTexturesById[costumeId];
+                Debug.Log($"  Textures loaded: Stand={textures.standTexture != null}, Walk={textures.walkTexture != null}, Jump={textures.jumpTexture != null}");
+            }
+            else
+            {
+                Debug.Log($"  Textures: Not loaded yet");
+            }
+        }
+        
+        Debug.Log("=== End Costume Data ===");
     }
 
     void FixedUpdate()
@@ -393,6 +661,7 @@ public class TowerGameController : GameBaseController
     {
         // Instantiate without parent, set world position, then attach to parent preserving world pos
         var characterController = GameObject.Instantiate(this.playerPrefab, this.globalParent).GetComponent<CharacterController>();
+        
         if (characterController == null)
         {
             Debug.LogError("playerPrefab missing CharacterController component");
@@ -421,6 +690,26 @@ public class TowerGameController : GameBaseController
         playerControllersByKey[key] = characterController;
         characterController.key = key;
 
+        // Apply costume textures if available
+        if (!string.IsNullOrEmpty(player.costume_id) && costumeTexturesById.ContainsKey(player.costume_id))
+        {
+            CostumeTextures costumeTextures = costumeTexturesById[player.costume_id];
+            
+            if (costumeTextures.standTexture != null && costumeTextures.walkTexture != null)
+            {
+                characterController.SetCostumeTextures(costumeTextures.standTexture, costumeTextures.walkTexture);
+                Debug.Log($"Applied costume textures for player {uid} with costume_id: {player.costume_id}");
+            }
+            else
+            {
+                Debug.LogWarning($"Costume textures not fully loaded for costume_id: {player.costume_id}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"No costume textures found for player {uid} with costume_id: {player.costume_id}");
+        }
+
         // keep an incremental id for legacy naming if needed
         this.playerID = Mathf.Max(this.playerID, uid + 1);
         Debug.Log($"Created player GameObject for uid={uid} at {startPos} (isLocal={isLocal})");
@@ -442,6 +731,7 @@ public class TowerGameController : GameBaseController
 
     private void CreateQuestionObject(WS_Client.QuestionData question, Vector3 position)
     {
+        Debug.Log($"CreateQuestionObject: {question.id} - {question.content}");
         if (questionPrefab == null)
         {
             Debug.LogError("questionPrefab is not assigned!");

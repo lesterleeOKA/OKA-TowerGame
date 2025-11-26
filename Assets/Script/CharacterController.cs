@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -11,29 +12,139 @@ public class CharacterController : UserData
     public float acc = 320f;
     public GameObject answerObject;
     private float currectSpeed = 320f;
-    private Animator animator;
+    // private Animator animator;
     private Vector3 lastPosition;
     private Transform imageTransform;
     private Transform answerBubbleTransform;
-    public int direction = 0;
     public string key = "";
     public bool IsLocalPlayer = false; 
     private Vector3 localDestination = Vector3.zero;
     public bool isMouseDown = false; 
     public CanvasGroup localPlayer;
 
+    // Costume texture animation
+    private Texture2D standTexture;
+    private Texture2D walkTexture;
+    private RawImage characterImage;
+    private SpriteRenderer characterSpriteRenderer;
+    private Image characterUIImage;
+    private AspectRatioFitter aspectRatio;
+    private Coroutine walkingCoroutine;
+    public float textureAnimationFrameRate = 0.5f; 
+
     void Start()
     {
-        animator = GetComponent<Animator>();
+        // animator = GetComponent<Animator>();
         lastPosition = transform.position;
         imageTransform = transform.Find("image");
         answerBubbleTransform = transform.Find("AnswerBubble");
+
+        // Get the image component from the "image" child
+        if (imageTransform != null)
+        {
+            characterImage = imageTransform.GetComponent<RawImage>();
+            characterSpriteRenderer = imageTransform.GetComponent<SpriteRenderer>();
+            characterUIImage = imageTransform.GetComponent<Image>();
+        }
     }
 
     public void setLocalPlayer(bool _isLocalPlayer = false)
     {
         this.IsLocalPlayer = _isLocalPlayer;
         SetUI.Set(this.localPlayer, _isLocalPlayer);
+    }
+
+    // Set costume textures for this character
+    public void SetCostumeTextures(Texture2D stand, Texture2D walk)
+    {
+        // Initialize image components if not done yet (in case this is called before Start)
+        if (imageTransform == null)
+        {
+            imageTransform = transform.Find("image");
+            if (imageTransform != null)
+            {
+                characterUIImage = imageTransform.GetComponent<Image>();
+                aspectRatio = characterUIImage.GetComponent<AspectRatioFitter>();
+                aspectRatio.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
+                aspectRatio.aspectRatio = (float)stand.width / (float)stand.height;
+            }
+        }
+        
+        this.standTexture = stand;
+        this.walkTexture = walk;
+
+        // Apply the stand texture immediately (idle state)
+        SetIdleTexture();
+    }
+
+    // Apply the stand/idle texture
+    private void SetIdleTexture()
+    {
+        if (standTexture == null)
+        {
+            Debug.LogWarning($"SetIdleTexture: standTexture is NULL for {gameObject.name}");
+            return;
+        }
+
+        if (characterUIImage != null)
+        {
+            characterUIImage.sprite = Sprite.Create(
+                standTexture,
+                new Rect(0, 0, standTexture.width, standTexture.height),
+                new Vector2(0.5f, 0.5f)
+            );
+        }
+        else
+        {
+            Debug.LogError($"SetIdleTexture: No image component found on {gameObject.name}! imageTransform={imageTransform != null}");
+        }
+    }
+
+    // Start the walking animation
+    private void PlayWalkingAnimation()
+    {
+        // If already walking or no walk texture, do nothing
+        if (walkingCoroutine != null || walkTexture == null || standTexture == null) return;
+
+        Debug.Log($"PlayWalkingAnimation starting: {walkTexture.width}x{walkTexture.height} - {standTexture.width}x{standTexture.height}");
+        walkingCoroutine = StartCoroutine(WalkingAnimationCoroutine());
+    }
+
+    // Stop the walking animation
+    private void StopWalkingAnimation()
+    {
+        if (walkingCoroutine != null)
+        {
+            StopCoroutine(walkingCoroutine);
+            walkingCoroutine = null;
+            SetIdleTexture();
+        }
+    }
+
+    // Coroutine to alternate between walk and stand textures
+    private IEnumerator WalkingAnimationCoroutine()
+    {
+        bool useWalkTexture = false;
+
+        while (true)
+        {
+            Texture2D currentTexture = useWalkTexture ? walkTexture : standTexture;
+
+            if (characterUIImage != null)
+            {
+                characterUIImage.sprite = Sprite.Create(
+                    currentTexture,
+                    new Rect(0, 0, currentTexture.width, currentTexture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
+            }
+
+            // Toggle between textures
+            useWalkTexture = !useWalkTexture;
+
+            // Wait for the frame duration
+            yield return new WaitForSeconds(1f / textureAnimationFrameRate);
+        }
     }
 
     //Fixed the touch and mouse click conflict with UI Buttons
@@ -101,11 +212,6 @@ public class CharacterController : UserData
             if (isMouseDown) 
             {
                 calLocalDestination();
-            }
-            else
-            {
-                animator.SetFloat("Speed", 0);
-                animator.SetInteger("Direction", 0);
             }
 
             WS_Client.PositionData posData = new WS_Client.PositionData
@@ -184,60 +290,39 @@ public class CharacterController : UserData
     private void UpdateAnimation()
     {
         Vector3 movement = localDestination - transform.localPosition;
-
         float speed = movement.magnitude;
-        animator.SetFloat("Speed", speed);
-
-    //    Debug.Log("Speed:" + speed);
 
         if (speed > 0f)
         {
-            // Debug.Log("movement x:" + movement.x);
-            // Debug.Log("movement y:" + Mathf.Abs(movement.y));
-
             if (movement.x > 0)
             {
-                this.direction = 2; // 向右
-                if (imageTransform != null)
-                {
-                    imageTransform.localScale = new Vector3(1f, 1f, 1f);
-                }
-            } else {
-                this.direction = 1;// 向左
                 if (imageTransform != null)
                 {
                     imageTransform.localScale = new Vector3(-1f, 1f, 1f);
                 }
+            } else {
+                if (imageTransform != null)
+                {
+                    imageTransform.localScale = new Vector3(1f, 1f, 1f);
+                }
             }
-            // else
-            // {
-            //     if (movement.y > 0)
-            //     {
-            //         this.direction = 2;// 向上
-            //     }
-            //     else
-            //     {
-            //         this.direction = 1;// 向下
-            //     }
-            // }
+            PlayWalkingAnimation();
         }
         else
         {
-            this.direction = 0;// 停止
+            StopWalkingAnimation();
         }
-
-        animator.SetInteger("Direction", this.direction);
     }
 
     public void TriggerCorrectAnimation()
     {
-        animator.SetTrigger("Correct");
+        // animator.SetTrigger("Correct");
         imageTransform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
     }
 
     public void ResetTrigger()
     {
-        animator.ResetTrigger("Correct");
+        // animator.ResetTrigger("Correct");
         imageTransform.localScale = new Vector3(1f, 1f, 1f);
     }
 

@@ -152,7 +152,7 @@ public static class ExternalCaller
 
     public static void UpdateLoadBarStatus(string status = "")
     {
-        LogController.Instance?.debug(status);
+        // LogController.Instance?.debug(status);
 #if UNITY_WEBGL && !UNITY_EDITOR
         Application.ExternalEval($"updateLoadingText('{status}')");
 #endif

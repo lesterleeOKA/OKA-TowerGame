@@ -89,7 +89,6 @@ public class GameSetting : MonoBehaviour
                 {
                     string key = keyValue[0];
                     string value = keyValue[1];
-                    LogController.Instance?.debug($"Parameter Key: {key}, Value: {value}");
 
                     if (!string.IsNullOrEmpty(value))
                     {
@@ -98,24 +97,19 @@ public class GameSetting : MonoBehaviour
                         {
                             case "jwt":
                                 this.apiManager.jwt = value;
-                                LogController.Instance?.debug("Current jwt: " + this.apiManager.jwt);
                                 break;
                             case "id":
                                 this.apiManager.appId = value;
-                                LogController.Instance?.debug("Current app/book id: " + this.apiManager.appId);
                                 break;
                             case "unit":
                                 this.unitKey = value;
-                                LogController.Instance?.debug("Current Game Unit: " + this.unitKey);
                                 break;
                             case "gameTime":
                                 this.GameTime = float.Parse(value);
-                                LogController.Instance?.debug("Game Time: " + this.GameTime);
                                 this.ShowFPS = true;
                                 break;
                             case "playerNumbers":
                                 this.PlayerNumbers = int.Parse(value);
-                                LogController.Instance?.debug("player Numbers: " + this.PlayerNumbers);
                                 break;
                             case "lang":
                                 if (value == "tc" || value == "sc")
@@ -455,6 +449,30 @@ public class EquippedCostumeData
     public string created_at;
     public string updated_at;
     public object deleted_at; // Use 'object' for nullable fields
+}
+
+[Serializable]
+public class CostumeData
+{
+    public string costume_id;
+    public string costume_name;
+    public string description;
+    public string price;
+    public string img_src_wholebody;
+    public string img_src_head;
+    public string img_src_stand;
+    public string img_src_walk;
+    public string img_src_jump;
+    public string created_at;
+    public string updated_at;
+    public object deleted_at; // Use 'object' for nullable fields
+}
+
+[Serializable]
+public class CostumeListResponse
+{
+    public string status;
+    public CostumeData[] data;
 }
 
 [Serializable]

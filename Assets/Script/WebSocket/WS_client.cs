@@ -164,6 +164,7 @@ public class WS_Client : MonoBehaviour
         public int uid;
         public string status;
         public float[] position;
+        public string costume_id;
         // public int dir;
         public float[] destination;
         public int isAnswerVisible;
@@ -343,7 +344,6 @@ public class WS_Client : MonoBehaviour
         var query = "?channelId=" + Uri.EscapeDataString(channelId) + "&jwt=" + Uri.EscapeDataString(jwt);
 
         var fullUrl = baseUrl + query;
-        Debug.Log("URL : " + fullUrl);
         websocket = new WebSocket(fullUrl);
 
         websocket.OnOpen += OnWebSocketOpen;
@@ -373,27 +373,14 @@ public class WS_Client : MonoBehaviour
                 {
                     case "roomInfo":
                         roomId = message.roomId;
-                        Debug.Log("current roomId : " + roomId);                       
                         break;
                     case "listGameRoom":
-                        if (message.content.roomList != null)
-                        {
-                            Debug.Log("listGameRoom count: " + message.content.roomList.Count);
-                            foreach (var room in message.content.roomList)
-                            {
-                                Debug.Log($"Room: {room.roomId}, Members: {room.roomMembers}");
-                            }
-                        }
-                        else
-                        {
-                            Debug.LogError("roomList is null!");
-                        }
                         break;
                     case "roomFull":
                         Debug.Log("roomFull : " + message.content.message + " / " + "current roomId : " + roomId);
                         break;
                     case "SyncRoomData":
-                        // debugLogPerSecond("OnMessage! " + jsonString, "debug");
+                        Debug.Log("OnMessage! " + jsonString);
                         GameData = message.content.roomGameData;
                         if (!string.IsNullOrEmpty(message.content.order))
                         {
@@ -448,7 +435,6 @@ public class WS_Client : MonoBehaviour
             }
         };
 
-        Debug.Log("Connect");
         // Keep sending messages at every 5s
         InvokeRepeating("SendTest", 0.0f, 5f);
         // // Keep sending game data at every 0.1s
@@ -496,23 +482,23 @@ public class WS_Client : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.P))
         {
-            printGameData(); // for DEV printGameData
+           printGameData(); // for DEV printGameData
         }
-
-    }
+  }
 
     public void printGameData()
     {
-        if (GameData.players != null) {
-            foreach (var player in GameData.players) {
-                Debug.Log($"printGameData Player: {player.uid} - {player.answer_id} - {player.answerContent} - {player.isAnswerVisible}");
-            }
-        }
-        // if (GameData.questions != null) {
-        //     foreach (var question in GameData.questions) {
-        //         Debug.Log($"Question: {question.id} - {question.content}");
+        // Debug.Log($"printGameData GameData: {GameData.players.Count}");
+        // if (GameData.players != null) {
+        //     foreach (var player in GameData.players) {
+        //         Debug.Log($"printGameData Player: {player.uid} - {player.costume_id}");
         //     }
         // }
+        if (GameData.questions != null) {
+            foreach (var question in GameData.questions) {
+                Debug.Log($"Question: {question.id} - {question.content}");
+            }
+        }
     }
 
     public void JoinGameRoom()
@@ -564,7 +550,6 @@ public class WS_Client : MonoBehaviour
     {
         try
         {
-            Debug.Log("J key pressed - joining room...");
             // 这里替换为你的实际加入房间逻辑
             await JoinRoom();
             // Debug.Log("Room joined successfully!");
@@ -673,8 +658,6 @@ public class WS_Client : MonoBehaviour
             };
 
             // 3. 发送位置更新到服务器
-            Debug.Log("positionData: " + positionData.x + " " + positionData.y + " " + destinationData.x + " " + destinationData.y);
-            // Debug.Log($"位置同步发送: 位置({positionData.x:F2}, {positionData.y:F2}) -> 目的地({destinationData.x:F2}, {destinationData.y:F2})", "debug");
             await UpdateServerPosition(positionData, destinationData);
 
         }

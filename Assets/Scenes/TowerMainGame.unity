@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -5309,6 +5308,7 @@ GameObject:
   - component: {fileID: 2027992708}
   - component: {fileID: 2027992707}
   - component: {fileID: 2027992709}
+  - component: {fileID: 2027992710}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -5423,6 +5423,7 @@ MonoBehaviour:
   answers: []
   trackingCamera: {fileID: 963194227}
   debugText: {fileID: 625172899}
+  accountCostumeId: 
 --- !u!114 &2027992709
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5453,6 +5454,18 @@ MonoBehaviour:
     channelId: 
     roomIds: []
   readyButton: {fileID: 965468766}
+--- !u!114 &2027992710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2027992704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9741b9efdb609c40a3d79aa14dbf6bd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2059364962
 GameObject:
   m_ObjectHideFlags: 0
