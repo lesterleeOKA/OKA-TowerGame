@@ -1,8 +1,9 @@
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class CharacterController : UserData
 {
@@ -22,6 +23,13 @@ public class CharacterController : UserData
     public bool isMouseDown = false; 
     public CanvasGroup localPlayer;
 
+    private Texture2D standTexture;
+    private Texture2D walkTexture;
+    private Image characterUIImage;
+    private AspectRatioFitter aspectRatio;
+    private Coroutine walkingCoroutine;
+    public float textureAnimationFrameRate = 0.5f;
+
     void Start()
     {
         animator = GetComponent<Animator>();
@@ -35,6 +43,98 @@ public class CharacterController : UserData
         this.IsLocalPlayer = _isLocalPlayer;
         SetUI.Set(this.localPlayer, _isLocalPlayer);
     }
+
+    public void SetCostumeTextures(Texture2D stand, Texture2D walk)
+    {
+        // Initialize image components if not done yet (in case this is called before Start)
+        if (imageTransform == null)
+        {
+            imageTransform = transform.Find("image");
+            if (imageTransform != null)
+            {
+                characterUIImage = imageTransform.GetComponent<Image>();
+                aspectRatio = characterUIImage.GetComponent<AspectRatioFitter>();
+                aspectRatio.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
+                aspectRatio.aspectRatio = (float)stand.width / (float)stand.height;
+            }
+        }
+
+        this.standTexture = stand;
+        this.walkTexture = walk;
+
+        // Apply the stand texture immediately (idle state)
+        SetIdleTexture();
+    }
+
+    private void SetIdleTexture()
+    {
+        if (standTexture == null)
+        {
+            Debug.LogWarning($"SetIdleTexture: standTexture is NULL for {gameObject.name}");
+            return;
+        }
+
+        if (characterUIImage != null)
+        {
+            characterUIImage.sprite = Sprite.Create(
+                standTexture,
+                new Rect(0, 0, standTexture.width, standTexture.height),
+                new Vector2(0.5f, 0.5f)
+            );
+        }
+        else
+        {
+            Debug.LogError($"SetIdleTexture: No image component found on {gameObject.name}! imageTransform={imageTransform != null}");
+        }
+    }
+
+    // Start the walking animation
+    private void PlayWalkingAnimation()
+    {
+        // If already walking or no walk texture, do nothing
+        if (walkingCoroutine != null || walkTexture == null || standTexture == null) return;
+
+        Debug.Log($"PlayWalkingAnimation starting: {walkTexture.width}x{walkTexture.height} - {standTexture.width}x{standTexture.height}");
+        walkingCoroutine = StartCoroutine(WalkingAnimationCoroutine());
+    }
+
+    // Stop the walking animation
+    private void StopWalkingAnimation()
+    {
+        if (walkingCoroutine != null)
+        {
+            StopCoroutine(walkingCoroutine);
+            walkingCoroutine = null;
+            SetIdleTexture();
+        }
+    }
+
+    // Coroutine to alternate between walk and stand textures
+    private IEnumerator WalkingAnimationCoroutine()
+    {
+        bool useWalkTexture = false;
+
+        while (true)
+        {
+            Texture2D currentTexture = useWalkTexture ? walkTexture : standTexture;
+
+            if (characterUIImage != null)
+            {
+                characterUIImage.sprite = Sprite.Create(
+                    currentTexture,
+                    new Rect(0, 0, currentTexture.width, currentTexture.height),
+                    new Vector2(0.5f, 0.5f)
+                );
+            }
+
+            // Toggle between textures
+            useWalkTexture = !useWalkTexture;
+
+            // Wait for the frame duration
+            yield return new WaitForSeconds(1f / textureAnimationFrameRate);
+        }
+    }
+
 
     //Fixed the touch and mouse click conflict with UI Buttons
     private bool IsPointerOverUIButton()

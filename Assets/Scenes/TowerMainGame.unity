@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -5423,6 +5423,29 @@ MonoBehaviour:
   answers: []
   trackingCamera: {fileID: 963194227}
   debugText: {fileID: 625172899}
+  characterSets:
+  - name: 1
+    playerNumber: 0
+    playersColor: {r: 0, g: 0, b: 0, a: 0}
+    boardTexture: {fileID: 0}
+    defaultIcon: {fileID: 0}
+    idlingTexture: {fileID: 2800000, guid: 51be000e8e7d7db46a14ff9694ce193a, type: 3}
+    walkingAnimationTextures:
+    - {fileID: 2800000, guid: 51be000e8e7d7db46a14ff9694ce193a, type: 3}
+    - {fileID: 2800000, guid: 047a0dab5a8c6b24caf37ae9c94840c0, type: 3}
+    positionRangeX: {x: 0, y: 0, z: 0}
+    positionRangeY: {x: 0, y: 0, z: 0}
+  - name: 2
+    playerNumber: 0
+    playersColor: {r: 0, g: 0, b: 0, a: 0}
+    boardTexture: {fileID: 0}
+    defaultIcon: {fileID: 0}
+    idlingTexture: {fileID: 2800000, guid: 63519a4dfef7a8e4c9e60e84b5d27647, type: 3}
+    walkingAnimationTextures:
+    - {fileID: 2800000, guid: 63519a4dfef7a8e4c9e60e84b5d27647, type: 3}
+    - {fileID: 2800000, guid: 8323528cd50bb6b428772790448fe85b, type: 3}
+    positionRangeX: {x: 0, y: 0, z: 0}
+    positionRangeY: {x: 0, y: 0, z: 0}
 --- !u!114 &2027992709
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -17,7 +17,7 @@ public class CharacterAnimation : MonoBehaviour
     void Start()
     {
         if (this.characterImage == null) this.characterImage = GetComponent<RawImage>();
-        this.characterImage.material = this.playerMats[this.characterSet.playerNumber];
+        //this.characterImage.material = this.playerMats[this.characterSet.playerNumber];
         this.GetComponent<ShiningEffect>().material = this.characterImage.material;
         this.setIdling();
         if (this.boardImage != null)

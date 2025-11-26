@@ -35,6 +35,7 @@ public class TowerGameController : GameBaseController
     private Dictionary<int, GameObject> answerObjectsById = new Dictionary<int, GameObject>();
     private Dictionary<int, GameObject> obstacleObjectsById = new Dictionary<int, GameObject>();
     private HashSet<string> currentKeys = new HashSet<string>();
+    public CharacterSet[] characterSets;
 
     protected override void Awake()
     {
@@ -405,6 +406,10 @@ public class TowerGameController : GameBaseController
         characterController.gameObject.name = "Player_" + uid;
         characterController.UserName = "Player_" + uid;
         characterController.UserId = uid;
+        characterController.SetCostumeTextures(this.characterSets[this.playerNumber].walkingAnimationTextures[0] as Texture2D,
+                                        this.characterSets[this.playerNumber].walkingAnimationTextures[1] as Texture2D);
+
+        this.playerNumber += 1;
         if (isLocal) characterController.gameObject.tag = "MainPlayer";
         this.characterControllers.Add(characterController);
 
