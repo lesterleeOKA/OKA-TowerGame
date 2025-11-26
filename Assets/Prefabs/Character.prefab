@@ -385,6 +385,7 @@ GameObject:
   - component: {fileID: 586965444709424553}
   - component: {fileID: 6697893090746634682}
   - component: {fileID: 1526487672107984864}
+  - component: {fileID: 3164985731322570353}
   m_Layer: 5
   m_Name: image
   m_TagString: Untagged
@@ -463,6 +464,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_AspectMode: 2
   m_AspectRatio: 0.6
+--- !u!114 &3164985731322570353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7296481544691439269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37c944897b477d846ae44eca63ef8314, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerMats: []
+  characterSet:
+    name: 
+    playerNumber: 0
+    playersColor: {r: 0, g: 0, b: 0, a: 0}
+    boardTexture: {fileID: 0}
+    defaultIcon: {fileID: 0}
+    idlingTexture: {fileID: 0}
+    walkingAnimationTextures: []
+    positionRangeX: {x: 0, y: 0, z: 0}
+    positionRangeY: {x: 0, y: 0, z: 0}
+  frameRate: 10
+  runEffect: {fileID: 0}
+  boardImage: {fileID: 0}
+  characterImage: {fileID: 0}
+  currentFrame: 0
 --- !u!1 &8946675504497628752
 GameObject:
   m_ObjectHideFlags: 0

@@ -52,6 +52,7 @@ public class TowerGameController : GameBaseController
     private Dictionary<int, GameObject> answerObjectsById = new Dictionary<int, GameObject>();
     private Dictionary<int, GameObject> obstacleObjectsById = new Dictionary<int, GameObject>();
     private HashSet<string> currentKeys = new HashSet<string>();
+    public CharacterSet[] characterSets;
 
     protected override void Awake()
     {
@@ -83,7 +84,7 @@ public class TowerGameController : GameBaseController
         }
 
         // Wait for starwishApiCaller to be ready before fetching costume data
-        StartCoroutine(WaitForStarwishApi());
+        //StartCoroutine(WaitForStarwishApi());
 
         /*// change ready button to WS_Client's ready button
         if (WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid).status != "playing") {
@@ -91,7 +92,7 @@ public class TowerGameController : GameBaseController
         }*/
     }
 
-    private IEnumerator WaitForStarwishApi()
+    /*private IEnumerator WaitForStarwishApi()
     {
         while (LoaderConfig.Instance == null || LoaderConfig.Instance.apiManager == null)
         {
@@ -106,9 +107,9 @@ public class TowerGameController : GameBaseController
         yield return new WaitUntil(() => task1.IsCompleted && task2.IsCompleted);
         
         finishLoading = true;
-    }
+    }*/
 
-    protected async Task fetchAccountCostumeId() {
+    /*protected async Task fetchAccountCostumeId() {
         try 
         {
             string jsonResponse = await LoaderConfig.Instance.apiManager.StarwishApi("get", "accounts/current");
@@ -297,7 +298,7 @@ public class TowerGameController : GameBaseController
             // Decrement the loading counter
             loadingImagesCount--;
         }
-    }
+    }*/
 
     private void OnDestroy()
     {
@@ -657,6 +658,7 @@ public class TowerGameController : GameBaseController
         }
     }
 
+    private int playerNumber = 0;
     private void CreatePlayerFromData(WS_Client.PlayerData player, Vector3 startPos, string key, bool isLocal = false)
     {
         // Instantiate without parent, set world position, then attach to parent preserving world pos
@@ -674,6 +676,10 @@ public class TowerGameController : GameBaseController
         characterController.gameObject.name = "Player_" + uid;
         characterController.UserName = "Player_" + uid;
         characterController.UserId = uid;
+        characterController.SetCostumeTextures(this.characterSets[this.playerNumber].walkingAnimationTextures[0] as Texture2D,
+                                                this.characterSets[this.playerNumber].walkingAnimationTextures[1] as Texture2D);
+
+         this.playerNumber +=1;
         if (isLocal) characterController.gameObject.tag = "MainPlayer";
         this.characterControllers.Add(characterController);
 

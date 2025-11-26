@@ -38,6 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
+  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -5308,7 +5309,6 @@ GameObject:
   - component: {fileID: 2027992708}
   - component: {fileID: 2027992707}
   - component: {fileID: 2027992709}
-  - component: {fileID: 2027992710}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -5424,6 +5424,74 @@ MonoBehaviour:
   trackingCamera: {fileID: 963194227}
   debugText: {fileID: 625172899}
   accountCostumeId: 
+  finishLoading: 0
+  characterSets:
+  - name: Player1
+    playerNumber: 0
+    playersColor: {r: 0, g: 0, b: 0, a: 0}
+    boardTexture: {fileID: 0}
+    defaultIcon: {fileID: 0}
+    idlingTexture: {fileID: 2800000, guid: b9577880095cba146833d6d3c19ca998, type: 3}
+    walkingAnimationTextures:
+    - {fileID: 2800000, guid: b9577880095cba146833d6d3c19ca998, type: 3}
+    - {fileID: 2800000, guid: f5a7ae326285f5b469790ef299ad2631, type: 3}
+    positionRangeX: {x: 0, y: 0, z: 0}
+    positionRangeY: {x: 0, y: 0, z: 0}
+  - name: Player2
+    playerNumber: 1
+    playersColor: {r: 0, g: 0, b: 0, a: 0}
+    boardTexture: {fileID: 0}
+    defaultIcon: {fileID: 0}
+    idlingTexture: {fileID: 2800000, guid: 64eba3f12ce1f2046ab9740bae3af396, type: 3}
+    walkingAnimationTextures:
+    - {fileID: 2800000, guid: 64eba3f12ce1f2046ab9740bae3af396, type: 3}
+    - {fileID: 2800000, guid: 52560b14dad21d442b8c85236992e44c, type: 3}
+    positionRangeX: {x: 0, y: 0, z: 0}
+    positionRangeY: {x: 0, y: 0, z: 0}
+  - name: Player3
+    playerNumber: 0
+    playersColor: {r: 0, g: 0, b: 0, a: 0}
+    boardTexture: {fileID: 0}
+    defaultIcon: {fileID: 0}
+    idlingTexture: {fileID: 2800000, guid: 9bd0e429a4d8ff847b2bac91bbb5de6e, type: 3}
+    walkingAnimationTextures:
+    - {fileID: 2800000, guid: 9bd0e429a4d8ff847b2bac91bbb5de6e, type: 3}
+    - {fileID: 2800000, guid: e66d3986df2467b408babc96da4deb14, type: 3}
+    positionRangeX: {x: 0, y: 0, z: 0}
+    positionRangeY: {x: 0, y: 0, z: 0}
+  - name: Player4
+    playerNumber: 0
+    playersColor: {r: 0, g: 0, b: 0, a: 0}
+    boardTexture: {fileID: 0}
+    defaultIcon: {fileID: 0}
+    idlingTexture: {fileID: 2800000, guid: e78e2ec7f98745440b4515bb0da64345, type: 3}
+    walkingAnimationTextures:
+    - {fileID: 2800000, guid: e78e2ec7f98745440b4515bb0da64345, type: 3}
+    - {fileID: 2800000, guid: 9d357b5f81cac0a44a1e65e64a0d7894, type: 3}
+    positionRangeX: {x: 0, y: 0, z: 0}
+    positionRangeY: {x: 0, y: 0, z: 0}
+  - name: Player5
+    playerNumber: 0
+    playersColor: {r: 0, g: 0, b: 0, a: 0}
+    boardTexture: {fileID: 0}
+    defaultIcon: {fileID: 0}
+    idlingTexture: {fileID: 2800000, guid: 155dc6c424de10846aa43b9a8dc51b85, type: 3}
+    walkingAnimationTextures:
+    - {fileID: 2800000, guid: 155dc6c424de10846aa43b9a8dc51b85, type: 3}
+    - {fileID: 2800000, guid: f101534fa83fa8d45b82f7f9c58fd353, type: 3}
+    positionRangeX: {x: 0, y: 0, z: 0}
+    positionRangeY: {x: 0, y: 0, z: 0}
+  - name: Player6
+    playerNumber: 0
+    playersColor: {r: 0, g: 0, b: 0, a: 0}
+    boardTexture: {fileID: 0}
+    defaultIcon: {fileID: 0}
+    idlingTexture: {fileID: 2800000, guid: 50ba9e8f61f82b0428ea65636621d593, type: 3}
+    walkingAnimationTextures:
+    - {fileID: 2800000, guid: 50ba9e8f61f82b0428ea65636621d593, type: 3}
+    - {fileID: 2800000, guid: ac61c62d2d8ec804a9da7e527cca7455, type: 3}
+    positionRangeX: {x: 0, y: 0, z: 0}
+    positionRangeY: {x: 0, y: 0, z: 0}
 --- !u!114 &2027992709
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5454,18 +5522,6 @@ MonoBehaviour:
     channelId: 
     roomIds: []
   readyButton: {fileID: 965468766}
---- !u!114 &2027992710
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2027992704}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9741b9efdb609c40a3d79aa14dbf6bd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2059364962
 GameObject:
   m_ObjectHideFlags: 0

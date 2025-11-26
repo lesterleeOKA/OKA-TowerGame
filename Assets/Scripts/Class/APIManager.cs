@@ -1,10 +1,7 @@
 using SimpleJSON;
 using System;
 using System.Collections;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -914,97 +911,7 @@ public class APIManager
         }
     }
 
-    public async Task<string> StarwishApi(string type, string api, object data = null)
-    {
-        try
-        {
-            // Determine the API prefix based on hostname
-            string starwishApiPrefix = "https://dev.openknowledge.hk/OKAGames/public/index.php/api/";
-            
-            #if UNITY_WEBGL && !UNITY_EDITOR
-            // In WebGL build, get hostname from Application.absoluteURL
-            string absoluteUrl = Application.absoluteURL;
-            if (!string.IsNullOrEmpty(absoluteUrl))
-            {
-                Uri uri = new Uri(absoluteUrl);
-                string hostname = uri.Host;
-                
-                // Check if it's localhost or local IP
-                bool isLocal = hostname.StartsWith("localhost") || 
-                               hostname.StartsWith("192.") || 
-                               hostname.StartsWith("10.");
-                
-                if (isLocal)
-                {
-                    starwishApiPrefix = "https://dev.openknowledge.hk/OKAGames/public/index.php/api/";
-                }
-                else
-                {
-                    starwishApiPrefix = $"https://{hostname}/OKAGames/public/index.php/api/";
-                }
-            }
-            #endif
 
-            string starwishApiUrl = starwishApiPrefix + api;
-
-            using (var client = new HttpClient())
-            {
-                
-                // Add Authorization header if JWT is available
-                if (!string.IsNullOrEmpty(LoaderConfig.Instance.apiManager.jwt))
-                {
-                    client.DefaultRequestHeaders.Authorization = 
-                        new AuthenticationHeaderValue("Bearer", LoaderConfig.Instance.apiManager.jwt);
-                } else {
-                    Debug.LogError("starwishApiCaller: JWT is not available");
-                    return null;
-                }
-
-                HttpResponseMessage response = null;
-                
-                // Execute the appropriate HTTP method
-                switch (type.ToLower())
-                {
-                    case "get":
-                        response = await client.GetAsync(starwishApiUrl);
-                        break;
-                        
-                    case "put":
-                        var putContent = new StringContent(
-                            JsonUtility.ToJson(data ?? new {}), 
-                            Encoding.UTF8, 
-                            "application/json"
-                        );
-                        response = await client.PutAsync(starwishApiUrl, putContent);
-                        break;
-                        
-                    case "delete":
-                        response = await client.DeleteAsync(starwishApiUrl);
-                        break;
-                        
-                    case "post":
-                    default:
-                        var postContent = new StringContent(
-                            JsonUtility.ToJson(data ?? new {}), 
-                            Encoding.UTF8, 
-                            "application/json"
-                        );
-                        response = await client.PostAsync(starwishApiUrl, postContent);
-                        break;
-                }
-
-                // Read and return the response
-                response.EnsureSuccessStatusCode();
-                string content = await response.Content.ReadAsStringAsync();
-                return content;
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"API call failed: {ex.Message}");
-            throw;
-        }
-    }
 }
 
 public static class APIConstant
