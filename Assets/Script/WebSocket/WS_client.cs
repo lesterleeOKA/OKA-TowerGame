@@ -30,7 +30,7 @@ public class WS_Client : MonoBehaviour
     private string channelId = "towerGame";
     //uid = 543717
     // public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcxNy05ZjY3MjcwZDk1Zjc5NjEzMTMwNzU0MGEyNjUyMDdmN2Q0YWM5ZDU2OTM3OTBiMmNhNjhlNTQ5YzI5NjBkZmM5IiwiZXhwaXJlcyI6MTc2MjIyNDQ0NywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTAtMjggMDI6NDc6MjcgR01UIiwidWlkIjoiNTQzNzE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNiIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.tDcwbbY0OxfSCrrAMcneyvji2u5M7k5M8Moz7JQHiUU";
-    public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxMS00MzY0ZTlmYmE3NzA2M2Q4MjdjZWY0NjMzMGYwMjlhZmU2ZTIyNWZhOTk1MGMzMTRiMzRkNjAyNjY5NGUzYWIwIiwiZXhwaXJlcyI6MTc2MzYxMDE0NywidGltZSI6IjIwMjUtMTAtMjEgMTE6NDI6MjciLCJ1aWQiOiI1MTEiLCJ1c2VyX3JvbGUiOiIzIiwic2Nob29sX2lkIjoiMjcyIiwiaXAiOiIxNjkuMjU0LjEyOS40IiwidmVyc2lvbiI6IjIuOC4zNiIsImRldmljZSI6Im1hYyJ9.LT8f4UNEB3nnW6BY2FMPQXZVMUzQ-6NyCJT08gqSx1s";
+    public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUyMy0wYzNkYmE1N2EzM2Q5YTZiOTA4YzBmNTQ5YTQwYzRkZWViNTdhNGMzYmU0YjkxN2EzYzE1YWE5ODU5NmFjOGUwIiwiZXhwaXJlcyI6MTc2NDgxNjIxMCwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTEtMjcgMDI6NDM6MzAgR01UIiwidWlkIjoiNTIzIiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuMiIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.Nxr4IwDN5z1iy3A_cIDYmFxuohimmlfV-o95KVRURD0";
     private string roomId = "";
     private string player_id = "";
 
@@ -585,7 +585,7 @@ public class WS_Client : MonoBehaviour
         {
             messageType = "joinRoom",
             content = new MessageContent { action = "joinRoom" },
-            roomId = "room1"
+            roomId = "room2"
         };
 
         string jsonString = JsonUtility.ToJson(msg);

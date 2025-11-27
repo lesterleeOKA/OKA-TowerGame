@@ -74,7 +74,7 @@ MonoBehaviour:
   IsLocalPlayer: 0
   isMouseDown: 0
   localPlayer: {fileID: 2308318903323463056}
-  textureAnimationFrameRate: 0.5
+  textureAnimationFrameRate: 4
 --- !u!50 &2935794267594871711
 Rigidbody2D:
   serializedVersion: 4

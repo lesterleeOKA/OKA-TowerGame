@@ -17,7 +17,7 @@ public class TowerGameController : GameBaseController
     public Transform globalParent;
     public GameObject YouWin;
     public GameObject YouLose;
-    private int playerNumber = 0;
+    private int debugPlayerNumber = 0;
 
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
@@ -143,7 +143,7 @@ public class TowerGameController : GameBaseController
 
         // Create missing players and update positions for existing ones
 
-        this.playerNumber = 0;
+        debugPlayerNumber = 0;
         foreach (var player in players)
         {
             string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
@@ -155,7 +155,7 @@ public class TowerGameController : GameBaseController
                 CreatePlayerFromData(player, location, key, isLocal);
             }
 
-            playerNumber += 1;
+            debugPlayerNumber += 1;
 
             // mark as present for this cycle
             currentKeys.Add(key);
@@ -411,8 +411,8 @@ public class TowerGameController : GameBaseController
         characterController.gameObject.name = "Player_" + uid;
         characterController.UserName = "Player_" + uid;
         characterController.UserId = uid;
-        characterController.SetCostumeTextures(this.characterSets[this.playerNumber].walkingAnimationTextures[0] as Texture2D,
-                                        this.characterSets[this.playerNumber].walkingAnimationTextures[1] as Texture2D);
+        characterController.SetCostumeTextures(this.characterSets[this.debugPlayerNumber].walkingAnimationTextures[0] as Texture2D,
+                                        this.characterSets[this.debugPlayerNumber].walkingAnimationTextures[1] as Texture2D);
 
         
         if (isLocal) characterController.gameObject.tag = "MainPlayer";
