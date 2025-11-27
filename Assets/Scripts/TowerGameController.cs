@@ -17,6 +17,7 @@ public class TowerGameController : GameBaseController
     public Transform globalParent;
     public GameObject YouWin;
     public GameObject YouLose;
+    private int playerNumber = 0;
 
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
@@ -26,7 +27,7 @@ public class TowerGameController : GameBaseController
     public Text debugText;
 
     // Map WS player key (string) -> CharacterController (ensures one GameObject per ws player)
-    private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
+    public Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
 
     // Map question ID -> GameObject
     private Dictionary<int, GameObject> questionObjectsById = new Dictionary<int, GameObject>();
@@ -141,6 +142,8 @@ public class TowerGameController : GameBaseController
         }
 
         // Create missing players and update positions for existing ones
+
+        this.playerNumber = 0;
         foreach (var player in players)
         {
             string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
@@ -151,6 +154,8 @@ public class TowerGameController : GameBaseController
                 Vector3 location = new Vector3(player.position[0], player.position[1], 0f);
                 CreatePlayerFromData(player, location, key, isLocal);
             }
+
+            playerNumber += 1;
 
             // mark as present for this cycle
             currentKeys.Add(key);
@@ -269,7 +274,7 @@ public class TowerGameController : GameBaseController
                     }
                     CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
                     if (characterController != null) {
-                        characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.answer_id != 0);
+                        characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.isAnswerVisible != 0);
                         characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = player.answer_id != 0 ? WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id).content : "";
                     }
                 }
@@ -409,7 +414,7 @@ public class TowerGameController : GameBaseController
         characterController.SetCostumeTextures(this.characterSets[this.playerNumber].walkingAnimationTextures[0] as Texture2D,
                                         this.characterSets[this.playerNumber].walkingAnimationTextures[1] as Texture2D);
 
-        this.playerNumber += 1;
+        
         if (isLocal) characterController.gameObject.tag = "MainPlayer";
         this.characterControllers.Add(characterController);
 
@@ -698,6 +703,15 @@ public class TowerGameController : GameBaseController
     {
         YouLose.SetActive(true);
         StartCoroutine(HideYouLoseAfterDelay(3f));
+
+            foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
+                if (player.isAnswerVisible == 0) {
+                    CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
+                    if (characterController != null) {
+                        characterController.showAnswerBubble(0);
+                    }
+                }
+            }
     }
 
     public void reloadScene() {
