@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class CharacterController : UserData
 {
@@ -12,40 +12,30 @@ public class CharacterController : UserData
     public float acc = 320f;
     public GameObject answerObject;
     private float currectSpeed = 320f;
-    // private Animator animator;
     private Vector3 lastPosition;
     private Transform imageTransform;
     private Transform answerBubbleTransform;
+    public int direction = 0;
     public string key = "";
     public bool IsLocalPlayer = false; 
     private Vector3 localDestination = Vector3.zero;
     public bool isMouseDown = false; 
     public CanvasGroup localPlayer;
 
-    // Costume texture animation
     private Texture2D standTexture;
     private Texture2D walkTexture;
-    private RawImage characterImage;
-    private SpriteRenderer characterSpriteRenderer;
+    private Sprite standSprite;
+    private Sprite walkSprite;
     private Image characterUIImage;
     private AspectRatioFitter aspectRatio;
     private Coroutine walkingCoroutine;
-    public float textureAnimationFrameRate = 0.5f; 
+    public float textureAnimationFrameRate = 2f;
 
     void Start()
     {
-        // animator = GetComponent<Animator>();
         lastPosition = transform.position;
         imageTransform = transform.Find("image");
         answerBubbleTransform = transform.Find("AnswerBubble");
-
-        // Get the image component from the "image" child
-        if (imageTransform != null)
-        {
-            characterImage = imageTransform.GetComponent<RawImage>();
-            characterSpriteRenderer = imageTransform.GetComponent<SpriteRenderer>();
-            characterUIImage = imageTransform.GetComponent<Image>();
-        }
     }
 
     public void setLocalPlayer(bool _isLocalPlayer = false)
@@ -54,7 +44,6 @@ public class CharacterController : UserData
         SetUI.Set(this.localPlayer, _isLocalPlayer);
     }
 
-    // Set costume textures for this character
     public void SetCostumeTextures(Texture2D stand, Texture2D walk)
     {
         // Initialize image components if not done yet (in case this is called before Start)
@@ -69,30 +58,38 @@ public class CharacterController : UserData
                 aspectRatio.aspectRatio = (float)stand.width / (float)stand.height;
             }
         }
-        
+
         this.standTexture = stand;
         this.walkTexture = walk;
+
+        // Create and cache sprites to avoid creating them during animation
+        this.standSprite = Sprite.Create(
+            standTexture,
+            new Rect(0, 0, standTexture.width, standTexture.height),
+            new Vector2(0.5f, 0.5f)
+        );
+
+        this.walkSprite = Sprite.Create(
+            walkTexture,
+            new Rect(0, 0, walkTexture.width, walkTexture.height),
+            new Vector2(0.5f, 0.5f)
+        );
 
         // Apply the stand texture immediately (idle state)
         SetIdleTexture();
     }
 
-    // Apply the stand/idle texture
     private void SetIdleTexture()
     {
-        if (standTexture == null)
+        if (standSprite == null)
         {
-            Debug.LogWarning($"SetIdleTexture: standTexture is NULL for {gameObject.name}");
+            Debug.LogWarning($"SetIdleTexture: standSprite is NULL for {gameObject.name}");
             return;
         }
 
         if (characterUIImage != null)
         {
-            characterUIImage.sprite = Sprite.Create(
-                standTexture,
-                new Rect(0, 0, standTexture.width, standTexture.height),
-                new Vector2(0.5f, 0.5f)
-            );
+            characterUIImage.sprite = standSprite;
         }
         else
         {
@@ -103,10 +100,9 @@ public class CharacterController : UserData
     // Start the walking animation
     private void PlayWalkingAnimation()
     {
-        // If already walking or no walk texture, do nothing
-        if (walkingCoroutine != null || walkTexture == null || standTexture == null) return;
+        // If already walking or no cached sprites, do nothing
+        if (walkingCoroutine != null || walkSprite == null || standSprite == null) return;
 
-        Debug.Log($"PlayWalkingAnimation starting: {walkTexture.width}x{walkTexture.height} - {standTexture.width}x{standTexture.height}");
         walkingCoroutine = StartCoroutine(WalkingAnimationCoroutine());
     }
 
@@ -124,28 +120,26 @@ public class CharacterController : UserData
     // Coroutine to alternate between walk and stand textures
     private IEnumerator WalkingAnimationCoroutine()
     {
-        bool useWalkTexture = false;
+        bool useWalkSprite = false;
 
         while (true)
         {
-            Texture2D currentTexture = useWalkTexture ? walkTexture : standTexture;
+            // Use cached sprites instead of creating new ones
+            Sprite currentSprite = useWalkSprite ? walkSprite : standSprite;
 
-            if (characterUIImage != null)
+            if (characterUIImage != null && currentSprite != null)
             {
-                characterUIImage.sprite = Sprite.Create(
-                    currentTexture,
-                    new Rect(0, 0, currentTexture.width, currentTexture.height),
-                    new Vector2(0.5f, 0.5f)
-                );
+                characterUIImage.sprite = currentSprite;
             }
 
-            // Toggle between textures
-            useWalkTexture = !useWalkTexture;
+            // Toggle between sprites
+            useWalkSprite = !useWalkSprite;
 
             // Wait for the frame duration
             yield return new WaitForSeconds(1f / textureAnimationFrameRate);
         }
     }
+
 
     //Fixed the touch and mouse click conflict with UI Buttons
     private bool IsPointerOverUIButton()
@@ -229,7 +223,11 @@ public class CharacterController : UserData
             WS_Client.Instance.UpdateServerPosition(posData, destData);
         }
 
-        FollowLocalDestination();
+        if(!this.IsLocalPlayer)
+        {
+            FollowLocalDestination();
+        }
+        UpdateAnimation();
     }
 
     private void calLocalDestination() {
@@ -251,18 +249,23 @@ public class CharacterController : UserData
         inputPosition.z = detectCamera.WorldToScreenPoint(transform.position).z;
         inputPosition = detectCamera.ScreenToWorldPoint(inputPosition);
 
+        // Calculate direction and move 0.2 seconds worth of distance in that direction
+        Vector3 direction = (inputPosition - transform.position).normalized;
+        Vector3 worldDestination = transform.position + direction * (followSpeed * 0.2f);
+        
         // Convert world position to local position (relative to parent)
         if (transform.parent != null)
         {
-            localDestination = transform.parent.InverseTransformPoint(inputPosition);
+            localDestination = transform.parent.InverseTransformPoint(worldDestination);
         }
         else
         {
-            localDestination = inputPosition;
+            localDestination = worldDestination;
         }
         
         // Maintain the character's local z position
         localDestination.z = transform.localPosition.z;
+        FollowLocalDestination();
     }
 
     public void setLocalDestination(Vector3 destination)
@@ -284,45 +287,71 @@ public class CharacterController : UserData
             currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, followSpeed);
             transform.localPosition = Vector3.MoveTowards(transform.localPosition, localDestination, currectSpeed * Time.deltaTime);
         }
-        UpdateAnimation();
     }
 
     private void UpdateAnimation()
     {
         Vector3 movement = localDestination - transform.localPosition;
+        float distance = Vector3.Distance(transform.localPosition, localDestination);
+
         float speed = movement.magnitude;
+
+    //    Debug.Log("Speed:" + speed);
 
         if (speed > 0f)
         {
+            // Debug.Log("movement x:" + movement.x);
+            // Debug.Log("movement y:" + Mathf.Abs(movement.y));
+
             if (movement.x > 0)
             {
+                this.direction = 2; // 向右
                 if (imageTransform != null)
                 {
                     imageTransform.localScale = new Vector3(-1f, 1f, 1f);
                 }
             } else {
+                this.direction = 1;// 向左
                 if (imageTransform != null)
                 {
                     imageTransform.localScale = new Vector3(1f, 1f, 1f);
                 }
             }
-            PlayWalkingAnimation();
+            // else
+            // {
+            //     if (movement.y > 0)
+            //     {
+            //         this.direction = 2;// 向上
+            //     }
+            //     else
+            //     {
+            //         this.direction = 1;// 向下
+            //     }
+            // }
         }
         else
         {
+            this.direction = 0;// 停止
+        }
+
+        if ((!IsLocalPlayer && distance > 0.01f) || (IsLocalPlayer && isMouseDown))
+        {
+            PlayWalkingAnimation();
+        }
+        else 
+        {
             StopWalkingAnimation();
         }
+
     }
 
     public void TriggerCorrectAnimation()
     {
-        // animator.SetTrigger("Correct");
         imageTransform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
     }
 
     public void ResetTrigger()
     {
-        // animator.ResetTrigger("Correct");
         imageTransform.localScale = new Vector3(1f, 1f, 1f);
     }
 

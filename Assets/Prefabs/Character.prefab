@@ -69,11 +69,12 @@ MonoBehaviour:
   followSpeed: 800
   acc: 320
   answerObject: {fileID: 0}
+  direction: 0
   key: 
   IsLocalPlayer: 0
   isMouseDown: 0
   localPlayer: {fileID: 2308318903323463056}
-  textureAnimationFrameRate: 1
+  textureAnimationFrameRate: 4
 --- !u!50 &2935794267594871711
 Rigidbody2D:
   serializedVersion: 4
@@ -471,7 +472,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7296481544691439269}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 37c944897b477d846ae44eca63ef8314, type: 3}
   m_Name: 

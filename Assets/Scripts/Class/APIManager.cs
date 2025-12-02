@@ -6,6 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using System.Threading.Tasks;
 
 [Serializable]
 public class APIManager
@@ -269,7 +270,8 @@ public class APIManager
                         if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
                             loader.CurrentHostName.Contains("uat.starwishparty.com") ||
                             loader.CurrentHostName.Contains("pre.starwishparty.com") ||
-                            loader.CurrentHostName.Contains("www.starwishparty.com"))
+                            loader.CurrentHostName.Contains("www.starwishparty.com") ||
+                            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
                         {
                             yield return this.GetStarwishAccountData(() =>
                             {
@@ -379,6 +381,114 @@ public class APIManager
                 }
             }
         }
+    }
+
+    public async Task<string> getCostumeData()
+    {
+        string api = APIConstant.GetCostumeDataAPI(LoaderConfig.Instance);
+        LogController.Instance?.debug("called costume data api: " + api);
+        
+        if (string.IsNullOrEmpty(api))
+        {
+            LogController.Instance.debug("Current site not support costume data api.");
+            return null;
+        }
+
+        int retryCount = 0;
+        bool requestSuccessful = false;
+        string jsonResponse = null;
+
+        while (retryCount < this.maxRetries && !requestSuccessful)
+        {
+            UnityWebRequest request = UnityWebRequest.Get(api);
+            request.SetRequestHeader("accept", "application/json");
+            request.SetRequestHeader("Authorization", "Bearer " + LoaderConfig.Instance.apiManager.jwt);
+
+            var operation = request.SendWebRequest();
+            
+            // Wait for the request to complete
+            while (!operation.isDone)
+            {
+                await Task.Yield();
+            }
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                requestSuccessful = true;
+                jsonResponse = request.downloadHandler.text;
+            }
+            else
+            {
+                LogController.Instance.debugError($"Attempt {retryCount + 1} failed: {request.error}");
+                retryCount++;
+
+                if (retryCount >= this.maxRetries)
+                {
+                    LogController.Instance.debugError("Failed to load costume data after maximum retries.");
+                    return null;
+                }
+
+                await Task.Delay(1000); // Wait 1 second before retry
+            }
+            
+            request.Dispose();
+        }
+
+        return jsonResponse;
+    }
+
+    public async Task<string> getCurrentAccount()
+    {
+        string api = APIConstant.GetCurrentAccountAPI(LoaderConfig.Instance);
+        LogController.Instance?.debug("called current account api: " + api);
+
+        if (string.IsNullOrEmpty(api))
+        {
+            LogController.Instance.debug("Current site not support current account api.");
+            return null;
+        }
+
+        int retryCount = 0;
+        bool requestSuccessful = false;
+        string jsonResponse = null;
+
+        while (retryCount < this.maxRetries && !requestSuccessful)
+        {
+            UnityWebRequest request = UnityWebRequest.Get(api);
+            request.SetRequestHeader("accept", "application/json");
+            request.SetRequestHeader("Authorization", "Bearer " + LoaderConfig.Instance.apiManager.jwt);
+
+            var operation = request.SendWebRequest();
+            
+            // Wait for the request to complete
+            while (!operation.isDone)
+            {
+                await Task.Yield();
+            }
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                requestSuccessful = true;
+                jsonResponse = request.downloadHandler.text;
+            }
+            else
+            {
+                LogController.Instance.debugError($"Attempt {retryCount + 1} failed: {request.error}");
+                retryCount++;
+
+                if (retryCount >= this.maxRetries)
+                {
+                    LogController.Instance.debugError("Failed to load current account after maximum retries.");
+                    return null;
+                }
+
+                await Task.Delay(1000); // Wait 1 second before retry
+            }
+            
+            request.Dispose();
+        }
+
+        return jsonResponse;
     }
 
     public IEnumerator getHelpToolInventory(Action onCompleted = null)
@@ -956,9 +1066,43 @@ public static class APIConstant
         if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
             loader.CurrentHostName.Contains("uat.starwishparty.com") ||
             loader.CurrentHostName.Contains("pre.starwishparty.com") ||
-            loader.CurrentHostName.Contains("www.starwishparty.com"))
+            loader.CurrentHostName.Contains("www.starwishparty.com") ||
+            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
         {
             return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/help-tools/user/inventory";
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    public static string GetCostumeDataAPI(LoaderConfig loader)
+    {
+        Debug.Log("GetCostumeDataAPI: " + loader.CurrentHostName);
+        if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
+            loader.CurrentHostName.Contains("uat.starwishparty.com") ||
+            loader.CurrentHostName.Contains("pre.starwishparty.com") ||
+            loader.CurrentHostName.Contains("www.starwishparty.com") ||
+            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
+        {
+            return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/costumes";
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    public static string GetCurrentAccountAPI(LoaderConfig loader)
+    {
+        if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
+            loader.CurrentHostName.Contains("uat.starwishparty.com") ||
+            loader.CurrentHostName.Contains("pre.starwishparty.com") ||
+            loader.CurrentHostName.Contains("www.starwishparty.com") ||
+            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
+        {
+            return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/accounts/current";
         }
         else
         {
@@ -971,7 +1115,8 @@ public static class APIConstant
         if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
             loader.CurrentHostName.Contains("uat.starwishparty.com") ||
             loader.CurrentHostName.Contains("pre.starwishparty.com") ||
-            loader.CurrentHostName.Contains("www.starwishparty.com"))
+            loader.CurrentHostName.Contains("www.starwishparty.com") ||
+            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
         {
             return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/help-tools/use";
         }

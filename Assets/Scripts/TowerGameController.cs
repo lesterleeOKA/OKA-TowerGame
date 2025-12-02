@@ -84,7 +84,7 @@ public class TowerGameController : GameBaseController
         }
 
         // Wait for starwishApiCaller to be ready before fetching costume data
-        //StartCoroutine(WaitForStarwishApi());
+        StartCoroutine(WaitForStarwishApi());
 
         /*// change ready button to WS_Client's ready button
         if (WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid).status != "playing") {
@@ -92,7 +92,7 @@ public class TowerGameController : GameBaseController
         }*/
     }
 
-    /*private IEnumerator WaitForStarwishApi()
+    private IEnumerator WaitForStarwishApi()
     {
         while (LoaderConfig.Instance == null || LoaderConfig.Instance.apiManager == null)
         {
@@ -100,19 +100,19 @@ public class TowerGameController : GameBaseController
         }
 
         // Fetch both costume data and account costume ID in parallel
-        Task task1 = fetchCostumeData();
+        // Task task1 = fetchCostumeData();
         Task task2 = fetchAccountCostumeId();
         
         // Wait for both tasks to complete
-        yield return new WaitUntil(() => task1.IsCompleted && task2.IsCompleted);
+        yield return new WaitUntil(() => task2.IsCompleted);
         
         finishLoading = true;
-    }*/
+    }
 
-    /*protected async Task fetchAccountCostumeId() {
+    protected async Task fetchAccountCostumeId() {
         try 
-        {
-            string jsonResponse = await LoaderConfig.Instance.apiManager.StarwishApi("get", "accounts/current");
+        {string jsonResponse = await LoaderConfig.Instance.apiManager.getCurrentAccount();
+            
             
             // Parse the JSON response
             if (!string.IsNullOrEmpty(jsonResponse))
@@ -144,161 +144,162 @@ public class TowerGameController : GameBaseController
             Debug.LogError($"Failed to fetch account costume ID: {ex.Message}");
         }
     }
-    protected async Task fetchCostumeData() {
-        try 
-        {
-            // Wait for APIManager to be initialized
-            if (LoaderConfig.Instance == null || LoaderConfig.Instance.apiManager == null)
-            {
-                Debug.LogError("LoaderConfig.Instance.apiManager is null. Make sure LoaderConfig is properly initialized.");
-                return;
-            }
+    
+    // protected async Task fetchCostumeData() {
+    //     try 
+    //     {
+    //         // Wait for APIManager to be initialized
+    //         if (LoaderConfig.Instance == null || LoaderConfig.Instance.apiManager == null)
+    //         {
+    //             Debug.LogError("LoaderConfig.Instance.apiManager is null. Make sure LoaderConfig is properly initialized.");
+    //             return;
+    //         }
 
-            string jsonResponse = await LoaderConfig.Instance.apiManager.StarwishApi("get", "costumes");
-            costumeDataJson = jsonResponse;
-            Debug.Log($"costumeData loaded: {costumeDataJson}");
+    //         string jsonResponse = await LoaderConfig.Instance.apiManager.getCostumeData();
+    //         costumeDataJson = jsonResponse;
+    //         Debug.Log($"costumeData loaded: {costumeDataJson}");
 
-            // Parse JSON to get all costumes
-            if (!string.IsNullOrEmpty(costumeDataJson))
-            {
-                try
-                {
-                    CostumeListResponse costumeResponse = JsonUtility.FromJson<CostumeListResponse>(costumeDataJson);
+    //         // Parse JSON to get all costumes
+    //         if (!string.IsNullOrEmpty(costumeDataJson))
+    //         {
+    //             try
+    //             {
+    //                 CostumeListResponse costumeResponse = JsonUtility.FromJson<CostumeListResponse>(costumeDataJson);
                     
-                    if (costumeResponse != null && 
-                        costumeResponse.data != null && 
-                        costumeResponse.data.Length > 0)
-                    {
+    //                 if (costumeResponse != null && 
+    //                     costumeResponse.data != null && 
+    //                     costumeResponse.data.Length > 0)
+    //                 {
                         
-                        // Store costume data and start loading images for each costume
-                        foreach (CostumeData costume in costumeResponse.data)
-                        {
-                            if (costume != null && !string.IsNullOrEmpty(costume.costume_id))
-                            {
-                                // Store costume data
-                                costumeDataById[costume.costume_id] = costume;
+    //                     // Store costume data and start loading images for each costume
+    //                     foreach (CostumeData costume in costumeResponse.data)
+    //                     {
+    //                         if (costume != null && !string.IsNullOrEmpty(costume.costume_id))
+    //                         {
+    //                             // Store costume data
+    //                             costumeDataById[costume.costume_id] = costume;
                                 
-                                // Initialize CostumeTextures object for this costume
-                                if (!costumeTexturesById.ContainsKey(costume.costume_id))
-                                {
-                                    costumeTexturesById[costume.costume_id] = new CostumeTextures();
-                                }
+    //                             // Initialize CostumeTextures object for this costume
+    //                             if (!costumeTexturesById.ContainsKey(costume.costume_id))
+    //                             {
+    //                                 costumeTexturesById[costume.costume_id] = new CostumeTextures();
+    //                             }
                                 
-                                // Load stand image
-                                if (!string.IsNullOrEmpty(costume.img_src_stand))
-                                {
-                                    loadingImagesCount++;
-                                    StartCoroutine(LoadCostumeImage(
-                                        costume.costume_id, 
-                                        costume.img_src_stand, 
-                                        "stand"
-                                    ));
-                                }
+    //                             // Load stand image
+    //                             if (!string.IsNullOrEmpty(costume.img_src_stand))
+    //                             {
+    //                                 loadingImagesCount++;
+    //                                 StartCoroutine(LoadCostumeImage(
+    //                                     costume.costume_id, 
+    //                                     costume.img_src_stand, 
+    //                                     "stand"
+    //                                 ));
+    //                             }
                                 
-                                // Load walk image
-                                if (!string.IsNullOrEmpty(costume.img_src_walk))
-                                {
-                                    loadingImagesCount++;
-                                    StartCoroutine(LoadCostumeImage(
-                                        costume.costume_id, 
-                                        costume.img_src_walk, 
-                                        "walk"
-                                    ));
-                                }
+    //                             // Load walk image
+    //                             if (!string.IsNullOrEmpty(costume.img_src_walk))
+    //                             {
+    //                                 loadingImagesCount++;
+    //                                 StartCoroutine(LoadCostumeImage(
+    //                                     costume.costume_id, 
+    //                                     costume.img_src_walk, 
+    //                                     "walk"
+    //                                 ));
+    //                             }
                                 
-                                // Load jump image
-                                if (!string.IsNullOrEmpty(costume.img_src_jump))
-                                {
-                                    loadingImagesCount++;
-                                    StartCoroutine(LoadCostumeImage(
-                                        costume.costume_id, 
-                                        costume.img_src_jump, 
-                                        "jump"
-                                    ));
-                                }
-                            }
-                        }
+    //                             // Load jump image
+    //                             if (!string.IsNullOrEmpty(costume.img_src_jump))
+    //                             {
+    //                                 loadingImagesCount++;
+    //                                 StartCoroutine(LoadCostumeImage(
+    //                                     costume.costume_id, 
+    //                                     costume.img_src_jump, 
+    //                                     "jump"
+    //                                 ));
+    //                             }
+    //                         }
+    //                     }
                         
-                        // Wait for all images to finish loading
-                        Debug.Log($"Started loading {loadingImagesCount} costume images. Waiting for completion...");
-                        int maxWaitSeconds = 30; // Maximum wait time
-                        float waitedTime = 0f;
-                        while (loadingImagesCount > 0 && waitedTime < maxWaitSeconds)
-                        {
-                            await Task.Delay(100); // Wait 100ms between checks
-                            waitedTime += 0.1f;
-                        }
+    //                     // Wait for all images to finish loading
+    //                     Debug.Log($"Started loading {loadingImagesCount} costume images. Waiting for completion...");
+    //                     int maxWaitSeconds = 30; // Maximum wait time
+    //                     float waitedTime = 0f;
+    //                     while (loadingImagesCount > 0 && waitedTime < maxWaitSeconds)
+    //                     {
+    //                         await Task.Delay(100); // Wait 100ms between checks
+    //                         waitedTime += 0.1f;
+    //                     }
                         
-                        if (loadingImagesCount > 0)
-                        {
-                            Debug.LogWarning($"Timed out waiting for costume images. {loadingImagesCount} images still loading.");
-                        }
-                        else
-                        {
-                            Debug.Log("All costume images loaded successfully!");
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning("No costume data found in response");
-                    }
-                }
-                catch (System.Exception parseEx)
-                {
-                    Debug.LogError($"Failed to parse costume data JSON: {parseEx.Message}");
-                }
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Failed to fetch costume data: {ex.Message}");
-        }
-    }
+    //                     if (loadingImagesCount > 0)
+    //                     {
+    //                         Debug.LogWarning($"Timed out waiting for costume images. {loadingImagesCount} images still loading.");
+    //                     }
+    //                     else
+    //                     {
+    //                         Debug.Log("All costume images loaded successfully!");
+    //                     }
+    //                 }
+    //                 else
+    //                 {
+    //                     Debug.LogWarning("No costume data found in response");
+    //                 }
+    //             }
+    //             catch (System.Exception parseEx)
+    //             {
+    //                 Debug.LogError($"Failed to parse costume data JSON: {parseEx.Message}");
+    //             }
+    //         }
+    //     }
+    //     catch (System.Exception ex)
+    //     {
+    //         Debug.LogError($"Failed to fetch costume data: {ex.Message}");
+    //     }
+    // }
 
-    private IEnumerator LoadCostumeImage(string costumeId, string imageUrl, string imageType)
-    {
-        using (UnityEngine.Networking.UnityWebRequest request = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(imageUrl))
-        {
-            // Set certificate handler to bypass SSL issues if needed
-            request.certificateHandler = new WebRequestSkipCert();
+    // private IEnumerator LoadCostumeImage(string costumeId, string imageUrl, string imageType)
+    // {
+    //     using (UnityEngine.Networking.UnityWebRequest request = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(imageUrl))
+    //     {
+    //         // Set certificate handler to bypass SSL issues if needed
+    //         request.certificateHandler = new WebRequestSkipCert();
             
-            yield return request.SendWebRequest();
+    //         yield return request.SendWebRequest();
 
-            if (request.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
-            {
-                Texture2D loadedTexture = UnityEngine.Networking.DownloadHandlerTexture.GetContent(request);
+    //         if (request.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+    //         {
+    //             Texture2D loadedTexture = UnityEngine.Networking.DownloadHandlerTexture.GetContent(request);
                 
-                // Store the texture in the appropriate field based on imageType
-                if (costumeTexturesById.ContainsKey(costumeId))
-                {
-                    CostumeTextures costumeTextures = costumeTexturesById[costumeId];
+    //             // Store the texture in the appropriate field based on imageType
+    //             if (costumeTexturesById.ContainsKey(costumeId))
+    //             {
+    //                 CostumeTextures costumeTextures = costumeTexturesById[costumeId];
                     
-                    switch (imageType.ToLower())
-                    {
-                        case "stand":
-                            costumeTextures.standTexture = loadedTexture;
-                            break;
-                        case "walk":
-                            costumeTextures.walkTexture = loadedTexture;
-                            break;
-                        case "jump":
-                            costumeTextures.jumpTexture = loadedTexture;
-                            break;
-                        default:
-                            Debug.LogWarning($"Unknown image type '{imageType}' for costume ID {costumeId}");
-                            break;
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogError($"Failed to load costume {imageType} image for ID {costumeId}: {request.error}");
-            }
+    //                 switch (imageType.ToLower())
+    //                 {
+    //                     case "stand":
+    //                         costumeTextures.standTexture = loadedTexture;
+    //                         break;
+    //                     case "walk":
+    //                         costumeTextures.walkTexture = loadedTexture;
+    //                         break;
+    //                     case "jump":
+    //                         costumeTextures.jumpTexture = loadedTexture;
+    //                         break;
+    //                     default:
+    //                         Debug.LogWarning($"Unknown image type '{imageType}' for costume ID {costumeId}");
+    //                         break;
+    //                 }
+    //             }
+    //         }
+    //         else
+    //         {
+    //             Debug.LogError($"Failed to load costume {imageType} image for ID {costumeId}: {request.error}");
+    //         }
             
-            // Decrement the loading counter
-            loadingImagesCount--;
-        }
-    }*/
+    //         // Decrement the loading counter
+    //         loadingImagesCount--;
+    //     }
+    // }
 
     private void OnDestroy()
     {
@@ -320,7 +321,7 @@ public class TowerGameController : GameBaseController
             case "addPlayer":
             case "removePlayer":
             case "reconnectPlayer":
-                SyncPlayers();
+                // SyncPlayers();
                 break;
             case "startGame":
                 WS_Client.Instance.readyButton.SetActive(false);
@@ -422,8 +423,8 @@ public class TowerGameController : GameBaseController
 
         if (Input.GetKeyDown(KeyCode.P))
         {
-            // printCostumeData(); // for DEV printCostumeData
-            printGameData(); // for DEV printCostumeData
+            printCostumeData(); // for DEV printCostumeData
+            // printGameData(); // for DEV printCostumeData
         }
     }
 
@@ -537,7 +538,7 @@ public class TowerGameController : GameBaseController
                     }
                     CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
                     if (characterController != null) {
-                        characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.answer_id != 0);
+                        characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.isAnswerVisible != 0);
                         characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = player.answer_id != 0 ? WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id).content : "";
                     }
                 }
@@ -658,7 +659,6 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    private int playerNumber = 0;
     private void CreatePlayerFromData(WS_Client.PlayerData player, Vector3 startPos, string key, bool isLocal = false)
     {
         // Instantiate without parent, set world position, then attach to parent preserving world pos
@@ -676,10 +676,7 @@ public class TowerGameController : GameBaseController
         characterController.gameObject.name = "Player_" + uid;
         characterController.UserName = "Player_" + uid;
         characterController.UserId = uid;
-        characterController.SetCostumeTextures(this.characterSets[this.playerNumber].walkingAnimationTextures[0] as Texture2D,
-                                                this.characterSets[this.playerNumber].walkingAnimationTextures[1] as Texture2D);
 
-         this.playerNumber +=1;
         if (isLocal) characterController.gameObject.tag = "MainPlayer";
         this.characterControllers.Add(characterController);
 
@@ -697,23 +694,28 @@ public class TowerGameController : GameBaseController
         characterController.key = key;
 
         // Apply costume textures if available
-        if (!string.IsNullOrEmpty(player.costume_id) && costumeTexturesById.ContainsKey(player.costume_id))
-        {
-            CostumeTextures costumeTextures = costumeTexturesById[player.costume_id];
-            
-            if (costumeTextures.standTexture != null && costumeTextures.walkTexture != null)
-            {
-                characterController.SetCostumeTextures(costumeTextures.standTexture, costumeTextures.walkTexture);
-                Debug.Log($"Applied costume textures for player {uid} with costume_id: {player.costume_id}");
-            }
-            else
-            {
-                Debug.LogWarning($"Costume textures not fully loaded for costume_id: {player.costume_id}");
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"No costume textures found for player {uid} with costume_id: {player.costume_id}");
+        // if (!string.IsNullOrEmpty(player.costume_id) && costumeTexturesById.ContainsKey(player.costume_id))
+        // {
+        //     CostumeTextures costumeTextures = costumeTexturesById[player.costume_id];
+        //     Debug.Log($"costumeTextures.standTexture: {costumeTextures.standTexture}");
+        //     Debug.Log($"costumeTextures.walkTexture: {costumeTextures.walkTexture}");
+        //     if (costumeTextures.standTexture != null && costumeTextures.walkTexture != null)
+        //     {
+        //         characterController.SetCostumeTextures(costumeTextures.standTexture, costumeTextures.walkTexture);
+        //         Debug.Log($"Applied costume textures for player {uid} with costume_id: {player.costume_id}");
+        //     }
+        //     else
+        //     {
+        //         Debug.LogWarning($"Costume textures not fully loaded for costume_id: {player.costume_id}");
+        //     }
+        // }
+        // else
+        // {
+        //     Debug.LogWarning($"No costume textures found for player {uid} with costume_id: {player.costume_id}");
+        // }
+        if (!string.IsNullOrEmpty(player.costume_id) && int.Parse(player.costume_id) < this.characterSets.Length) {
+            characterController.SetCostumeTextures(this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[0] as Texture2D,
+                                                this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[1] as Texture2D);
         }
 
         // keep an incremental id for legacy naming if needed
@@ -989,6 +991,15 @@ public class TowerGameController : GameBaseController
     {
         YouLose.SetActive(true);
         StartCoroutine(HideYouLoseAfterDelay(3f));
+
+        foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
+            if (player.isAnswerVisible == 0) {
+                CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
+                if (characterController != null) {
+                    characterController.showAnswerBubble(0);
+                }
+            }
+        }
     }
 
     public void reloadScene() {
