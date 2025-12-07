@@ -71,6 +71,14 @@ public class WS_Client : MonoBehaviour
         set { _gameData = value; }
     }
 
+    public static List<RoomInfo> _roomList;
+
+    public List<RoomInfo> RoomList
+    {
+        get { return _roomList; }
+        set { _roomList = value; }
+    }
+
     [Serializable]
     public class UserInfo
     {
@@ -372,12 +380,15 @@ public class WS_Client : MonoBehaviour
                 switch (message.messageType)
                 {
                     case "roomInfo":
+                        Debug.Log("roomInfo : " + jsonString);
                         roomId = message.roomId;
                         break;
                     case "listGameRoom":
+                        Debug.Log("listGameRoom : " + jsonString);
+                        RoomList = message.content.roomList;
                         break;
                     case "roomFull":
-                        Debug.Log("roomFull : " + message.content.message + " / " + "current roomId : " + roomId);
+                        Debug.Log("roomFull : " + jsonString);
                         break;
                     case "SyncRoomData":
                         // Debug.Log("OnMessage! " + jsonString);
@@ -478,7 +489,7 @@ public class WS_Client : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.J))
         {
-            JoinGameRoom(); // for DEV JoinRoom
+            JoinGameRoom(1); // for DEV JoinRoom
         }
         if (Input.GetKeyDown(KeyCode.P))
         {
@@ -501,7 +512,7 @@ public class WS_Client : MonoBehaviour
         }
     }
 
-    public void JoinGameRoom()
+    public void JoinGameRoom(int roomId = 1)
     {
         if (websocket == null || websocket.State != WebSocketState.Open)
         {
@@ -513,7 +524,7 @@ public class WS_Client : MonoBehaviour
         {
             lastJoinTime = Time.time;
             isJoining = true;
-            _ = JoinRoomAsync();
+            _ = JoinRoomAsync(roomId);
         }
     }
 
@@ -525,7 +536,7 @@ public class WS_Client : MonoBehaviour
             // await JoinRoom(); // 调用一次 JoinRoom
             await ListGameRoom();
             // Automatically join game room after listing rooms
-            JoinGameRoom();
+            JoinGameRoom(1);
         }
         catch (Exception ex)
         {
@@ -546,12 +557,12 @@ public class WS_Client : MonoBehaviour
         await websocket.SendText(jsonString);
     }
 
-    private async Task JoinRoomAsync()
+    private async Task JoinRoomAsync(int roomId = 1)
     {
         try
         {
             // 这里替换为你的实际加入房间逻辑
-            await JoinRoom();
+            await JoinRoom(roomId);
             // Debug.Log("Room joined successfully!");
         }
         catch (System.Exception e)
@@ -564,13 +575,15 @@ public class WS_Client : MonoBehaviour
         }
     }
 
-    public async Task JoinRoom()
+    public async Task JoinRoom(int roomId = 1)
     {
+        string roomIdString = "room" + roomId.ToString();
+        if (roomId == 0) roomIdString = "lobby";
         var msg = new OutMessage
         {
             messageType = "joinRoom",
             content = new MessageContent { action = "joinRoom" },
-            roomId = "room1"
+            roomId = roomIdString
         };
 
         string jsonString = JsonUtility.ToJson(msg);

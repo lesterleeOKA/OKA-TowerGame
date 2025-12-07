@@ -5,24 +5,24 @@ using UnityEngine;
 public class QuestionTrigger : MonoBehaviour
 {
     public int questionId;
-    public WS_Client.QuestionData questionData;
+    // public WS_Client.QuestionData questionData;
 
-    void Update()
-    {
-        // Look up current question data from GameData (not the cached copy)
-        WS_Client.QuestionData currentQuestionData = WS_Client.Instance.GameData?.questions?.Find(q => q.id == questionId);
+    // void Update()
+    // {
+    //     // Look up current question data from GameData (not the cached copy)
+    //     WS_Client.QuestionData currentQuestionData = WS_Client.Instance.GameData?.questions?.Find(q => q.id == questionId);
         
-        if (currentQuestionData != null)
-        {
-            // Update the cached questionData reference
-            questionData = currentQuestionData;
+    //     if (currentQuestionData != null)
+    //     {
+    //         // Update the cached questionData reference
+    //         questionData = currentQuestionData;
             
-            // Debug.Log($"Question {questionId} content: {currentQuestionData.content}");
+    //         // Debug.Log($"Question {questionId} content: {currentQuestionData.content}");
             
-            // You can add logic here to show/hide question based on game state
-            // gameObject.SetActive(someCondition);
-        }
-    }
+    //         // You can add logic here to show/hide question based on game state
+    //         // gameObject.SetActive(someCondition);
+    //     }
+    // }
 
     private void OnTriggerEnter2D(Collider2D other)
     {

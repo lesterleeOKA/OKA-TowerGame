@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -412,7 +411,7 @@ MonoBehaviour:
     allTextures: []
     roAppDataKey: 
     gamePageName: 
-    bgTexture: {fileID: 2800000, guid: 37c9536992eefc94fa8753b0d498335a, type: 3}
+    bgTexture: {fileID: 2800000, guid: a654835e990e98144aae5d5a84af992d, type: 3}
     previewTexture: {fileID: 2800000, guid: 8e53b2996fac9c64f8ef224da31c4cf2, type: 3}
     object_item_images: []
     gameBackground: {fileID: 0}

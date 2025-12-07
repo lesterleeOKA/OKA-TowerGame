@@ -41,6 +41,7 @@ public class TowerGameController : GameBaseController
     public Dictionary<string, CostumeData> costumeDataById = new Dictionary<string, CostumeData>(); // costume_id -> CostumeData
     public bool finishLoading = false; // Set to true after costume data and account costume ID are loaded
     private int loadingImagesCount = 0; // Track how many images are currently loading
+    private int currentQuestionId = -1;
 
     // Map WS player key (string) -> CharacterController (ensures one GameObject per ws player)
     private Dictionary<string, CharacterController> playerControllersByKey = new Dictionary<string, CharacterController>();
@@ -319,13 +320,18 @@ public class TowerGameController : GameBaseController
         switch (newOrder)
         {
             case "addPlayer":
+            break;
             case "removePlayer":
+            break;
             case "reconnectPlayer":
+                WS_Client.Instance.readyButton.SetActive(false);
+                StartCoroutine(updateQuestionUI());
                 // SyncPlayers();
                 break;
             case "startGame":
                 WS_Client.Instance.readyButton.SetActive(false);
                 StartGame.Instance.startGameSequence();
+                StartCoroutine(updateQuestionUI());
                 break;
             case "endGame":
                 WS_Client.Instance.readyButton.SetActive(true);
@@ -333,9 +339,12 @@ public class TowerGameController : GameBaseController
                 base.endGame();
                 break;
             case "resetGame":
+                WS_Client.Instance.readyButton.SetActive(true);
+                onTopUI.GetComponent<CanvasGroup>().alpha = 0;
                 // Add your logic here
                 break;
             case "nextRound":
+                StartCoroutine(updateQuestionUI());
                 // Add your logic here
                 break;
             case "getAnswer":
@@ -349,6 +358,31 @@ public class TowerGameController : GameBaseController
                 break;
             default:
                 break;
+        }
+    }
+
+    private IEnumerator updateQuestionUI()
+    {
+        while (WS_Client.Instance.GameData == null) {
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        
+        List<WS_Client.QuestionData> questions = WS_Client.Instance.GameData.questions;
+        onTopUI.GetComponent<CanvasGroup>().alpha = 1;
+        GameObject bg_FillInBlank = onTopUI.transform.Find("Bg/QABoard/bg_FillInBlank").gameObject;
+        bg_FillInBlank.GetComponent<CanvasGroup>().alpha = 1;
+        
+        int round = WS_Client.Instance.GameData.round;
+        //wait until round != currentQuestionId
+        while (round == currentQuestionId) {
+            round = WS_Client.Instance.GameData.round;
+            yield return new WaitForSeconds(0.1f);
+        }
+
+        if (round > 0) {
+            bg_FillInBlank.GetComponentInChildren<TextMeshProUGUI>().text = WS_Client.Instance.GameData.questions[round-1].content;
+            currentQuestionId = round;
         }
     }
 
@@ -469,79 +503,14 @@ public class TowerGameController : GameBaseController
         var players = WS_Client.Instance.GameData.players;
         if (players == null) return;
 
-        // Process questions
-        if (WS_Client.Instance.GameData != null && WS_Client.Instance.GameData.questions != null)
-        {
-            var currentQuestionIds = new HashSet<int>();
-            int currentRound = WS_Client.Instance.GameData.round; // 获取当前轮次(1-10)
-
-            // 只处理当前轮次对应的问题
-            int questionIndex = currentRound - 1; // round 1 对应 questions[0]
-
-            if (questionIndex >= 0 && questionIndex < WS_Client.Instance.GameData.questions.Count)
-            {
-                var question = WS_Client.Instance.GameData.questions[questionIndex];
-                currentQuestionIds.Add(question.id);
-
-                if (!questionObjectsById.ContainsKey(question.id))
-                {
-                    // 使用问题数据中的位置信息
-                    Vector3 questionPos = Vector3.zero;
-                    if (question.position != null && question.position.Length >= 2)
-                    {
-                        questionPos = new Vector3(question.position[0], question.position[1], 0f);
-                    }
-                    else
-                    {
-                        // 备用位置：根据轮次水平分布
-                        float spacing = 1000f;
-                        float startX = -(WS_Client.Instance.GameData.questions.Count - 1) * spacing / 2f;
-                        questionPos = new Vector3(startX + (questionIndex * spacing), 800f, 0f);
-                    }
-
-                    CreateQuestionObject(question, questionPos);
-                }
-                else
-                {
-                    // 更新已存在问题对象的位置
-                    var questionObj = questionObjectsById[question.id];
-                    if (questionObj != null && question.position != null && question.position.Length >= 2)
-                    {
-                        Vector2 uiPosition = new Vector2(question.position[0] * 1500f, question.position[1] * 1500f);
-
-                        RectTransform rectTransform = questionObj.GetComponent<RectTransform>();
-                        if (rectTransform != null)
-                        {
-                            rectTransform.anchoredPosition = uiPosition;
-                        }
-                        else
-                        {
-                            questionObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, 0f);
-                        }
-                    }
-                }
+        foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
+            if (player.uid == WS_Client.Instance.public_UserInfo.uid) {
+                continue;
             }
-
-            // 移除不属于当前轮次的问题
-            foreach (var kv in questionObjectsById)
-            {
-                if (!currentQuestionIds.Contains(kv.Key))
-                {
-                    RemoveQuestionObject(kv.Key);
-                }
-            }
-
-            if (WS_Client.Instance.GameData.players != null) {
-                foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
-                    if (player.uid == WS_Client.Instance.public_UserInfo.uid) {
-                        continue;
-                    }
-                    CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
-                    if (characterController != null) {
-                        characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.isAnswerVisible != 0);
-                        characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = player.answer_id != 0 ? WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id).content : "";
-                    }
-                }
+            CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
+            if (characterController != null) {
+                characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.isAnswerVisible != 0);
+                characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = player.answer_id != 0 ? WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id).content : "";
             }
         }
 
@@ -556,6 +525,7 @@ public class TowerGameController : GameBaseController
 
                 if (!answerObjectsById.ContainsKey(answer.id))
                 {
+                    // Debug.Log($"answer: {answer.id} - {answer.content} - {answer.position[0]} - {answer.position[1]}");
                     // Create answer at position from data
                     Vector3 answerPos = Vector3.zero;
                     if (answer.position != null && answer.position.Length >= 2)
@@ -570,7 +540,7 @@ public class TowerGameController : GameBaseController
                     var answerObj = answerObjectsById[answer.id];
                     if (answerObj != null && answer.position != null && answer.position.Length >= 2)
                     {
-                        Vector2 uiPosition = new Vector2(answer.position[0] * 1500f, answer.position[1] * 1500f);
+                        Vector2 uiPosition = new Vector2(answer.position[0], answer.position[1]);
                         RectTransform rectTransform = answerObj.GetComponent<RectTransform>();
                         if (rectTransform != null)
                         {
@@ -594,69 +564,67 @@ public class TowerGameController : GameBaseController
             }
         }
 
-        // Process obstacles 
-        if (WS_Client.Instance.GameData.obstacles != null)
-        {
-            var currentObstacleIds = new HashSet<int>();
+        // // Process obstacles 
+        // if (WS_Client.Instance.GameData.obstacles != null)
+        // {
+        //     var currentObstacleIds = new HashSet<int>();
 
-            // Debug.Log($"=== 障碍物处理开始 ===");
-            // Debug.Log($"当前帧障碍物数量: {WS_Client.Instance.GameData.obstacles.Count}");
+        //     // Debug.Log($"=== 障碍物处理开始 ===");
+        //     // Debug.Log($"当前帧障碍物数量: {WS_Client.Instance.GameData.obstacles.Count}");
 
-            foreach (var obstacle in WS_Client.Instance.GameData.obstacles)
-            {
-                if (obstacle.id == 0)
-                {
-                    // Debug.LogWarning("跳过ID为空的障碍物");
-                    continue;
-                }
+        //     foreach (var obstacle in WS_Client.Instance.GameData.obstacles)
+        //     {
+        //         if (obstacle.id == 0)
+        //         {
+        //             // Debug.LogWarning("跳过ID为空的障碍物");
+        //             continue;
+        //         }
 
-                currentObstacleIds.Add(obstacle.id);
-                //  Debug.Log($"处理障碍物: ID={obstacle.id}, Position=[{obstacle.position?[0]}, {obstacle.position?[1]}]");
-                if (!obstacleObjectsById.ContainsKey(obstacle.id))
-                {
-                    // Create obstacle at position from data - 与answer相同的创建逻辑
-                    // Debug.Log($"创建新障碍物: {obstacle.id}");
-                    Vector3 obstaclePos = Vector3.zero;
-                    if (obstacle.position != null && obstacle.position.Length >= 2)
-                    {
-                        obstaclePos = new Vector3(obstacle.position[0], obstacle.position[1], 0f);
-                    }
-                    CreateObstacleObject(obstacle, obstaclePos);
-                }
-                else
-                {
-                    // Update obstacle position if it exists - 与answer相同的更新逻辑
-                    // Debug.Log($"更新已存在障碍物: {obstacle.id}");
-                    var obstacleObj = obstacleObjectsById[obstacle.id];
-                    if (obstacleObj != null && obstacle.position != null && obstacle.position.Length >= 2)
-                    {
-                        Vector2 uiPosition = new Vector2(obstacle.position[0] * 1500f, obstacle.position[1] * 1500f);
+        //         currentObstacleIds.Add(obstacle.id);
+        //         //  Debug.Log($"处理障碍物: ID={obstacle.id}, Position=[{obstacle.position?[0]}, {obstacle.position?[1]}]");
+        //         if (!obstacleObjectsById.ContainsKey(obstacle.id))
+        //         {
+        //             // Create obstacle at position from data - 与answer相同的创建逻辑
+        //             // Debug.Log($"创建新障碍物: {obstacle.id}");
+        //             Vector3 obstaclePos = Vector3.zero;
+        //             if (obstacle.position != null && obstacle.position.Length >= 2)
+        //             {
+        //                 obstaclePos = new Vector3(obstacle.position[0], obstacle.position[1], 0f);
+        //             }
+        //             CreateObstacleObject(obstacle, obstaclePos);
+        //         }
+        //         else
+        //         {
+        //             var obstacleObj = obstacleObjectsById[obstacle.id];
+        //             if (obstacleObj != null && obstacle.position != null && obstacle.position.Length >= 2)
+        //             {
+        //                 Vector2 uiPosition = new Vector2(obstacle.position[0], obstacle.position[1]);
 
-                        RectTransform rectTransform = obstacleObj.GetComponent<RectTransform>();
-                        if (rectTransform != null)
-                        {
-                            rectTransform.anchoredPosition = uiPosition;
-                        }
-                        else
-                        {
-                            obstacleObj.transform.localPosition = new Vector3(uiPosition.x, uiPosition.y, 0f);
-                        }
+        //                 RectTransform rectTransform = obstacleObj.GetComponent<RectTransform>();
+        //                 if (rectTransform != null)
+        //                 {
+        //                     rectTransform.anchoredPosition = uiPosition;
+        //                 }
+        //                 else
+        //                 {
+        //                     obstacleObj.transform.localPosition = new Vector3(uiPosition.x, uiPosition.y, 0f);
+        //                 }
 
-                        // Debug.Log($"Updated obstacle {obstacle.id} position to ({obstacle.position[0]}, {obstacle.position[1]})");
-                    }
-                }
-            }
+        //                 // Debug.Log($"Updated obstacle {obstacle.id} position to ({obstacle.position[0]}, {obstacle.position[1]})");
+        //             }
+        //         }
+        //     }
 
-            // Remove obstacles that no longer exist - 与answer相同的清理逻辑
-            foreach (var kv in obstacleObjectsById)
-            {
-                if (!currentObstacleIds.Contains(kv.Key))
-                {
-                    RemoveObstacleObject(kv.Key);
-                }
-            }
+        //     // Remove obstacles that no longer exist - 与answer相同的清理逻辑
+        //     foreach (var kv in obstacleObjectsById)
+        //     {
+        //         if (!currentObstacleIds.Contains(kv.Key))
+        //         {
+        //             RemoveObstacleObject(kv.Key);
+        //         }
+        //     }
 
-        }
+        // }
     }
 
     private void CreatePlayerFromData(WS_Client.PlayerData player, Vector3 startPos, string key, bool isLocal = false)
@@ -737,84 +705,84 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    private void CreateQuestionObject(WS_Client.QuestionData question, Vector3 position)
-    {
-        Debug.Log($"CreateQuestionObject: {question.id} - {question.content}");
-        if (questionPrefab == null)
-        {
-            Debug.LogError("questionPrefab is not assigned!");
-            return;
-        }
+    // private void CreateQuestionObject(WS_Client.QuestionData question, Vector3 position)
+    // {
+    //     Debug.Log($"CreateQuestionObject: {question.id} - {question.content}");
+    //     if (questionPrefab == null)
+    //     {
+    //         Debug.LogError("questionPrefab is not assigned!");
+    //         return;
+    //     }
 
-        if (question.content == null)
-        {
-            Debug.LogError("question.content is null!");
-            return;
-        }
+    //     if (question.content == null)
+    //     {
+    //         Debug.LogError("question.content is null!");
+    //         return;
+    //     }
 
-        var questionObj = GameObject.Instantiate(questionPrefab, this.globalParent);
-        questionObj.name = "Question_" + question.id;
+    //     var questionObj = GameObject.Instantiate(questionPrefab, this.globalParent);
+    //     questionObj.name = "Question_" + question.id;
 
-        // Use RectTransform for UI positioning
-        RectTransform rectTransform = questionObj.GetComponent<RectTransform>();
-        if (rectTransform != null)
-        {
-            rectTransform.anchoredPosition = new Vector2(position.x, position.y);
-        }
-        else
-        {
-            // Fallback to world position if not a UI element
-            questionObj.transform.position = position;
-        }
+    //     // Use RectTransform for UI positioning
+    //     RectTransform rectTransform = questionObj.GetComponent<RectTransform>();
+    //     if (rectTransform != null)
+    //     {
+    //         rectTransform.anchoredPosition = new Vector2(position.x, position.y);
+    //     }
+    //     else
+    //     {
+    //         // Fallback to world position if not a UI element
+    //         questionObj.transform.position = position;
+    //     }
 
-        // Set text on TextMeshProUGUI component in child
-        // TextMeshProUGUI textComponent = questionObj.GetComponentInChildren<TextMeshProUGUI>();
-        // Debug.Log($"question.content: {question.content}");
-        // if (textComponent != null)
-        // {
-        //     textComponent.text = question.content;
-        // }
+    //     // Set text on TextMeshProUGUI component in child
+    //     // TextMeshProUGUI textComponent = questionObj.GetComponentInChildren<TextMeshProUGUI>();
+    //     // Debug.Log($"question.content: {question.content}");
+    //     // if (textComponent != null)
+    //     // {
+    //     //     textComponent.text = question.content;
+    //     // }
 
-        // Add QuestionTrigger component for collision detection
-        QuestionTrigger questionTrigger = questionObj.GetComponent<QuestionTrigger>();
-        if (questionTrigger == null)
-        {
-            questionTrigger = questionObj.AddComponent<QuestionTrigger>();
-        }
-        questionTrigger.questionId = question.id;
-        questionTrigger.questionData = question;
-        Debug.Log($"Added QuestionTrigger component to {question.id}");
+    //     // Add QuestionTrigger component for collision detection
+    //     QuestionTrigger questionTrigger = questionObj.GetComponent<QuestionTrigger>();
+    //     if (questionTrigger == null)
+    //     {
+    //         questionTrigger = questionObj.AddComponent<QuestionTrigger>();
+    //     }
+    //     questionTrigger.questionId = question.id;
+    //     questionTrigger.questionData = question;
+    //     Debug.Log($"Added QuestionTrigger component to {question.id}");
 
-        questionObj.gameObject.SetActive(true);
+    //     questionObj.gameObject.SetActive(true);
 
-        // questionUIText.GetComponent<TextMeshProUGUI>().text = question.content;
-        onTopUI.GetComponent<CanvasGroup>().alpha = 1;
-        GameObject bg_FillInBlank = onTopUI.transform.Find("Bg/QABoard/bg_FillInBlank").gameObject;
-        bg_FillInBlank.GetComponent<CanvasGroup>().alpha = 1;
-        bg_FillInBlank.GetComponentInChildren<TextMeshProUGUI>().text = question.content;
+    //     // questionUIText.GetComponent<TextMeshProUGUI>().text = question.content;
+    //     onTopUI.GetComponent<CanvasGroup>().alpha = 1;
+    //     GameObject bg_FillInBlank = onTopUI.transform.Find("Bg/QABoard/bg_FillInBlank").gameObject;
+    //     bg_FillInBlank.GetComponent<CanvasGroup>().alpha = 1;
+    //     bg_FillInBlank.GetComponentInChildren<TextMeshProUGUI>().text = question.content;
 
-        // Store the question data (you can add a component to store this if needed)
-        // For now, just track the GameObject
-        questionObjectsById[question.id] = questionObj;
-        questions.Add(question);
+    //     // Store the question data (you can add a component to store this if needed)
+    //     // For now, just track the GameObject
+    //     questionObjectsById[question.id] = questionObj;
+    //     questions.Add(question);
 
-    }
+    // }
 
-    private void RemoveQuestionObject(int id)
-    {
-        if (questionObjectsById.TryGetValue(id, out var questionObj))
-        {
-            if (questionObj != null)
-            {
-                GameObject.Destroy(questionObj);
-                Debug.Log($"[TowerGameController] Removed question GameObject for id={id}");
-            }
-            questionObjectsById.Remove(id);
+    // private void RemoveQuestionObject(int id)
+    // {
+    //     if (questionObjectsById.TryGetValue(id, out var questionObj))
+    //     {
+    //         if (questionObj != null)
+    //         {
+    //             GameObject.Destroy(questionObj);
+    //             Debug.Log($"[TowerGameController] Removed question GameObject for id={id}");
+    //         }
+    //         questionObjectsById.Remove(id);
 
-            // Remove from list
-            questions.RemoveAll(q => q.id == id);
-        }
-    }
+    //         // Remove from list
+    //         questions.RemoveAll(q => q.id == id);
+    //     }
+    // }
 
     private void CreateAnswerObject(WS_Client.AnswerData answer, Vector3 position)
     {
@@ -828,7 +796,7 @@ public class TowerGameController : GameBaseController
         answerObj.name = "Answer_" + answer.id;
 
         // Scale position for UI (multiply by 500 for canvas coordinates)
-        Vector2 uiPosition = new Vector2(position.x * 1500f, position.y * 1500f);
+        Vector2 uiPosition = new Vector2(position.x, position.y);
 
         // Use RectTransform for UI positioning
         RectTransform rectTransform = answerObj.GetComponent<RectTransform>();
@@ -938,7 +906,7 @@ public class TowerGameController : GameBaseController
         obstacleObj.name = "Obstacle_" + obstacle.id;
 
         // 使用与answer完全相同的坐标转换逻辑
-        Vector2 uiPosition = new Vector2(position.x * 1500f, position.y * 1500f);
+        Vector2 uiPosition = new Vector2(position.x, position.y);
 
         // 使用RectTransform进行UI定位 - 与answer相同
         RectTransform rectTransform = obstacleObj.GetComponent<RectTransform>();
