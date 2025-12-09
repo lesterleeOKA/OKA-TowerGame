@@ -782,7 +782,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 2027992709}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: WS_Client, endel.nativewebsocket
         m_MethodName: JoinGameRoom
         m_Mode: 1
@@ -4622,7 +4622,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2027992709}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: WS_Client, endel.nativewebsocket
           m_MethodName: setReady
           m_Mode: 6
@@ -4677,7 +4677,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 965468772}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2027992708}
+        m_TargetAssemblyTypeName: TowerGameController, Assembly-CSharp
+        m_MethodName: ready
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &965468772
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8909,7 +8921,6 @@ GameObject:
   - component: {fileID: 2027992706}
   - component: {fileID: 2027992708}
   - component: {fileID: 2027992707}
-  - component: {fileID: 2027992709}
   m_Layer: 0
   m_Name: GameController
   m_TagString: Untagged
@@ -9019,6 +9030,7 @@ MonoBehaviour:
   globalParent: {fileID: 1388269475}
   YouWin: {fileID: 617150445}
   YouLose: {fileID: 105608703}
+  readyButton: {fileID: 0}
   characterControllers: []
   questions: []
   answers: []
@@ -9087,42 +9099,12 @@ MonoBehaviour:
     playersColor: {r: 0, g: 0, b: 0, a: 0}
     boardTexture: {fileID: 0}
     defaultIcon: {fileID: 0}
-    idlingTexture: {fileID: 2800000, guid: e78e2ec7f98745440b4515bb0da64345, type: 3}
+    idlingTexture: {fileID: 2800000, guid: 343f0c1cbd9862c4a9d6212f53296933, type: 3}
     walkingAnimationTextures:
-    - {fileID: 2800000, guid: e78e2ec7f98745440b4515bb0da64345, type: 3}
+    - {fileID: 2800000, guid: 343f0c1cbd9862c4a9d6212f53296933, type: 3}
     - {fileID: 2800000, guid: 9d357b5f81cac0a44a1e65e64a0d7894, type: 3}
     positionRangeX: {x: 0, y: 0, z: 0}
     positionRangeY: {x: 0, y: 0, z: 0}
---- !u!114 &2027992709
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2027992704}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 875967ed28cd34d5eb53ef12d061b3b5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  jwt: 
-  localhostUrl: wss://ws.openknowledge.hk:8084
-  localhostUrl_copy: ws://localhost:8000/
-  developmentUrl: wss://ws.openknowledge.hk:8084
-  productionUrl: wss://ws.openknowledge.hk
-  userInfo:
-    uid: 0
-    cname: 
-    ename: 
-    gender: 0
-    user_role: 0
-    school_id: 0
-    classno: 
-    nickname: 
-    wsId: 
-    channelId: 
-    roomIds: []
-  readyButton: {fileID: 965468766}
 --- !u!1 &2059364962
 GameObject:
   m_ObjectHideFlags: 0
@@ -18760,7 +18742,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 6851366536088606958}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2027992708}
+        m_TargetAssemblyTypeName: TowerGameController, Assembly-CSharp
+        m_MethodName: loadRoomList
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!224 &5977945056412344229
 RectTransform:
   m_ObjectHideFlags: 0

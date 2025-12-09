@@ -66,6 +66,7 @@ public class LoaderConfig : GameSetting
 
         ExternalCaller.HiddenLoadingBar();
         this.changeScene(1);
+        WS_Client.Instance.Connect();
     } 
 
     public void SubmitAnswer(int duration, int playerScore, float statePercent, int stateProgress,
@@ -109,11 +110,11 @@ public class LoaderConfig : GameSetting
             LogController.Instance?.debug($"{state}, called exit api.");
             if (useExitApi)
             {
-                StartCoroutine(this.apiManager.ExitGameRecord(() =>
-                {
+                // StartCoroutine(this.apiManager.ExitGameRecord(() =>
+                // {
                     leavePageWithValue?.Invoke(true);
                     leavePageWithoutValue?.Invoke();
-                }));
+                // }));
             }
             else
             {

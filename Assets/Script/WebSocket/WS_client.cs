@@ -53,7 +53,6 @@ public class WS_Client : MonoBehaviour
     // Event system for order changes
     public delegate void OrderChangedHandler(string newOrder);
     public event OrderChangedHandler OnOrderChanged;
-    public GameObject readyButton;
 
     // 新增公共属性，作为访问私有字段的受控接口
     public UserInfo public_UserInfo
@@ -286,6 +285,10 @@ public class WS_Client : MonoBehaviour
 
         // GameData.questions = dummyQuestions;
         // GameData.answers = dummyAnswers;
+    }
+
+    public void Connect()
+    {
         this.Connect(()=>
         {
             try
@@ -302,19 +305,6 @@ public class WS_Client : MonoBehaviour
                 {
                     Debug.LogWarning($"WS_Client: local player (uid={this.public_UserInfo.uid}) not found in GameData.players.");
                     return;
-                }
-
-                if (me.status != "playing")
-                {
-                    // UnityEngine.Object equality works for destroyed Unity objects:
-                    if (this.readyButton != null)
-                    {
-                        this.readyButton.SetActive(true);
-                    }
-                    else
-                    {
-                        Debug.LogWarning("WS_Client: readyButton is null or has been destroyed; cannot SetActive.");
-                    }
                 }
             }
             catch (Exception ex)
@@ -343,6 +333,7 @@ public class WS_Client : MonoBehaviour
 
     public async void Connect(Action onConnectCompleted = null)
     {
+        Debug.Log("Connect: " + GetCurrentUrl());
         // var baseUrl = WEBSHOCKET_URL; // "wss://ws.openknowledge.hk"
         // // *********************************************
         // var baseUrl = "ws://localhost:8000/"; // comment when build and deploy
@@ -391,7 +382,7 @@ public class WS_Client : MonoBehaviour
                         Debug.Log("roomFull : " + jsonString);
                         break;
                     case "SyncRoomData":
-                        // Debug.Log("OnMessage! " + jsonString);
+                        debugLogPerSecond("OnMessage! " + jsonString);
                         GameData = message.content.roomGameData;
                         if (!string.IsNullOrEmpty(message.content.order))
                         {
@@ -499,21 +490,22 @@ public class WS_Client : MonoBehaviour
 
     public void printGameData()
     {
-        // Debug.Log($"printGameData GameData: {GameData.players.Count}");
-        // if (GameData.players != null) {
-        //     foreach (var player in GameData.players) {
-        //         Debug.Log($"printGameData Player: {player.uid} - {player.costume_id}");
-        //     }
-        // }
-        if (GameData.questions != null) {
-            foreach (var question in GameData.questions) {
-                Debug.Log($"Question: {question.id} - {question.content}");
+        Debug.Log($"printGameData GameData: {GameData.players.Count}");
+        if (GameData.players != null) {
+            foreach (var player in GameData.players) {
+                Debug.Log($"printGameData Player: {player.uid} - {player.costume_id}");
             }
         }
+        // if (GameData.questions != null) {
+        //     foreach (var question in GameData.questions) {
+        //         Debug.Log($"Question: {question.id} - {question.content}");
+        //     }
+        // }
     }
 
     public void JoinGameRoom(int roomId = 1)
     {
+        Debug.Log("JoinGameRoom: " + roomId);
         if (websocket == null || websocket.State != WebSocketState.Open)
         {
             Debug.Log(websocket);
@@ -536,7 +528,7 @@ public class WS_Client : MonoBehaviour
             // await JoinRoom(); // 调用一次 JoinRoom
             await ListGameRoom();
             // Automatically join game room after listing rooms
-            JoinGameRoom(1);
+            JoinGameRoom(0);
         }
         catch (Exception ex)
         {
@@ -632,7 +624,7 @@ public class WS_Client : MonoBehaviour
         // 检查是否已加入房间
         if (string.IsNullOrEmpty(roomId) || roomId == "lobby")
         {
-            // Debug.Log("未加入有效房间，跳过位置同步", "debug");
+            // Debug.Log("未加入有效房间，跳过位置同步");
             return;
         }
 
@@ -878,26 +870,26 @@ public class WS_Client : MonoBehaviour
     }
 
     private float lastLogTime = 0f;
-    // private void debugLogPerSecond(string message, string type)
-    // {
-    //     if (Time.time - lastLogTime >= 2f)
-    //     {
-    //         switch (type)
-    //         {
-    //             case "debug":
-    //                 Debug.Log(message);
-    //                 break;
-    //             case "warning":
-    //                 Debug.LogWarning(message);
-    //                 break;
-    //             case "error":
-    //                 Debug.LogError(message);
-    //                 break;
-    //             default:
-    //                 Debug.Log(message);
-    //                 break;
-    //         }
-    //         lastLogTime = Time.time;
-    //     }
-    // }
+    private void debugLogPerSecond(string message, string type = "debug")
+    {
+        if (Time.time - lastLogTime >= 2f)
+        {
+            switch (type)
+            {
+                case "debug":
+                    Debug.Log(message);
+                    break;
+                case "warning":
+                    Debug.LogWarning(message);
+                    break;
+                case "error":
+                    Debug.LogError(message);
+                    break;
+                default:
+                    Debug.Log(message);
+                    break;
+            }
+            lastLogTime = Time.time;
+        }
+    }
 }

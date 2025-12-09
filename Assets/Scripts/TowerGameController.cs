@@ -27,6 +27,7 @@ public class TowerGameController : GameBaseController
     public Transform globalParent;
     public GameObject YouWin;
     public GameObject YouLose;
+    public GameObject readyButton;
 
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
@@ -324,22 +325,22 @@ public class TowerGameController : GameBaseController
             case "removePlayer":
             break;
             case "reconnectPlayer":
-                WS_Client.Instance.readyButton.SetActive(false);
+                readyButton.SetActive(false);
                 StartCoroutine(updateQuestionUI());
                 // SyncPlayers();
                 break;
             case "startGame":
-                WS_Client.Instance.readyButton.SetActive(false);
+                readyButton.SetActive(false);
                 StartGame.Instance.startGameSequence();
                 StartCoroutine(updateQuestionUI());
                 break;
             case "endGame":
-                WS_Client.Instance.readyButton.SetActive(true);
+                readyButton.SetActive(true);
                 onTopUI.GetComponent<CanvasGroup>().alpha = 0;
                 base.endGame();
                 break;
             case "resetGame":
-                WS_Client.Instance.readyButton.SetActive(true);
+                readyButton.SetActive(true);
                 onTopUI.GetComponent<CanvasGroup>().alpha = 0;
                 // Add your logic here
                 break;
@@ -457,7 +458,7 @@ public class TowerGameController : GameBaseController
 
         if (Input.GetKeyDown(KeyCode.P))
         {
-            printCostumeData(); // for DEV printCostumeData
+            // printCostumeData(); // for DEV printCostumeData
             // printGameData(); // for DEV printCostumeData
         }
     }
@@ -469,6 +470,9 @@ public class TowerGameController : GameBaseController
         // Debug.Log($"Answers: {WS_Client.Instance.GameData.answers.Count}");
         // Debug.Log($"Obstacles: {WS_Client.Instance.GameData.obstacles.Count}");
         // Debug.Log($"=== End Game Data ===");
+        // foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
+        //     Debug.Log($"player: {player.uid} - {player.costume_id}");
+        // }
     }
 
     void printCostumeData()
@@ -507,7 +511,11 @@ public class TowerGameController : GameBaseController
             if (player.uid == WS_Client.Instance.public_UserInfo.uid) {
                 continue;
             }
-            CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
+            Debug.Log($"characterControllers: {characterControllers.Count}");
+            foreach (CharacterController cc in characterControllers) {
+                Debug.Log($"characterController: {cc.UserId}");
+            }
+            CharacterController characterController = characterControllers != null ? characterControllers.Find(c => c.UserId == player.uid) : null;
             if (characterController != null) {
                 characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.isAnswerVisible != 0);
                 characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = player.answer_id != 0 ? WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id).content : "";
@@ -681,7 +689,8 @@ public class TowerGameController : GameBaseController
         // {
         //     Debug.LogWarning($"No costume textures found for player {uid} with costume_id: {player.costume_id}");
         // }
-        if (!string.IsNullOrEmpty(player.costume_id) && int.Parse(player.costume_id) < this.characterSets.Length) {
+        if (!string.IsNullOrEmpty(player.costume_id) && int.Parse(player.costume_id) <= this.characterSets.Length) {
+            Debug.Log($"SetCostumeTextures: {player.costume_id} - {this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[0]} - {this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[1]}");
             characterController.SetCostumeTextures(this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[0] as Texture2D,
                                                 this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[1] as Texture2D);
         }
@@ -970,8 +979,9 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    public void reloadScene() {
-        SceneManager.LoadScene(1);
+    public void loadRoomList() {
+        WS_Client.Instance.JoinGameRoom(0);
+        LoaderConfig.Instance?.changeScene(1);
     }
 
     public void quitGame() {
@@ -985,5 +995,9 @@ public class TowerGameController : GameBaseController
             // For standalone builds, quit the application
             Application.Quit();
         #endif
+    }
+
+    public void ready() {
+        WS_Client.Instance.ready();
     }
 }

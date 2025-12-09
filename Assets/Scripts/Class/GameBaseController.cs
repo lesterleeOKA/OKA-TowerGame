@@ -44,7 +44,7 @@ public class GameBaseController : MonoBehaviour
         }
         SetUI.Set(this.endGamePage.EndGameLayer, true, 0f);
         this.playing = false;
-        LoaderConfig.Instance?.submitEndGameSummary();
+        // LoaderConfig.Instance?.submitEndGameSummary();
     }
 
     public void retryGame()

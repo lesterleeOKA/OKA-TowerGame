@@ -379,6 +379,7 @@ GameObject:
   - component: {fileID: 734659898}
   - component: {fileID: 734659900}
   - component: {fileID: 734659901}
+  - component: {fileID: 734659902}
   m_Layer: 0
   m_Name: Loader
   m_TagString: Untagged
@@ -673,6 +674,35 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &734659902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 734659895}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 875967ed28cd34d5eb53ef12d061b3b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxMy1kMmY2NDYwZWIyOGRhMmNkMjIxYTE5MTZjZTk0NzU2NmI4ZDQ4ZGMwYTRkOTM2ZjYwYjU0OTE0ZmIzMWE5NTY2IiwiZXhwaXJlcyI6MTc2NTc5NDUwOCwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTItMDggMTA6Mjg6MjggR01UIiwidWlkIjoiNTEzIiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMzEuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ._9jPw7_tuZ6rNi7JuTawF1xNbSwzczgbRrb4cRoHkw4
+  localhostUrl: wss://ws.openknowledge.hk:8084
+  localhostUrl_copy: ws://localhost:8000/
+  developmentUrl: wss://ws.openknowledge.hk:8084
+  productionUrl: wss://ws.openknowledge.hk
+  userInfo:
+    uid: 0
+    cname: 
+    ename: 
+    gender: 0
+    user_role: 0
+    school_id: 0
+    classno: 
+    nickname: 
+    wsId: 
+    channelId: 
+    roomIds: []
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

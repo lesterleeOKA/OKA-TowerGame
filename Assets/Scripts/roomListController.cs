@@ -17,25 +17,49 @@ public class roomListController : MonoBehaviour
     {
         joinButton.onClick.AddListener(JoinRoom);
         roomNoText.text = "Room " + roomId.ToString();
+        roomListRefresh();
     }
 
     void FixedUpdate()
     {
         if (WS_Client.Instance.RoomList != null)
         {
-            room = WS_Client.Instance.RoomList.Find(r => r.roomId == roomId.ToString());
+            
             if (room != null)
             {
                 playerNoText.text = room.roomMembers.ToString() + "/6";
+            } else {
+                playerNoText.text = "-/6";
             }
         }
+    }
+
+    private void roomListRefresh()
+    {
+        if (WS_Client.Instance != null && WS_Client.Instance.RoomList != null)
+        {
+            room = WS_Client.Instance.RoomList.Find(r => r.roomId == "room" + roomId.ToString());
+            if (room != null)
+            {
+                playerNoText.text = room.roomMembers.ToString() + "/6";
+                return;
+            }
+        }
+        playerNoText.text = "-/6";
+        StartCoroutine(RetryFindRoom());
+    }
+
+    private IEnumerator RetryFindRoom()
+    {
+        yield return new WaitForSeconds(0.1f);
+        roomListRefresh();
     }
 
     public void JoinRoom()
     {
         if (room != null)
         {
-            WS_Client.Instance.JoinRoom(roomId);
+            WS_Client.Instance.JoinGameRoom(roomId);
             LoaderConfig.Instance?.changeScene(2);
         }
     }
