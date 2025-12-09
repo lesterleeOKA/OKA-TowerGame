@@ -63,11 +63,6 @@ public class TowerGameController : GameBaseController
             Instance = this;
             DontDestroyOnLoad(this.gameObject);
         }
-        else
-        {
-            Destroy(this.gameObject);
-            return;
-        }
     }
 
     // Start is called before the first frame update
