@@ -69,10 +69,6 @@ public class TowerGameController : GameBaseController
     protected override void Start()
     {
         base.Start();
-        if (!string.IsNullOrEmpty(LoaderConfig.Instance.apiManager.jwt) && WS_Client.Instance != null)
-        {
-            WS_Client.Instance.jwt = LoaderConfig.Instance.apiManager.jwt;
-        }
 
         // Subscribe to the order changed event
         if (WS_Client.Instance != null)
@@ -506,10 +502,6 @@ public class TowerGameController : GameBaseController
             if (player.uid == WS_Client.Instance.public_UserInfo.uid) {
                 continue;
             }
-            Debug.Log($"characterControllers: {characterControllers.Count}");
-            foreach (CharacterController cc in characterControllers) {
-                Debug.Log($"characterController: {cc.UserId}");
-            }
             CharacterController characterController = characterControllers != null ? characterControllers.Find(c => c.UserId == player.uid) : null;
             if (characterController != null) {
                 characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.isAnswerVisible != 0);
@@ -685,7 +677,6 @@ public class TowerGameController : GameBaseController
         //     Debug.LogWarning($"No costume textures found for player {uid} with costume_id: {player.costume_id}");
         // }
         if (!string.IsNullOrEmpty(player.costume_id) && int.Parse(player.costume_id) <= this.characterSets.Length) {
-            Debug.Log($"SetCostumeTextures: {player.costume_id} - {this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[0]} - {this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[1]}");
             characterController.SetCostumeTextures(this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[0] as Texture2D,
                                                 this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[1] as Texture2D);
         }

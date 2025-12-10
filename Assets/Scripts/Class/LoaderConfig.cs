@@ -64,6 +64,11 @@ public class LoaderConfig : GameSetting
             LogController.Instance?.debug($"Setup Current GameName: {pageName}");
         }
 
+        if (!string.IsNullOrEmpty(this.apiManager.jwt) && WS_Client.Instance != null)
+        {
+            WS_Client.Instance.jwt = this.apiManager.jwt;
+        }
+
         ExternalCaller.HiddenLoadingBar();
         this.changeScene(1);
         WS_Client.Instance.Connect();

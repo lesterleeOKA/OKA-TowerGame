@@ -872,7 +872,7 @@ public class WS_Client : MonoBehaviour
     private float lastLogTime = 0f;
     private void debugLogPerSecond(string message, string type = "debug")
     {
-        if (Time.time - lastLogTime >= 2f)
+        if (Time.time - lastLogTime >= 5f)
         {
             switch (type)
             {

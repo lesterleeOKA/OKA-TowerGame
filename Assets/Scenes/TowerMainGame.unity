@@ -9030,7 +9030,7 @@ MonoBehaviour:
   globalParent: {fileID: 1388269475}
   YouWin: {fileID: 617150445}
   YouLose: {fileID: 105608703}
-  readyButton: {fileID: 0}
+  readyButton: {fileID: 965468766}
   characterControllers: []
   questions: []
   answers: []
