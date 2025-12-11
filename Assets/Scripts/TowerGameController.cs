@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.SceneManagement;
 
 // Class to hold all costume textures for a single costume
 [System.Serializable]
@@ -55,6 +54,19 @@ public class TowerGameController : GameBaseController
     private Dictionary<int, GameObject> obstacleObjectsById = new Dictionary<int, GameObject>();
     private HashSet<string> currentKeys = new HashSet<string>();
     public CharacterSet[] characterSets;
+
+
+    /// <summary>
+    /// minmap
+    /// </summary>
+    public RawImage minimapRawImage;              // assign the minimap RawImage in Inspector
+    public RectTransform minimapMarkerPrefab;                    // small UI prefab (Image) for markers; set pivot (0.5,0.5)
+    public RectTransform minimapMarkersParent;                   // parent under the minimap canvas (can be the RawImage rectTransform)
+    public Vector2 minimapWorldBottomLeft = new Vector2(-50f, -50f); // world coords that map to minimap bottom-left
+    public Vector2 minimapWorldTopRight = new Vector2(50f, 50f);
+
+    private Dictionary<string, RectTransform> minimapMarkersByKey = new Dictionary<string, RectTransform>();
+
 
     protected override void Awake()
     {
@@ -137,7 +149,114 @@ public class TowerGameController : GameBaseController
             Debug.LogError($"Failed to fetch account costume ID: {ex.Message}");
         }
     }
-    
+
+    private Vector2 WorldToMinimapAnchoredPosition(Vector2 worldPos)
+    {
+        if (minimapRawImage == null || minimapMarkersParent == null) return Vector2.zero;
+
+        RectTransform mapRT = minimapRawImage.rectTransform;
+
+        // world bounds
+        float minX = minimapWorldBottomLeft.x;
+        float maxX = minimapWorldTopRight.x;
+        float minY = minimapWorldBottomLeft.y;
+        float maxY = minimapWorldTopRight.y;
+
+        if (Mathf.Approximately(maxX, minX) || Mathf.Approximately(maxY, minY))
+        {
+            Debug.LogWarning("Minimap world bounds invalid (min == max). Check minimapWorldBottomLeft/topRight.");
+            return Vector2.zero;
+        }
+
+        // compute inner texture rect (local coords of mapRT)
+        Rect inner = GetRawImageInnerRect(mapRT, minimapRawImage);
+
+        // world extents
+        float worldW = maxX - minX;
+        float worldH = maxY - minY;
+        if (Mathf.Approximately(worldW, 0f) || Mathf.Approximately(worldH, 0f))
+        {
+            Debug.LogWarning("Invalid world size for minimap mapping.");
+            return Vector2.zero;
+        }
+
+        // Map world position to inner rect by linear scaling:
+        // localX = inner.xMin + (worldPos.x - minX) * (inner.width / worldW)
+        // localY = inner.yMin + (worldPos.y - minY) * (inner.height / worldH)
+        float scaleX = inner.width / worldW;
+        float scaleY = inner.height / worldH;
+
+        float localX = inner.xMin + (worldPos.x - minX) * scaleX;
+        float localY = inner.yMin + (worldPos.y - minY) * scaleY;
+
+        // clamp into inner rect to avoid corners when out-of-bounds
+        localX = Mathf.Clamp(localX, inner.xMin, inner.xMax);
+        localY = Mathf.Clamp(localY, inner.yMin, inner.yMax);
+
+        Vector2 localPointInMapRT = new Vector2(localX, localY);
+
+        // If markers are direct children of the minimap RectTransform, return the local point directly.
+        if (minimapMarkersParent == mapRT)
+        {
+            return localPointInMapRT;
+        }
+
+        // Otherwise convert to minimapMarkersParent local coordinates
+        Canvas mapCanvas = minimapRawImage.canvas;
+        Camera canvasCam = mapCanvas != null ? mapCanvas.worldCamera : null;
+
+        Vector3 worldPoint = mapRT.TransformPoint(localPointInMapRT);
+        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(canvasCam, worldPoint);
+
+        Vector2 anchoredPos;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(minimapMarkersParent, screenPoint, canvasCam, out anchoredPos);
+
+#if UNITY_EDITOR
+        if (debugText != null)
+        {
+            debugText.text = $"World({worldPos.x:F1},{worldPos.y:F1}) -> local({localX:F2},{localY:F2}) inner({inner.xMin:F1},{inner.yMin:F1},{inner.width:F1},{inner.height:F1})";
+        }
+#endif
+
+        return anchoredPos;
+    }
+
+    private Rect GetRawImageInnerRect(RectTransform rt, RawImage rawImage)
+    {
+        Rect r = rt.rect;
+
+        if (rawImage == null || rawImage.texture == null)
+            return r;
+
+        // If texture has no size, return full rect
+        float texW = rawImage.texture.width;
+        float texH = rawImage.texture.height;
+        if (texW <= 0f || texH <= 0f) return r;
+
+        float texAspect = texW / texH;
+        float rectAspect = r.width / r.height;
+
+        Rect inner = r;
+
+        if (rectAspect > texAspect)
+        {
+            // letterbox horizontally — texture height fits, width is smaller
+            float innerW = r.height * texAspect;
+            inner.x = r.x + (r.width - innerW) * 0.5f;
+            inner.width = innerW;
+        }
+        else
+        {
+            // letterbox vertically — texture width fits, height is smaller
+            float innerH = r.width / texAspect;
+            inner.y = r.y + (r.height - innerH) * 0.5f;
+            inner.height = innerH;
+        }
+
+        return inner;
+    }
+
+
     // protected async Task fetchCostumeData() {
     //     try 
     //     {
@@ -158,12 +277,12 @@ public class TowerGameController : GameBaseController
     //             try
     //             {
     //                 CostumeListResponse costumeResponse = JsonUtility.FromJson<CostumeListResponse>(costumeDataJson);
-                    
+
     //                 if (costumeResponse != null && 
     //                     costumeResponse.data != null && 
     //                     costumeResponse.data.Length > 0)
     //                 {
-                        
+
     //                     // Store costume data and start loading images for each costume
     //                     foreach (CostumeData costume in costumeResponse.data)
     //                     {
@@ -171,13 +290,13 @@ public class TowerGameController : GameBaseController
     //                         {
     //                             // Store costume data
     //                             costumeDataById[costume.costume_id] = costume;
-                                
+
     //                             // Initialize CostumeTextures object for this costume
     //                             if (!costumeTexturesById.ContainsKey(costume.costume_id))
     //                             {
     //                                 costumeTexturesById[costume.costume_id] = new CostumeTextures();
     //                             }
-                                
+
     //                             // Load stand image
     //                             if (!string.IsNullOrEmpty(costume.img_src_stand))
     //                             {
@@ -188,7 +307,7 @@ public class TowerGameController : GameBaseController
     //                                     "stand"
     //                                 ));
     //                             }
-                                
+
     //                             // Load walk image
     //                             if (!string.IsNullOrEmpty(costume.img_src_walk))
     //                             {
@@ -199,7 +318,7 @@ public class TowerGameController : GameBaseController
     //                                     "walk"
     //                                 ));
     //                             }
-                                
+
     //                             // Load jump image
     //                             if (!string.IsNullOrEmpty(costume.img_src_jump))
     //                             {
@@ -212,7 +331,7 @@ public class TowerGameController : GameBaseController
     //                             }
     //                         }
     //                     }
-                        
+
     //                     // Wait for all images to finish loading
     //                     Debug.Log($"Started loading {loadingImagesCount} costume images. Waiting for completion...");
     //                     int maxWaitSeconds = 30; // Maximum wait time
@@ -222,7 +341,7 @@ public class TowerGameController : GameBaseController
     //                         await Task.Delay(100); // Wait 100ms between checks
     //                         waitedTime += 0.1f;
     //                     }
-                        
+
     //                     if (loadingImagesCount > 0)
     //                     {
     //                         Debug.LogWarning($"Timed out waiting for costume images. {loadingImagesCount} images still loading.");
@@ -255,18 +374,18 @@ public class TowerGameController : GameBaseController
     //     {
     //         // Set certificate handler to bypass SSL issues if needed
     //         request.certificateHandler = new WebRequestSkipCert();
-            
+
     //         yield return request.SendWebRequest();
 
     //         if (request.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
     //         {
     //             Texture2D loadedTexture = UnityEngine.Networking.DownloadHandlerTexture.GetContent(request);
-                
+
     //             // Store the texture in the appropriate field based on imageType
     //             if (costumeTexturesById.ContainsKey(costumeId))
     //             {
     //                 CostumeTextures costumeTextures = costumeTexturesById[costumeId];
-                    
+
     //                 switch (imageType.ToLower())
     //                 {
     //                     case "stand":
@@ -288,7 +407,7 @@ public class TowerGameController : GameBaseController
     //         {
     //             Debug.LogError($"Failed to load costume {imageType} image for ID {costumeId}: {request.error}");
     //         }
-            
+
     //         // Decrement the loading counter
     //         loadingImagesCount--;
     //     }
@@ -395,7 +514,7 @@ public class TowerGameController : GameBaseController
             localUid = WS_Client.Instance.public_UserInfo.uid;
         }
 
-        // Create missing players and update positions for existing ones
+        // Track minimap presence while iterating players (reuse currentKeys)
         foreach (var player in players)
         {
             string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
@@ -403,11 +522,15 @@ public class TowerGameController : GameBaseController
             bool isLocal = (player.uid == localUid);
             if (!playerControllersByKey.ContainsKey(key))
             {
-                Vector3 location = new Vector3(player.position[0], player.position[1], 0f);
+                Vector3 location = Vector3.zero;
+                if (player.position != null && player.position.Length >= 2)
+                {
+                    location = new Vector3(player.position[0], player.position[1], 0f);
+                }
                 CreatePlayerFromData(player, location, key, isLocal);
             }
 
-            // mark as present for this cycle
+            // mark as present for this cycle (used for player removal and minimap cleanup)
             currentKeys.Add(key);
 
             // update non-local players' destination
@@ -417,9 +540,62 @@ public class TowerGameController : GameBaseController
                 {
                     if (cc != null)
                     {
-                        Vector3 otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
+                        Vector3 otherPlayerPos = Vector3.zero;
+                        if (player.position != null && player.position.Length >= 2)
+                        {
+                            otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
+                        }
                         cc.setLocalDestination(otherPlayerPos);
                     }
+                }
+            }
+
+            // --- Minimap marker update (merged here to avoid a second players pass) ---
+            if (minimapRawImage != null && minimapMarkerPrefab != null && minimapMarkersParent != null)
+            {
+                // Determine world position for marker (prefer authoritative server position)
+                Vector2 worldPos = Vector2.zero;
+                if (player.position != null && player.position.Length >= 2)
+                {
+                    worldPos = new Vector2(player.position[0], player.position[1]);
+                }
+                else if (playerControllersByKey.TryGetValue(key, out var fallbackCc) && fallbackCc != null)
+                {
+                    Vector3 t = fallbackCc.transform.position; // use world-space position
+                    worldPos = new Vector2(t.x, t.y);
+                }
+
+                Vector2 anchoredPos = WorldToMinimapAnchoredPosition(worldPos);
+
+                if (!minimapMarkersByKey.TryGetValue(key, out var marker) || marker == null)
+                {
+                    // Instantiate as child of minimapRawImage.rectTransform (so local coordinates match)
+                    RectTransform parentRT = minimapRawImage.rectTransform;
+                    RectTransform instance = GameObject.Instantiate(minimapMarkerPrefab, parentRT);
+                    instance.gameObject.name = $"MinimapMarker_{key}";
+
+                    // Ensure marker uses centered anchors/pivot and neutral scale so anchoredPosition behaves predictably
+                    instance.anchorMin = new Vector2(0.5f, 0.5f);
+                    instance.anchorMax = new Vector2(0.5f, 0.5f);
+                    instance.pivot = new Vector2(0.5f, 0.5f);
+                    instance.localScale = Vector3.one;
+
+                    minimapMarkersByKey[key] = instance;
+                    marker = instance;
+
+                    // Optional tint local player
+                    var img = instance.GetComponent<UnityEngine.UI.Image>();
+                    if (img != null)
+                    {
+                        bool isMarkerLocal = (WS_Client.Instance.public_UserInfo != null && player.uid == WS_Client.Instance.public_UserInfo.uid);
+                        img.color = isMarkerLocal ? new Color(0.28f, 0.85f, 0.29f, 1f) /*green*/ : new Color(0.85f, 0.28f, 0.28f, 1f) /*red*/;
+                    }
+                }
+
+                // Update marker position using the function that returns local map coords when markers are children
+                if (marker != null)
+                {
+                    marker.anchoredPosition = anchoredPos;
                 }
             }
         }
@@ -439,6 +615,30 @@ public class TowerGameController : GameBaseController
         {
             RemovePlayer(key);
         }
+
+        // Remove minimap markers for players that are gone (cleanup)
+        if (minimapMarkersByKey != null && minimapMarkersByKey.Count > 0)
+        {
+            var markersToRemove = new List<string>();
+            foreach (var kv in minimapMarkersByKey)
+            {
+                if (!currentKeys.Contains(kv.Key))
+                {
+                    if (kv.Value != null) GameObject.Destroy(kv.Value.gameObject);
+                    markersToRemove.Add(kv.Key);
+                }
+            }
+            foreach (var k in markersToRemove) minimapMarkersByKey.Remove(k);
+        }
+    }
+
+    public Vector2 ProjectWorldToMinimap(Vector3 worldPosition)
+    {
+        // Convert 3D world position to the 2D world coords your map uses (X,Y)
+        Vector2 mapWorldPos = new Vector2(worldPosition.x, worldPosition.y);
+
+        // Map to minimap anchored position (handles scaled RawImage and inner rect)
+        return WorldToMinimapAnchoredPosition(mapWorldPos);
     }
 
     // Update is called once per frame
