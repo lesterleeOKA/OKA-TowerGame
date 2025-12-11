@@ -632,15 +632,6 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    public Vector2 ProjectWorldToMinimap(Vector3 worldPosition)
-    {
-        // Convert 3D world position to the 2D world coords your map uses (X,Y)
-        Vector2 mapWorldPos = new Vector2(worldPosition.x, worldPosition.y);
-
-        // Map to minimap anchored position (handles scaled RawImage and inner rect)
-        return WorldToMinimapAnchoredPosition(mapWorldPos);
-    }
-
     // Update is called once per frame
     void Update()
     {
@@ -897,6 +888,21 @@ public class TowerGameController : GameBaseController
                 Debug.Log($"[TowerGameController] Removed player GameObject for key={key}");
             }
             playerControllersByKey.Remove(key);
+        }
+
+        this.RemovePlayerMarker(key);
+    }
+
+    private void RemovePlayerMarker(string key)
+    {
+        if (minimapMarkersByKey.TryGetValue(key, out var marker))
+        {
+            if (marker != null)
+            {
+                GameObject.Destroy(marker.gameObject);
+            }
+            minimapMarkersByKey.Remove(key);
+            Debug.Log($"[TowerGameController] Removed minimap marker for key={key}");
         }
     }
 
