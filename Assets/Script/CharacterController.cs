@@ -177,7 +177,7 @@ public class CharacterController : UserData
         return false;
     }
 
-    void Update()
+    void FixedUpdate()
     {
         if(this.IsLocalPlayer)
         {

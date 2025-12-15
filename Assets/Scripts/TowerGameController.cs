@@ -54,6 +54,7 @@ public class TowerGameController : GameBaseController
     private Dictionary<int, GameObject> obstacleObjectsById = new Dictionary<int, GameObject>();
     private HashSet<string> currentKeys = new HashSet<string>();
     public CharacterSet[] characterSets;
+    public GameObject[] scoreboardControllers;
 
 
     /// <summary>
@@ -818,6 +819,19 @@ public class TowerGameController : GameBaseController
         // Instantiate without parent, set world position, then attach to parent preserving world pos
         var characterController = GameObject.Instantiate(this.playerPrefab, this.globalParent).GetComponent<CharacterController>();
         
+        // Find the scoreboardController with matching uid
+        scoreboardController matchingScoreboard = null;
+        foreach (GameObject obj in this.scoreboardControllers)
+        {
+            scoreboardController sb = obj.GetComponent<scoreboardController>();
+            if (sb != null && sb.key == "")
+            {
+                matchingScoreboard = sb;
+                matchingScoreboard.key = key;
+                break;
+            }
+        }
+        
         if (characterController == null)
         {
             Debug.LogError("playerPrefab missing CharacterController component");
@@ -847,29 +861,14 @@ public class TowerGameController : GameBaseController
         playerControllersByKey[key] = characterController;
         characterController.key = key;
 
-        // Apply costume textures if available
-        // if (!string.IsNullOrEmpty(player.costume_id) && costumeTexturesById.ContainsKey(player.costume_id))
-        // {
-        //     CostumeTextures costumeTextures = costumeTexturesById[player.costume_id];
-        //     Debug.Log($"costumeTextures.standTexture: {costumeTextures.standTexture}");
-        //     Debug.Log($"costumeTextures.walkTexture: {costumeTextures.walkTexture}");
-        //     if (costumeTextures.standTexture != null && costumeTextures.walkTexture != null)
-        //     {
-        //         characterController.SetCostumeTextures(costumeTextures.standTexture, costumeTextures.walkTexture);
-        //         Debug.Log($"Applied costume textures for player {uid} with costume_id: {player.costume_id}");
-        //     }
-        //     else
-        //     {
-        //         Debug.LogWarning($"Costume textures not fully loaded for costume_id: {player.costume_id}");
-        //     }
-        // }
-        // else
-        // {
-        //     Debug.LogWarning($"No costume textures found for player {uid} with costume_id: {player.costume_id}");
-        // }
         if (!string.IsNullOrEmpty(player.costume_id) && int.Parse(player.costume_id) <= this.characterSets.Length) {
             characterController.SetCostumeTextures(this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[0] as Texture2D,
                                                 this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[1] as Texture2D);
+        }
+
+        if (matchingScoreboard != null) {
+            // matchingScoreboard.scoreboardText.text = player.userName;
+            matchingScoreboard.setScoreboard(key, this.characterSets[int.Parse(player.costume_id) - 1].defaultIcon as Texture2D);
         }
 
         // keep an incremental id for legacy naming if needed
@@ -883,6 +882,14 @@ public class TowerGameController : GameBaseController
         {
             if (cc != null)
             {
+                // Find matching scoreboard
+                GameObject scoreboardObj = System.Array.Find(this.scoreboardControllers, obj => obj.GetComponent<scoreboardController>().key == cc.key);
+                if (scoreboardObj != null) {
+                    scoreboardController matchingScoreboard = scoreboardObj.GetComponent<scoreboardController>();
+                    if (matchingScoreboard != null) {
+                        matchingScoreboard.resetScoreboard();
+                    }
+                }
                 this.characterControllers.Remove(cc);
                 GameObject.Destroy(cc.gameObject);
                 Debug.Log($"[TowerGameController] Removed player GameObject for key={key}");
