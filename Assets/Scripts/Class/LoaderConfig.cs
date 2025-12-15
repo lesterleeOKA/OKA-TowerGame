@@ -112,9 +112,10 @@ public class LoaderConfig : GameSetting
         bool isLogined = this.apiManager.IsLogined;
         if (isLogined)
         {
-            LogController.Instance?.debug($"{state}, called exit api.");
+   
             if (useExitApi)
             {
+                LogController.Instance?.debug($"{state}, called exit api.");
                 // StartCoroutine(this.apiManager.ExitGameRecord(() =>
                 // {
                     leavePageWithValue?.Invoke(true);

@@ -38,6 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
+  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -417,7 +418,7 @@ MonoBehaviour:
     object_item_images: []
     gameBackground: {fileID: 0}
     gamePreview: {fileID: 0}
-    gameExitType: 0
+    gameExitType: 1
     instructions: {fileID: 0}
     gameTime: 999999
     inventory:
@@ -813,7 +814,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_Text
-      value: v1.03
+      value: v1.04
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_FontData.m_Font

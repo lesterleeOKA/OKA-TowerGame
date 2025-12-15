@@ -120,11 +120,19 @@ public class APIManager
         }
         else
         {
-            if (!string.IsNullOrEmpty(this.jwt) && !string.IsNullOrEmpty(LoaderConfig.Instance.RoAppDataKey))
+            if (!string.IsNullOrEmpty(this.jwt))
             {
-                LogController.Instance.debug("Logined in RainbowOne App.");
-                this.IsLoginedRainbowOne = true;
-                getDataFromRoAppAPI?.Invoke();
+                if(!string.IsNullOrEmpty(LoaderConfig.Instance.RoAppDataKey))
+                {
+                    LogController.Instance.debug("Logined in RainbowOne App.");
+                    this.IsLoginedRainbowOne = true;
+                    getDataFromRoAppAPI?.Invoke();
+                }
+                else
+                {
+                    this.IsLogined = true;
+                    onCompleted?.Invoke();
+                }
             }
             else
             {
