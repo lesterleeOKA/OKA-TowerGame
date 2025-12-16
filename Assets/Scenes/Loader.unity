@@ -435,7 +435,7 @@ MonoBehaviour:
     gameSettingScore: -1
     gameTotalStars: 3
   apiManager:
-    jwt: 
+    jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcyMS04OWU2YTA1NWVjYzM5Mzk3ZTc0NzgxN2M5ZjBjOTRmOGJiNzQzYTNmMDBkMTNhZGU1Y2E5NGU0YjRmNmNlZmFlIiwiZXhwaXJlcyI6MTc2NjQ4MTkzMiwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTItMTYgMDk6MjU6MzIgR01UIiwidWlkIjoiNTQzNzIxIiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMzEuMyIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.kYbHdR9ycE1ZRuxFXmLjXHbc_R2KnfDnH0_gl_2jP8w
     appId: 
     gameSettingJson: 
     questionJson: 
@@ -484,7 +484,7 @@ MonoBehaviour:
         score: 0
         percent: 0
   unitKey: 
-  testURL: https://dev.openknowledge.hk/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcyMS00NTkwZGQ3NTdhOTU2NWJlMWYyYTk3ZDk2MmU3ODBkOWI5ZDE2MTIzZTM0NmY4ODE1MDgwMDI3ZTU3YjQxNDMwIiwiZXhwaXJlcyI6MTc2NDMwOTkxOSwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTEtMjEgMDY6MDU6MTkgR01UIiwidWlkIjoiNTQzNzIxIiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuMiIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.CkRDSAzzT2NrGtg3HLeWouoEfI0IJ06joTlaujWDk_o
+  testURL: 
   skipAudioPanel: 0
 --- !u!4 &734659897
 Transform:
