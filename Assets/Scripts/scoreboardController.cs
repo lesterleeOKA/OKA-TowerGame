@@ -12,6 +12,8 @@ public class scoreboardController : MonoBehaviour
     public bool isReady = false;
 
     [SerializeField]
+    private GameObject rootObject;
+    [SerializeField]
     private GameObject readyObject;
     [SerializeField]
     private GameObject notReadyObject;
@@ -23,11 +25,21 @@ public class scoreboardController : MonoBehaviour
 
     private Image iconImage;
     private TextMeshProUGUI textComponent;
+    private CanvasGroup rootCanvasGroup;
 
     void Awake()
     {
         this.iconImage = this.iconObject.GetComponent<Image>();
         this.textComponent = this.textObject.GetComponent<TextMeshProUGUI>();
+        
+        // Get or add CanvasGroup to rootObject for visibility control
+        this.rootCanvasGroup = this.rootObject.GetComponent<CanvasGroup>();
+        if (this.rootCanvasGroup == null)
+        {
+            this.rootCanvasGroup = this.rootObject.AddComponent<CanvasGroup>();
+        }
+        resetScoreboard();
+        DontDestroyOnLoad(this.gameObject);
     }
     
     public void setScoreboard(string key, Texture2D icon, string text = "")
@@ -37,6 +49,10 @@ public class scoreboardController : MonoBehaviour
         this.icon = icon;
         this.text = text;
         this.isReady = false;
+        this.iconImage.sprite = SetUI.ConvertTextureToSprite(this.icon);
+        this.iconObject.SetActive(true);
+        this.textComponent.text = this.text;
+        this.rootCanvasGroup.alpha = 1f;
     }
 
     public void resetScoreboard()
@@ -45,33 +61,26 @@ public class scoreboardController : MonoBehaviour
         this.icon = null;
         this.text = "";
         this.isReady = false;
+        this.iconObject.SetActive(false);
+        this.rootCanvasGroup.alpha = 0f;
     }
 
     // Update is called once per frame
     void Update()
     {
-        debugLogPerSecond("update: key=" + key + ", icon=" + icon + ", text=" + text);
-        if (key != null) {
+        if (key != "" && key != null) {
             WS_Client.PlayerData player = WS_Client.Instance.GameData.players.Find(p => p.player_id == key);
             if (player != null) {
                 if (player.status == "ready") {
                     readyObject.SetActive(true);
                     notReadyObject.SetActive(false);
-                } else {
+                } else if (player.status == "waiting") {
                     readyObject.SetActive(false);
                     notReadyObject.SetActive(true);
+                } else {
+                    readyObject.SetActive(false);
+                    notReadyObject.SetActive(false);
                 }
-            }
-            
-            if (this.icon != null) {
-                this.iconImage.sprite = SetUI.ConvertTextureToSprite(this.icon);
-                this.iconObject.SetActive(true);
-            }
-            else {
-                this.iconObject.SetActive(false);
-            }
-            if (this.text != null) {
-                this.textComponent.text = this.text;
             }
         }
     }

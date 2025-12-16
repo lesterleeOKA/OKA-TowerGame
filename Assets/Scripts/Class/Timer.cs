@@ -84,8 +84,11 @@ public class Timer : MonoBehaviour
     }
     private void UpdateTimerText()
     {
-        int minutes = Mathf.FloorToInt(this.currentTime / 60f);
-        int seconds = Mathf.FloorToInt(this.currentTime % 60f);
+        this.currentTime = (float)WS_Client.Instance.GameData.gameTimer;
+        // int minutes = Mathf.FloorToInt(this.currentTime / 60f);
+        // int seconds = Mathf.FloorToInt(this.currentTime % 60f);
+        int minutes = Mathf.FloorToInt(WS_Client.Instance.GameData.gameTimer / 60f);
+        int seconds = Mathf.FloorToInt(WS_Client.Instance.GameData.gameTimer % 60f);
         this.timer.text = $"{minutes:D2}:{seconds:D2}";
     }
 

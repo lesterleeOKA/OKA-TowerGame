@@ -2,9 +2,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum Team
+{
+    BlueTeam = 0,
+    OrangeTeam = 1
+}
+
 public class QuestionTrigger : MonoBehaviour
 {
     public int questionId;
+    [SerializeField]
+    private Team team;
+    
+    // To get the integer value from the enum, use: (int)team
+    // Example: int teamValue = (int)team; // Returns 1 for BlueTeam, 2 for OrangeTeam
+    
     // public WS_Client.QuestionData questionData;
 
     // void Update()
@@ -56,17 +68,36 @@ public class QuestionTrigger : MonoBehaviour
                 AnswerTrigger answerTrigger = characterController.answerObject.GetComponent<AnswerTrigger>();
                 if (answerTrigger != null && answerTrigger.answerData != null)
                 {
-                    WS_Client.Instance.submitAnswer(answerTrigger.answerId);
-                        
-                    characterController.showAnswerBubble(0);
-                    characterController.answerObject = null;
 
                     if (WS_Client.Instance.GameData.players != null) {
                         WS_Client.PlayerData clientPlayer = WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid);
                         if (clientPlayer != null) {
-                            clientPlayer.answer_id = 0;
-                            clientPlayer.answerContent = "";
-                            clientPlayer.isAnswerVisible = 0;
+
+                            // Find the index of the scoreboard matching the client player's key
+                            int clientPlayerIndex = -1;
+                            for (int i = 0; i < TowerGameController.Instance.scoreboardControllers.Length; i++)
+                            {
+                                scoreboardController sb = TowerGameController.Instance.scoreboardControllers[i].GetComponent<scoreboardController>();
+                                if (sb != null && sb.key == clientPlayer.player_id)
+                                {
+                                    clientPlayerIndex = i;
+                                    break;
+                                }
+                            }
+
+                            if (clientPlayerIndex != -1 && clientPlayerIndex % 2 == (int)this.team) {
+                                // TowerGameController.Instance.teamScore[(int)this.team] += answerTrigger.answerData.score;
+                            
+                                clientPlayer.answer_id = 0;
+                                clientPlayer.answerContent = "";
+                                clientPlayer.isAnswerVisible = 0;
+
+                                WS_Client.Instance.submitAnswer(answerTrigger.answerId);
+                            
+                                characterController.showAnswerBubble(0);
+                                characterController.answerObject = null;
+                            }
+                            
                         }
                     }
                 }

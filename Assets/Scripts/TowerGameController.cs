@@ -74,8 +74,8 @@ public class TowerGameController : GameBaseController
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(this.gameObject);
         }
+        DontDestroyOnLoad(this.gameObject);
     }
 
     // Start is called before the first frame update
@@ -821,14 +821,16 @@ public class TowerGameController : GameBaseController
         
         // Find the scoreboardController with matching uid
         scoreboardController matchingScoreboard = null;
-        foreach (GameObject obj in this.scoreboardControllers)
+
+        int playerIndex = int.Parse(player.player_id.Replace("player", "")) - 1;
+
+        if (playerIndex >= 0 && playerIndex < this.scoreboardControllers.Length)
         {
-            scoreboardController sb = obj.GetComponent<scoreboardController>();
+            scoreboardController sb = this.scoreboardControllers[playerIndex].GetComponent<scoreboardController>();
             if (sb != null && sb.key == "")
             {
                 matchingScoreboard = sb;
                 matchingScoreboard.key = key;
-                break;
             }
         }
         
@@ -885,6 +887,7 @@ public class TowerGameController : GameBaseController
                 // Find matching scoreboard
                 GameObject scoreboardObj = System.Array.Find(this.scoreboardControllers, obj => obj.GetComponent<scoreboardController>().key == cc.key);
                 if (scoreboardObj != null) {
+                    Debug.Log("RemovePlayer: scoreboardObj=" + scoreboardObj.name + cc.key);
                     scoreboardController matchingScoreboard = scoreboardObj.GetComponent<scoreboardController>();
                     if (matchingScoreboard != null) {
                         matchingScoreboard.resetScoreboard();

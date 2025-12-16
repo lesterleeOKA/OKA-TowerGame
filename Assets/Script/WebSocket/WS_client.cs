@@ -382,7 +382,7 @@ public class WS_Client : MonoBehaviour
                         Debug.Log("roomFull : " + jsonString);
                         break;
                     case "SyncRoomData":
-                        // debugLogPerSecond("OnMessage! " + jsonString);
+                        debugLogPerSecond("OnMessage! " + jsonString);
                         GameData = message.content.roomGameData;
                         if (!string.IsNullOrEmpty(message.content.order))
                         {
