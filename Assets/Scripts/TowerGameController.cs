@@ -27,6 +27,8 @@ public class TowerGameController : GameBaseController
     public GameObject YouWin;
     public GameObject YouLose;
     public GameObject readyButton;
+    public GameObject blueTeamScore;
+    public GameObject orangeTeamScore;
 
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
@@ -456,6 +458,7 @@ public class TowerGameController : GameBaseController
                 // Add your logic here
                 break;
             case "nextRound":
+                StartCoroutine(updateScoreUI());
                 StartCoroutine(updateQuestionUI());
                 // Add your logic here
                 break;
@@ -471,6 +474,15 @@ public class TowerGameController : GameBaseController
             default:
                 break;
         }
+    }
+
+    private IEnumerator updateScoreUI()
+    {
+        while (WS_Client.Instance.GameData == null) {
+            yield return new WaitForSeconds(0.1f);
+        }
+        blueTeamScore.GetComponent<TextMeshProUGUI>().text = WS_Client.Instance.GameData.teamScore[0].ToString();
+        orangeTeamScore.GetComponent<TextMeshProUGUI>().text = WS_Client.Instance.GameData.teamScore[1].ToString();
     }
 
     private IEnumerator updateQuestionUI()
@@ -870,7 +882,7 @@ public class TowerGameController : GameBaseController
 
         if (matchingScoreboard != null) {
             // matchingScoreboard.scoreboardText.text = player.userName;
-            matchingScoreboard.setScoreboard(key, this.characterSets[int.Parse(player.costume_id) - 1].defaultIcon as Texture2D);
+            matchingScoreboard.setScoreboard(key, this.characterSets[int.Parse(player.costume_id) - 1].defaultIcon as Texture2D, player.ename);
         }
 
         // keep an incremental id for legacy naming if needed

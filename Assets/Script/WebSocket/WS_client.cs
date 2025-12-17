@@ -168,6 +168,8 @@ public class WS_Client : MonoBehaviour
     public class PlayerData
     {
         public string player_id;
+        public string ename;
+        public string cname;
         public int uid;
         public string status;
         public float[] position;
