@@ -22,12 +22,18 @@ public class roomListController : MonoBehaviour
 
     void FixedUpdate()
     {
+        roomListRefresh();
         if (WS_Client.Instance.RoomList != null)
         {
             
             if (room != null)
             {
                 playerNoText.text = room.roomMembers.ToString() + "/6";
+                if (room.roomMembers >= 6) {
+                    joinButton.interactable = false;
+                } else {
+                    joinButton.interactable = true;
+                }
             } else {
                 playerNoText.text = "-/6";
             }

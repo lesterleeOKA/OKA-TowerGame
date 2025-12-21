@@ -21,6 +21,10 @@ public class CharacterController : UserData
     private Vector3 localDestination = Vector3.zero;
     public bool isMouseDown = false; 
     public CanvasGroup localPlayer;
+    
+    // Network throttling
+    private float lastNetworkUpdateTime = 0f;
+    public float networkUpdateInterval = 0.1f; // Send updates every 0.1 seconds (10 times per second)
 
     private Texture2D standTexture;
     private Texture2D walkTexture;
@@ -208,19 +212,26 @@ public class CharacterController : UserData
                 calLocalDestination();
             }
 
-            WS_Client.PositionData posData = new WS_Client.PositionData
+            // Throttle network updates
+            if (Time.time - lastNetworkUpdateTime >= networkUpdateInterval)
             {
-                x = this.transform.localPosition.x,
-                y = this.transform.localPosition.y,
-            };
+                lastNetworkUpdateTime = Time.time;
+                
+                WS_Client.PositionData posData = new WS_Client.PositionData
+                {
+                    x = this.transform.localPosition.x,
+                    y = this.transform.localPosition.y,
+                };
 
-            WS_Client.PositionData destData = new WS_Client.PositionData
-            {
-                x = localDestination.x,
-                y = localDestination.y,
-            };
+                WS_Client.PositionData destData = new WS_Client.PositionData
+                {
+                    x = localDestination.x,
+                    y = localDestination.y,
+                };
 
-            WS_Client.Instance.UpdateServerPosition(posData, destData);
+                // Debug.Log("UpdateServerPosition: posData=" + posData.x + " - " + posData.y + " - destData=" + destData.x + " - " + destData.y);
+                WS_Client.Instance.UpdateServerPosition(posData, destData);
+            }
         }
 
         if(!this.IsLocalPlayer)
@@ -244,8 +255,6 @@ public class CharacterController : UserData
             inputPosition = Input.mousePosition;
         }
 
-        // Convert screen position to world position
-        // Set z to the distance from camera to the character's plane
         inputPosition.z = detectCamera.WorldToScreenPoint(transform.position).z;
         inputPosition = detectCamera.ScreenToWorldPoint(inputPosition);
 
@@ -277,14 +286,15 @@ public class CharacterController : UserData
     {
         float distance = Vector3.Distance(transform.localPosition, localDestination);
 
-        // if (distance > 1000f)
-        // {
-        //     transform.localPosition = new Vector3(localDestination.x, localDestination.y, 0.1f);
-        // }
-        // else if (distance > 0.01f)
-        if (distance > 0.01f)
+        if (!IsLocalPlayer && distance > 500f)
+        {
+            Debug.Log("Teleporting player due to large desync: distance=" + distance);
+            transform.localPosition = new Vector3(localDestination.x, localDestination.y, transform.localPosition.z);
+        }
+        else if (distance > 0.01f)
         {
             currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, followSpeed);
+            // Debug.Log("FollowLocalDestination: transform.localPosition=" + transform.localPosition + " - localDestination=" + localDestination + " - distance=" + distance + " - currectSpeed=" + currectSpeed + " - (currectSpeed + acc * Time.deltaTime)=" + (currectSpeed + acc * Time.deltaTime) + " - followSpeed=" + followSpeed);
             transform.localPosition = Vector3.MoveTowards(transform.localPosition, localDestination, currectSpeed * Time.deltaTime);
         }
     }

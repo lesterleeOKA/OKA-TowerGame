@@ -29,6 +29,8 @@ public class TowerGameController : GameBaseController
     public GameObject readyButton;
     public GameObject blueTeamScore;
     public GameObject orangeTeamScore;
+    public Vector3[] blueTeamPositions;
+    public Vector3[] orangeTeamPositions;
 
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
@@ -121,7 +123,7 @@ public class TowerGameController : GameBaseController
         try 
         {string jsonResponse = await LoaderConfig.Instance.apiManager.getCurrentAccount();
             
-            
+            Debug.Log("jsonResponse: " + jsonResponse);
             // Parse the JSON response
             if (!string.IsNullOrEmpty(jsonResponse))
             {
@@ -536,6 +538,15 @@ public class TowerGameController : GameBaseController
             if (!playerControllersByKey.ContainsKey(key))
             {
                 Vector3 location = Vector3.zero;
+                // int playerIndex = int.Parse(player.player_id.Replace("player", "")) - 1;
+                // if (playerIndex % 2 == 0)
+                // {
+                //     location = this.blueTeamPositions[playerIndex / 2];
+                // } else {
+                //     location = this.orangeTeamPositions[playerIndex / 2];
+                // }
+
+                Debug.Log("CreatePlayerFromData 1: " + location + " - " + key + " - " + isLocal);
                 if (player.position != null && player.position.Length >= 2)
                 {
                     location = new Vector3(player.position[0], player.position[1], 0f);
@@ -602,6 +613,9 @@ public class TowerGameController : GameBaseController
                     {
                         bool isMarkerLocal = (WS_Client.Instance.public_UserInfo != null && player.uid == WS_Client.Instance.public_UserInfo.uid);
                         img.color = isMarkerLocal ? new Color(0.28f, 0.85f, 0.29f, 1f) /*green*/ : new Color(0.85f, 0.28f, 0.28f, 1f) /*red*/;
+                        img.sprite = SetUI.ConvertTextureToSprite(this.characterSets[int.Parse(player.costume_id) - 1].defaultIcon as Texture2D);
+                        img.SetNativeSize();
+                        img.rectTransform.sizeDelta = new Vector2(64, 64);
                     }
                 }
 
