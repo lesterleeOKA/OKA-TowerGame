@@ -100,6 +100,7 @@ public class WS_Client : MonoBehaviour
         public string position;
         public string destination;
         public int answer_id;
+        public int timer;
     }
 
     [Serializable]
@@ -468,6 +469,14 @@ public class WS_Client : MonoBehaviour
         {
             ready(); // 玩家準備
         }
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            cancelReady(); // 取消準備
+        }
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            setTimer(3);
+        }
         if (Input.GetKeyDown(KeyCode.M))
         {
             resetGame(); // for DEV 重置遊戲
@@ -800,6 +809,30 @@ public class WS_Client : MonoBehaviour
         }
     }
 
+    public async Task setTimer(int timer)
+    {
+        isSendingPosition = true;
+        if (websocket?.State == WebSocketState.Open)
+        {
+            var msg = new OutMessage
+            {
+                messageType = "setTimer",
+                content = new MessageContent
+                {
+                    action = "setTimer",
+                    timer = timer
+                }
+            };
+
+            string jsonString = JsonUtility.ToJson(msg);
+            await websocket.SendText(jsonString);
+        }
+        else
+        {
+            Debug.LogWarning("WebSocket未连接！");
+        }
+    }
+
     public async Task sendAction(string action)
     {
         isSendingPosition = true;
@@ -823,7 +856,10 @@ public class WS_Client : MonoBehaviour
             Debug.LogWarning("WebSocket未连接！");
         }
     }
-
+    public async Task cancelReady()
+    {
+        sendAction("cancelReady");
+    }
     public async Task ready()
     {
         sendAction("ready");
