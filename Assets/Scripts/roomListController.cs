@@ -28,8 +28,8 @@ public class roomListController : MonoBehaviour
             
             if (room != null)
             {
-                playerNoText.text = room.roomPlayers.ToString() + "/6";
-                if (room.roomPlayers >= 6) {
+                playerNoText.text = room.roomMembers.ToString() + "/6";
+                if (room.roomMembers >= 6) {
                     joinButton.interactable = false;
                 } else {
                     joinButton.interactable = true;
