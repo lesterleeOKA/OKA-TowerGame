@@ -858,10 +858,6 @@ public class WS_Client : MonoBehaviour
             Debug.LogWarning("WebSocket未连接！");
         }
     }
-    public async Task cancelReady()
-    {
-        sendAction("cancelReady");
-    }
     public async Task ready()
     {
         sendAction("ready");
