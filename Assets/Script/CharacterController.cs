@@ -48,6 +48,19 @@ public class CharacterController : UserData
         SetUI.Set(this.localPlayer, _isLocalPlayer);
     }
 
+    public void setPlayerTag(Sprite tag)
+    {
+        Transform playerTagTransform = transform.Find("playerTag");
+        if (playerTagTransform != null)
+        {
+            Image playerTagImage = playerTagTransform.GetComponent<Image>();
+            if (playerTagImage != null)
+            {
+                playerTagImage.sprite = tag;
+            }
+        }
+    }
+
     public void SetCostumeTextures(Texture2D stand, Texture2D walk)
     {
         // Initialize image components if not done yet (in case this is called before Start)

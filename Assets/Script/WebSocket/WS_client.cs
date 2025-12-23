@@ -148,6 +148,8 @@ public class WS_Client : MonoBehaviour
     {
         public string roomId;
         public int roomMembers;
+        public int roomPlayers;
+        public string status;
     }
 
     [System.Serializable]
@@ -827,6 +829,10 @@ public class WS_Client : MonoBehaviour
     public async Task ready()
     {
         sendAction("ready");
+    }
+    public async Task cancelReady()
+    {
+        sendAction("cancelReady");
     }
     public async Task startGame()
     {

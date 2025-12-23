@@ -29,8 +29,6 @@ public class TowerGameController : GameBaseController
     public GameObject readyButton;
     public GameObject blueTeamScore;
     public GameObject orangeTeamScore;
-    public Vector3[] blueTeamPositions;
-    public Vector3[] orangeTeamPositions;
 
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
@@ -59,6 +57,8 @@ public class TowerGameController : GameBaseController
     private HashSet<string> currentKeys = new HashSet<string>();
     public CharacterSet[] characterSets;
     public GameObject[] scoreboardControllers;
+    public Sprite[] playerTags;
+
 
 
     /// <summary>
@@ -538,13 +538,6 @@ public class TowerGameController : GameBaseController
             if (!playerControllersByKey.ContainsKey(key))
             {
                 Vector3 location = Vector3.zero;
-                // int playerIndex = int.Parse(player.player_id.Replace("player", "")) - 1;
-                // if (playerIndex % 2 == 0)
-                // {
-                //     location = this.blueTeamPositions[playerIndex / 2];
-                // } else {
-                //     location = this.orangeTeamPositions[playerIndex / 2];
-                // }
 
                 Debug.Log("CreatePlayerFromData 1: " + location + " - " + key + " - " + isLocal);
                 if (player.position != null && player.position.Length >= 2)
@@ -881,6 +874,7 @@ public class TowerGameController : GameBaseController
 
         // mark local player for client-side control
         characterController.setLocalPlayer(isLocal);
+        characterController.setPlayerTag(playerTags[playerIndex]);
         if (isLocal)
         {
             Debug.Log($"Local player created for uid={uid}");
@@ -1225,7 +1219,12 @@ public class TowerGameController : GameBaseController
         #endif
     }
 
-    public void ready() {
-        WS_Client.Instance.ready();
+    public void ready(bool ready) {
+        if (ready) {
+            WS_Client.Instance.ready();
+        } else {
+            WS_Client.Instance.cancelReady();
+        }
     }
+
 }
