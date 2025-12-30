@@ -26,7 +26,7 @@ public class WS_Client : MonoBehaviour
             return _instance;
         }
     }
-    WebSocket websocket;
+    public WebSocket websocket;
     private string channelId = "towerGame";
     //uid = 543717
     // public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcxNy05ZjY3MjcwZDk1Zjc5NjEzMTMwNzU0MGEyNjUyMDdmN2Q0YWM5ZDU2OTM3OTBiMmNhNjhlNTQ5YzI5NjBkZmM5IiwiZXhwaXJlcyI6MTc2MjIyNDQ0NywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTAtMjggMDI6NDc6MjcgR01UIiwidWlkIjoiNTQzNzE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNiIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.tDcwbbY0OxfSCrrAMcneyvji2u5M7k5M8Moz7JQHiUU";
@@ -49,6 +49,15 @@ public class WS_Client : MonoBehaviour
     private const float JOIN_COOLDOWN = 1f; // 1秒冷却时间
     public UserInfo userInfo;
     private bool isSendingPosition = false;
+    
+    // Disconnection timeout tracking
+    private float disconnectionStartTime = -1f;
+    private const float DISCONNECTION_TIMEOUT = 5f; // 5 seconds
+    private bool hasCalledDisconnected = false;
+    
+    // Reconnection tracking
+    private float lastReconnectAttemptTime = 0f;
+    private const float RECONNECT_COOLDOWN = 5f; // 5 seconds between reconnect attempts
 
     // Event system for order changes
     public delegate void OrderChangedHandler(string newOrder);
@@ -339,6 +348,18 @@ public class WS_Client : MonoBehaviour
     public async void Connect(Action onConnectCompleted = null)
     {
         Debug.Log("Connect: " + GetCurrentUrl());
+        
+        // Cancel any existing repeating invokes to prevent duplicates
+        CancelInvoke("SendTest");
+        CancelInvoke("ConstantSyncData");
+        
+        // Close existing websocket if it exists
+        if (websocket != null && websocket.State == WebSocketState.Open)
+        {
+            Debug.Log("关闭现有WebSocket连接...");
+            await websocket.Close();
+        }
+        
         // var baseUrl = WEBSHOCKET_URL; // "wss://ws.openknowledge.hk"
         // // *********************************************
         // var baseUrl = "ws://localhost:8000/"; // comment when build and deploy
@@ -456,8 +477,11 @@ public class WS_Client : MonoBehaviour
     void Update()
     {
 #if !UNITY_WEBGL || UNITY_EDITOR
-        if (websocket == null) return;
-        websocket.DispatchMessageQueue();
+        // Only dispatch messages if websocket exists and is valid
+        if (websocket != null)
+        {
+            websocket.DispatchMessageQueue();
+        }
 #endif
         if (Input.GetKeyDown(KeyCode.G))
         {
@@ -499,6 +523,37 @@ public class WS_Client : MonoBehaviour
         {
         //    printGameData(); // for DEV printGameData
         }
+
+        // Auto-reconnect logic
+        bool needsReconnect = false;
+        
+        // Check if websocket is null or not in Open state
+        if (websocket == null)
+        {
+            needsReconnect = true;
+        }
+        else if (websocket.State != WebSocketState.Open)
+        {
+            needsReconnect = true;
+        }
+        
+        if (needsReconnect)
+        {
+            // Check if enough time has passed since last reconnect attempt
+            if (Time.time - lastReconnectAttemptTime >= RECONNECT_COOLDOWN)
+            {
+                Debug.Log($"WebSocket需要重新连接, 正在尝试连接...");
+                lastReconnectAttemptTime = Time.time;
+                
+                // Stop any existing repeating invokes before reconnecting
+                CancelInvoke("SendTest");
+                CancelInvoke("ConstantSyncData");
+                
+                // Reconnect
+                Connect();
+            }
+        }
+        
   }
 
     public void printGameData()
@@ -536,6 +591,11 @@ public class WS_Client : MonoBehaviour
     // 连接打开后
     private async void OnWebSocketOpen()
     {
+        Debug.Log("WebSocket连接成功！");
+        
+        // Reset reconnection timer on successful connection
+        lastReconnectAttemptTime = 0f;
+        
         try
         {
             // await JoinRoom(); // 调用一次 JoinRoom
@@ -624,6 +684,11 @@ public class WS_Client : MonoBehaviour
         }
     }
 
+    void disconnected()
+    {
+        OnOrderChanged?.Invoke("disconnected");
+    }
+
     async void ConstantSyncData()
     {
         if (isSendingPosition) return;
@@ -631,7 +696,6 @@ public class WS_Client : MonoBehaviour
         if (websocket?.State != WebSocketState.Open)
         {
             Debug.Log("WebSocket未连接，无法发送位置同步数据！");
-            return;
         }
 
         // 检查是否已加入房间
@@ -729,6 +793,31 @@ public class WS_Client : MonoBehaviour
         else
         {
             Debug.Log("WebSocket未连接！");
+                        
+            // Start tracking disconnection time
+            if (disconnectionStartTime < 0)
+            {
+                disconnectionStartTime = Time.time;
+                hasCalledDisconnected = false;
+            }
+            
+            // Check if disconnected for more than 5 seconds
+            float disconnectedDuration = Time.time - disconnectionStartTime;
+            if (disconnectedDuration >= DISCONNECTION_TIMEOUT && !hasCalledDisconnected)
+            {
+                Debug.LogWarning($"WebSocket断开连接超过 {DISCONNECTION_TIMEOUT} 秒，调用 disconnected()");
+                hasCalledDisconnected = true;
+                disconnected();
+            }
+            
+            return;
+        }
+        
+        // Reset disconnection tracking when connection is restored
+        if (disconnectionStartTime >= 0)
+        {
+            disconnectionStartTime = -1f;
+            hasCalledDisconnected = false;
         }
     }
 

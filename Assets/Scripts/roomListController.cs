@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using NativeWebSocket;
 
 public class roomListController : MonoBehaviour
 {
@@ -23,19 +24,26 @@ public class roomListController : MonoBehaviour
     void FixedUpdate()
     {
         roomListRefresh();
+
+        if (WS_Client.Instance.websocket == null || WS_Client.Instance.websocket.State != WebSocketState.Open) {
+            playerNoText.text = "-/6";
+            joinButton.interactable = false;
+            return;
+        }
+        
         if (WS_Client.Instance.RoomList != null)
         {
             
-            if (room != null)
-            {
+            if (room == null) {
+                playerNoText.text = "-/6";
+                joinButton.interactable = false;
+            } else {
                 playerNoText.text = room.roomMembers.ToString() + "/6";
                 if (room.roomMembers >= 6 || room.roomStatus == "playing") {
                     joinButton.interactable = false;
                 } else {
                     joinButton.interactable = true;
                 }
-            } else {
-                playerNoText.text = "-/6";
             }
         }
     }

@@ -29,6 +29,7 @@ public class TowerGameController : GameBaseController
     public GameObject readyButton;
     public GameObject blueTeamScore;
     public GameObject orangeTeamScore;
+    public GameObject disconnectedUI;
 
     public List<CharacterController> characterControllers = new List<CharacterController>();
     public List<WS_Client.QuestionData> questions = new List<WS_Client.QuestionData>();
@@ -481,9 +482,17 @@ public class TowerGameController : GameBaseController
             case "submitWrongAnswer":
                 submitWrongAnswerHandler();
                 break;
+            case "disconnected":
+                disconnectedUI.GetComponent<CanvasGroup>().alpha = 1;
+                break;
             default:
                 break;
         }
+    }
+
+    public void hideDisconnectedUI()
+    {
+        disconnectedUI.GetComponent<CanvasGroup>().alpha = 0;
     }
 
     private IEnumerator updateScoreUI()
