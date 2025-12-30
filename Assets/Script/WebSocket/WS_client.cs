@@ -150,7 +150,7 @@ public class WS_Client : MonoBehaviour
         public string roomId;
         public int roomMembers;
         public int roomPlayers;
-        public string status;
+        public string roomStatus;
     }
 
     [System.Serializable]
@@ -497,23 +497,23 @@ public class WS_Client : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.P))
         {
-           printGameData(); // for DEV printGameData
+        //    printGameData(); // for DEV printGameData
         }
   }
 
     public void printGameData()
     {
-        Debug.Log($"printGameData GameData: {GameData.players.Count}");
-        if (GameData.players != null) {
-            foreach (var player in GameData.players) {
-                Debug.Log($"printGameData Player: {player.uid} - {player.costume_id}");
-            }
-        }
-        // if (GameData.questions != null) {
-        //     foreach (var question in GameData.questions) {
-        //         Debug.Log($"Question: {question.id} - {question.content}");
+        // if (GameData.players != null) {
+        //     foreach (var player in GameData.players) {
+        //         Debug.Log($"printGameData Player: {player.uid} - {player.costume_id}");
         //     }
         // }
+        // if (GameData.answers != null) {
+        //     foreach (var answer in GameData.answers) {
+        //         Debug.Log($"Answer: {answer.id} - {answer.content} - {answer.isOnPlayer}");
+        //     }
+        // }
+        // Debug.Log($"========================");
     }
 
     public void JoinGameRoom(int roomId = 1)

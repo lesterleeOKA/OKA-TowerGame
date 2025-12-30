@@ -66,7 +66,7 @@ public class QuestionTrigger : MonoBehaviour
             {
                 // Get the AnswerTrigger component from the answer GameObject
                 AnswerTrigger answerTrigger = characterController.answerObject.GetComponent<AnswerTrigger>();
-                if (answerTrigger != null && answerTrigger.answerData != null)
+                if (answerTrigger != null)
                 {
 
                     if (WS_Client.Instance.GameData.players != null) {

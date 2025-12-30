@@ -37,6 +37,10 @@ public class TowerGameController : GameBaseController
     private int playerID = 0;
     public Text debugText;
 
+    //this variable is only used in "next round order call" right now, change webSocket for start round position
+    [SerializeField]
+    private Vector3[] startingPos;
+
     private string costumeDataJson = "";
     public string accountCostumeId = ""; // ID of the costume currently equipped by the account
     public Dictionary<string, CostumeTextures> costumeTexturesById = new Dictionary<string, CostumeTextures>(); // costume_id -> CostumeTextures (stand, walk, jump)
@@ -441,6 +445,7 @@ public class TowerGameController : GameBaseController
             break;
             case "reconnectPlayer":
                 readyButton.SetActive(false);
+                checkAnswerVisibility();
                 StartCoroutine(updateQuestionUI());
                 // SyncPlayers();
                 break;
@@ -448,6 +453,7 @@ public class TowerGameController : GameBaseController
                 readyButton.SetActive(false);
                 StartGame.Instance.startGameSequence();
                 StartCoroutine(updateQuestionUI());
+                resetStartingPos();
                 break;
             case "endGame":
                 readyButton.SetActive(true);
@@ -457,15 +463,17 @@ public class TowerGameController : GameBaseController
             case "resetGame":
                 readyButton.SetActive(true);
                 onTopUI.GetComponent<CanvasGroup>().alpha = 0;
+                resetStartingPos();
                 // Add your logic here
                 break;
             case "nextRound":
                 StartCoroutine(updateScoreUI());
                 StartCoroutine(updateQuestionUI());
+                resetStartingPos();
                 // Add your logic here
                 break;
             case "getAnswer":
-                // Add your logic here
+                checkAnswerVisibility();
                 break;
             case "submitCorrectAnswer":
                 submitCorrectAnswerHandler();
@@ -661,7 +669,7 @@ public class TowerGameController : GameBaseController
         if (Input.GetKeyDown(KeyCode.P))
         {
             // printCostumeData(); // for DEV printCostumeData
-            // printGameData(); // for DEV printCostumeData
+            printGameData(); // for DEV printCostumeData
         }
     }
 
@@ -672,9 +680,9 @@ public class TowerGameController : GameBaseController
         // Debug.Log($"Answers: {WS_Client.Instance.GameData.answers.Count}");
         // Debug.Log($"Obstacles: {WS_Client.Instance.GameData.obstacles.Count}");
         // Debug.Log($"=== End Game Data ===");
-        // foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
-        //     Debug.Log($"player: {player.uid} - {player.costume_id}");
-        // }
+        foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
+            Debug.Log($"player: {player.uid} - {player.costume_id}");
+        }
     }
 
     void printCostumeData()
@@ -831,6 +839,14 @@ public class TowerGameController : GameBaseController
         //     }
 
         // }
+    }
+
+    private void resetStartingPos()
+    {
+        for (int i = 0; i < characterControllers.Count; i++)
+        {
+            characterControllers[i].transform.localPosition = startingPos[i];
+        }
     }
 
     private void CreatePlayerFromData(WS_Client.PlayerData player, Vector3 startPos, string key, bool isLocal = false)
@@ -1054,7 +1070,6 @@ public class TowerGameController : GameBaseController
             answerTrigger = answerObj.AddComponent<AnswerTrigger>();
         }
         answerTrigger.answerId = answer.id;
-        answerTrigger.answerData = answer;
 
         // BoxCollider2D boxCollider = answerObj.GetComponent<BoxCollider2D>();
         // if (boxCollider == null)
@@ -1088,8 +1103,6 @@ public class TowerGameController : GameBaseController
 
     public void OnAnswerObjectTrigger(GameObject answerObject, int answerId, WS_Client.AnswerData answerData)
     {
-        Debug.Log($"Answer {answerId} triggered - Content: {answerData?.content}");
-
         // Find and update the answer in GameData
         if (WS_Client.Instance.GameData?.answers != null)
         {
@@ -1099,28 +1112,22 @@ public class TowerGameController : GameBaseController
                 answer.isOnPlayer = 1;
                 Debug.Log($"Set answer {answerId} isOnPlayer to 1");
 
-                // Send update to server so it syncs with all players
                 WS_Client.Instance.updateAnswerOnPlayer(answerId);
-
-                // if (WS_Client.Instance.GameData.players != null) {
-                //     WS_Client.PlayerData player = WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid);
-                //     Debug.Log($"GameData player 1: {player?.uid} - {player?.answer_id} - {player?.answerContent} - {player?.isAnswerVisible}");
-                //     if (player != null) {
-                //         player.answer_id = answerId;
-                //         player.answerContent = answerData.content;
-                //         player.isAnswerVisible = 1;
-                //     }
-                //     Debug.Log($"GameData player 2: {player?.uid} - {player?.answer_id} - {player?.answerContent} - {player?.isAnswerVisible}");
-                // }
-
-                // You can add more logic here:
-                // - Send update to server
-                // - Update UI
-                // - Trigger effects
             }
             else
             {
                 Debug.LogWarning($"Answer {answerId} not found in GameData.answers");
+            }
+        }
+    }
+
+    public void checkAnswerVisibility()
+    {
+        foreach (GameObject answerObj in answerObjectsById.Values) {
+            AnswerTrigger answerTrigger = answerObj.GetComponent<AnswerTrigger>();
+            if (answerTrigger != null)
+            {
+                answerTrigger.checkAnswerVisibility();
             }
         }
     }

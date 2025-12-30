@@ -6,20 +6,52 @@ using TMPro;
 public class AnswerTrigger : MonoBehaviour
 {
     public int answerId;
-    public WS_Client.AnswerData answerData;
+    private CanvasGroup canvas;
+
+    void Start()
+    {
+        canvas = GetComponent<CanvasGroup>();
+    }
 
     void Update()
     {
-        // Look up current answer data from GameData (not the cached copy)
+        
+    }
+
+    public void checkAnswerVisibility() {
         WS_Client.AnswerData currentAnswerData = WS_Client.Instance.GameData?.answers?.Find(a => a.id == answerId);
         
         if (currentAnswerData != null)
         {
-            // Update the cached answerData reference
-            answerData = currentAnswerData;
-            
-            // Show/hide answer based on isOnPlayer value
-            gameObject.SetActive(currentAnswerData.isOnPlayer == 0);
+            // Set canvas alpha to 0 and disable trigger when isOnPlayer == 0
+            if (currentAnswerData.isOnPlayer == 1)
+            {
+                if (canvas != null)
+                {
+                    canvas.alpha = 0;
+                }
+                Collider2D trigger = GetComponent<Collider2D>();
+                if (trigger != null)
+                {
+                    trigger.enabled = false;
+                }
+            }
+            else
+            {
+                if (canvas != null)
+                {
+                    canvas.alpha = 1;
+                }
+                Collider2D trigger = GetComponent<Collider2D>();
+                if (trigger != null)
+                {
+                    trigger.enabled = true;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Answer {answerId} not found in GameData.answers");
         }
     }
 
@@ -53,12 +85,13 @@ public class AnswerTrigger : MonoBehaviour
 
         if (characterController != null)
         {
+            WS_Client.AnswerData currentAnswerData = WS_Client.Instance.GameData?.answers?.Find(a => a.id == answerId);
             characterController.showAnswerBubble(1);
             characterController.answerObject = this.gameObject;
-            characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = answerData.content;
-            if (TowerGameController.Instance != null)
+            characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = currentAnswerData?.content ?? "";
+            if (TowerGameController.Instance != null && currentAnswerData != null)
             {
-                TowerGameController.Instance.OnAnswerObjectTrigger(this.gameObject, answerId, answerData);
+                TowerGameController.Instance.OnAnswerObjectTrigger(this.gameObject, answerId, currentAnswerData);
             }
         }
         else
