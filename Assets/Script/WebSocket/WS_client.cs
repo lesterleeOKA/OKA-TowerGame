@@ -463,13 +463,13 @@ public class WS_Client : MonoBehaviour
             }
         };
 
+        // // waiting for messages\
+        await websocket.Connect();
         // Keep sending messages at every 5s
         InvokeRepeating("SendTest", 0.0f, 5f);
         // // Keep sending game data at every 0.1s
         InvokeRepeating("ConstantSyncData", 0.0f, 0.1f);
 
-        // // waiting for messages\
-        await websocket.Connect();
 
         onConnectCompleted?.Invoke();
     }
@@ -524,7 +524,7 @@ public class WS_Client : MonoBehaviour
         //    printGameData(); // for DEV printGameData
         }
 
-        // Auto-reconnect logic
+        // Auto-reconnect logic - only try to reconnect if we're in the game scene (not lobby)
         bool needsReconnect = false;
         
         // Check if websocket is null or not in Open state
@@ -532,7 +532,7 @@ public class WS_Client : MonoBehaviour
         {
             needsReconnect = true;
         }
-        else if (websocket.State != WebSocketState.Open)
+        else if (websocket.State != WebSocketState.Open && websocket.State != WebSocketState.Connecting)
         {
             needsReconnect = true;
         }
@@ -542,15 +542,22 @@ public class WS_Client : MonoBehaviour
             // Check if enough time has passed since last reconnect attempt
             if (Time.time - lastReconnectAttemptTime >= RECONNECT_COOLDOWN)
             {
-                Debug.Log($"WebSocket需要重新连接, 正在尝试连接...");
+                Debug.Log($"WebSocket needs reconnection, attempting to connect...");
                 lastReconnectAttemptTime = Time.time;
                 
-                // Stop any existing repeating invokes before reconnecting
-                CancelInvoke("SendTest");
-                CancelInvoke("ConstantSyncData");
-                
-                // Reconnect
-                Connect();
+                try
+                {
+                    // Stop any existing repeating invokes before reconnecting
+                    CancelInvoke("SendTest");
+                    CancelInvoke("ConstantSyncData");
+                    
+                    // Reconnect
+                    Connect();
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"Error during WebSocket reconnection: {ex.Message}\n{ex.StackTrace}");
+                }
             }
         }
         
@@ -692,25 +699,27 @@ public class WS_Client : MonoBehaviour
     async void ConstantSyncData()
     {
         if (isSendingPosition) return;
-        // 检查WebSocket连接状态
-        if (websocket?.State != WebSocketState.Open)
-        {
-            Debug.Log("WebSocket未连接，无法发送位置同步数据！");
-        }
-
-        // 检查是否已加入房间
-        if (string.IsNullOrEmpty(roomId) || roomId == "lobby")
-        {
-            // Debug.Log("未加入有效房间，跳过位置同步");
-            return;
-        }
-
+        
         try
         {
-            // 1. 从本地GameData中获取当前玩家的数据
-            if (GameData?.players == null)
+            // 检查WebSocket连接状态
+            if (websocket?.State != WebSocketState.Open)
             {
-                Debug.Log("GameData或players列表为空，无法同步位置");
+                // Debug.Log("WebSocket未连接，无法发送位置同步数据！");
+                return;
+            }
+
+            // 检查是否已加入房间
+            if (string.IsNullOrEmpty(roomId) || roomId == "lobby")
+            {
+                // Debug.Log("未加入有效房间，跳过位置同步");
+                return;
+            }
+
+            // 1. 从本地GameData中获取当前玩家的数据
+            if (GameData?.players == null || userInfo == null)
+            {
+                // Debug.Log("GameData或players列表为空，无法同步位置");
                 return;
             }
 
@@ -722,7 +731,15 @@ public class WS_Client : MonoBehaviour
 
             if (myPlayer == null)
             {
-                Debug.Log($"在GameData中未找到UID为{currentPlayerUid}的玩家, GameData: {GameData.players}");
+                // Debug.Log($"在GameData中未找到UID为{currentPlayerUid}的玩家");
+                return;
+            }
+            
+            // Validate position and destination arrays
+            if (myPlayer.position == null || myPlayer.position.Length < 2 ||
+                myPlayer.destination == null || myPlayer.destination.Length < 2)
+            {
+                Debug.LogWarning($"Player {currentPlayerUid} has invalid position or destination data");
                 return;
             }
 

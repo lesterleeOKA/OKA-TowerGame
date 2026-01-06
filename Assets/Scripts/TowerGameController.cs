@@ -531,20 +531,22 @@ public class TowerGameController : GameBaseController
 
     private void SyncPlayers()
     {
-        // Defensive checks
-        if (WS_Client.Instance == null || WS_Client.Instance.GameData == null) return;
-        var players = WS_Client.Instance.GameData.players;
-        if (players == null) return;
-
-        // Clear currentKeys so we rebuild it from the authoritative GameData
-        currentKeys.Clear();
-
-        // Get local player's uid (if available)
-        int localUid = -1;
-        if (WS_Client.Instance.public_UserInfo != null)
+        try
         {
-            localUid = WS_Client.Instance.public_UserInfo.uid;
-        }
+            // Defensive checks
+            if (WS_Client.Instance == null || WS_Client.Instance.GameData == null) return;
+            var players = WS_Client.Instance.GameData.players;
+            if (players == null) return;
+
+            // Clear currentKeys so we rebuild it from the authoritative GameData
+            currentKeys.Clear();
+
+            // Get local player's uid (if available)
+            int localUid = -1;
+            if (WS_Client.Instance.public_UserInfo != null)
+            {
+                localUid = WS_Client.Instance.public_UserInfo.uid;
+            }
 
         // Track minimap presence while iterating players (reuse currentKeys)
         foreach (var player in players)
@@ -623,7 +625,20 @@ public class TowerGameController : GameBaseController
                     {
                         bool isMarkerLocal = (WS_Client.Instance.public_UserInfo != null && player.uid == WS_Client.Instance.public_UserInfo.uid);
                         img.color = isMarkerLocal ? new Color(0.28f, 0.85f, 0.29f, 1f) /*green*/ : new Color(0.85f, 0.28f, 0.28f, 1f) /*red*/;
-                        img.sprite = SetUI.ConvertTextureToSprite(this.characterSets[int.Parse(player.costume_id) - 1].defaultIcon as Texture2D);
+                        
+                        // Safely access costume with bounds checking
+                        if (!string.IsNullOrEmpty(player.costume_id) && int.TryParse(player.costume_id, out int costumeIndex))
+                        {
+                            int arrayIndex = costumeIndex - 1;
+                            if (arrayIndex >= 0 && arrayIndex < this.characterSets.Length && this.characterSets[arrayIndex] != null)
+                            {
+                                img.sprite = SetUI.ConvertTextureToSprite(this.characterSets[arrayIndex].defaultIcon as Texture2D);
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"Invalid costume index {arrayIndex} for player {player.uid}. CharacterSets length: {this.characterSets.Length}");
+                            }
+                        }
                         img.SetNativeSize();
                         img.rectTransform.sizeDelta = new Vector2(64, 64);
                     }
@@ -667,18 +682,30 @@ public class TowerGameController : GameBaseController
             }
             foreach (var k in markersToRemove) minimapMarkersByKey.Remove(k);
         }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error in SyncPlayers: {ex.Message}\n{ex.StackTrace}");
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        // If no data, nothing to do
-        if (finishLoading) SyncPlayers();
-
-        if (Input.GetKeyDown(KeyCode.P))
+        try
         {
-            // printCostumeData(); // for DEV printCostumeData
-            printGameData(); // for DEV printCostumeData
+            // If no data, nothing to do
+            if (finishLoading) SyncPlayers();
+
+            if (Input.GetKeyDown(KeyCode.P))
+            {
+                // printCostumeData(); // for DEV printCostumeData
+                printGameData(); // for DEV printCostumeData
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error in Update: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
@@ -721,20 +748,54 @@ public class TowerGameController : GameBaseController
 
     void FixedUpdate()
     {
-        // If no data, nothing to do
-        if (WS_Client.Instance.GameData == null) return;
-        var players = WS_Client.Instance.GameData.players;
-        if (players == null) return;
+        try
+        {
+            // If no data, nothing to do
+            if (WS_Client.Instance == null || WS_Client.Instance.GameData == null) return;
+            var players = WS_Client.Instance.GameData.players;
+            if (players == null || WS_Client.Instance.public_UserInfo == null) return;
 
-        foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
-            if (player.uid == WS_Client.Instance.public_UserInfo.uid) {
-                continue;
+            foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players)
+            {
+                if (player == null || player.uid == WS_Client.Instance.public_UserInfo.uid)
+                {
+                    continue;
+                }
+                CharacterController characterController = characterControllers != null ? characterControllers.Find(c => c.UserId == player.uid) : null;
+                if (characterController != null)
+                {
+                    Transform answerBubble = characterController.transform.Find("AnswerBubble");
+                    if (answerBubble != null)
+                    {
+                        answerBubble.gameObject.SetActive(player.isAnswerVisible != 0);
+                        
+                        // Safely get answer content
+                        string answerContent = "";
+                        if (player.answer_id != 0 && WS_Client.Instance.GameData.answers != null)
+                        {
+                            var answer = WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id);
+                            if (answer != null)
+                            {
+                                answerContent = answer.content;
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"Answer with id {player.answer_id} not found for player {player.uid}");
+                            }
+                        }
+                        
+                        TextMeshProUGUI textComponent = answerBubble.GetComponentInChildren<TextMeshProUGUI>();
+                        if (textComponent != null)
+                        {
+                            textComponent.text = answerContent;
+                        }
+                    }
+                }
             }
-            CharacterController characterController = characterControllers != null ? characterControllers.Find(c => c.UserId == player.uid) : null;
-            if (characterController != null) {
-                characterController.transform.Find("AnswerBubble").gameObject.SetActive(player.isAnswerVisible != 0);
-                characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = player.answer_id != 0 ? WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id).content : "";
-            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error in FixedUpdate: {ex.Message}\n{ex.StackTrace}");
         }
 
         // Process answers
@@ -860,13 +921,27 @@ public class TowerGameController : GameBaseController
 
     private void CreatePlayerFromData(WS_Client.PlayerData player, Vector3 startPos, string key, bool isLocal = false)
     {
-        // Instantiate without parent, set world position, then attach to parent preserving world pos
-        var characterController = GameObject.Instantiate(this.playerPrefab, this.globalParent).GetComponent<CharacterController>();
-        
-        // Find the scoreboardController with matching uid
-        scoreboardController matchingScoreboard = null;
+        try
+        {
+            if (player == null)
+            {
+                Debug.LogError("Attempted to create player from null PlayerData");
+                return;
+            }
+            
+            // Instantiate without parent, set world position, then attach to parent preserving world pos
+            var characterController = GameObject.Instantiate(this.playerPrefab, this.globalParent).GetComponent<CharacterController>();
+            
+            // Find the scoreboardController with matching uid
+            scoreboardController matchingScoreboard = null;
 
-        int playerIndex = int.Parse(player.player_id.Replace("player", "")) - 1;
+            if (string.IsNullOrEmpty(player.player_id))
+            {
+                Debug.LogError($"Player {player.uid} has null or empty player_id");
+                return;
+            }
+
+            int playerIndex = int.Parse(player.player_id.Replace("player", "")) - 1;
 
         if (playerIndex >= 0 && playerIndex < this.scoreboardControllers.Length)
         {
@@ -908,19 +983,43 @@ public class TowerGameController : GameBaseController
         playerControllersByKey[key] = characterController;
         characterController.key = key;
 
-        if (!string.IsNullOrEmpty(player.costume_id) && int.Parse(player.costume_id) <= this.characterSets.Length) {
-            characterController.SetCostumeTextures(this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[0] as Texture2D,
-                                                this.characterSets[int.Parse(player.costume_id) - 1].walkingAnimationTextures[1] as Texture2D);
+        // Safely parse and access costume with bounds checking
+        if (!string.IsNullOrEmpty(player.costume_id) && int.TryParse(player.costume_id, out int costumeId))
+        {
+            int arrayIndex = costumeId - 1;
+            if (arrayIndex >= 0 && arrayIndex < this.characterSets.Length && this.characterSets[arrayIndex] != null)
+            {
+                var characterSet = this.characterSets[arrayIndex];
+                if (characterSet.walkingAnimationTextures != null && characterSet.walkingAnimationTextures.Length >= 2)
+                {
+                    characterController.SetCostumeTextures(
+                        characterSet.walkingAnimationTextures[0] as Texture2D,
+                        characterSet.walkingAnimationTextures[1] as Texture2D);
+                }
+                
+                if (matchingScoreboard != null)
+                {
+                    matchingScoreboard.setScoreboard(key, characterSet.defaultIcon as Texture2D, player.ename);
+                }
+            }
+            else
+            {
+                Debug.LogError($"Invalid costume_id {player.costume_id} for player {player.uid}. Valid range: 1-{this.characterSets.Length}");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Player {player.uid} has invalid or empty costume_id: {player.costume_id}");
         }
 
-        if (matchingScoreboard != null) {
-            // matchingScoreboard.scoreboardText.text = player.userName;
-            matchingScoreboard.setScoreboard(key, this.characterSets[int.Parse(player.costume_id) - 1].defaultIcon as Texture2D, player.ename);
+            // keep an incremental id for legacy naming if needed
+            this.playerID = Mathf.Max(this.playerID, uid + 1);
+            Debug.Log($"Created player GameObject for uid={uid} at {startPos} (isLocal={isLocal})");
         }
-
-        // keep an incremental id for legacy naming if needed
-        this.playerID = Mathf.Max(this.playerID, uid + 1);
-        Debug.Log($"Created player GameObject for uid={uid} at {startPos} (isLocal={isLocal})");
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error creating player from data: {ex.Message}\n{ex.StackTrace}");
+        }
     }
 
     private void RemovePlayer(string key)

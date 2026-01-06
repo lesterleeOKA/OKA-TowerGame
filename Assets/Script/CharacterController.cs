@@ -117,20 +117,37 @@ public class CharacterController : UserData
     // Start the walking animation
     private void PlayWalkingAnimation()
     {
-        // If already walking or no cached sprites, do nothing
-        if (walkingCoroutine != null || walkSprite == null || standSprite == null) return;
+        try
+        {
+            // If already walking or no cached sprites, do nothing
+            if (walkingCoroutine != null || walkSprite == null || standSprite == null) return;
 
-        walkingCoroutine = StartCoroutine(WalkingAnimationCoroutine());
+            walkingCoroutine = StartCoroutine(WalkingAnimationCoroutine());
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error starting walking animation for {gameObject.name}: {ex.Message}");
+            walkingCoroutine = null;
+        }
     }
 
     // Stop the walking animation
     private void StopWalkingAnimation()
     {
-        if (walkingCoroutine != null)
+        try
         {
-            StopCoroutine(walkingCoroutine);
+            if (walkingCoroutine != null)
+            {
+                StopCoroutine(walkingCoroutine);
+                walkingCoroutine = null;
+                SetIdleTexture();
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error stopping walking animation for {gameObject.name}: {ex.Message}");
+            // Ensure we reset the coroutine reference even if StopCoroutine fails
             walkingCoroutine = null;
-            SetIdleTexture();
         }
     }
 
@@ -196,62 +213,73 @@ public class CharacterController : UserData
 
     void FixedUpdate()
     {
-        if(this.IsLocalPlayer)
+        try
         {
-            if (this.IsPointerOverUIButton())
+            if(this.IsLocalPlayer)
             {
-                return;
-            }
-
-            // Handle both mouse and touch input
-            if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
-            {
-                isMouseDown = true;
-            }
-
-            if (Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
-            {
-                isMouseDown = false;
-            }
-
-            // Also set isMouseDown to false if no touches are detected
-            if (Input.touchCount == 0 && !Input.GetMouseButton(0))
-            {
-                isMouseDown = false;
-            }
-
-            if (isMouseDown) 
-            {
-                calLocalDestination();
-            }
-
-            // Throttle network updates
-            if (Time.time - lastNetworkUpdateTime >= networkUpdateInterval)
-            {
-                lastNetworkUpdateTime = Time.time;
-                
-                WS_Client.PositionData posData = new WS_Client.PositionData
+                if (this.IsPointerOverUIButton())
                 {
-                    x = this.transform.localPosition.x,
-                    y = this.transform.localPosition.y,
-                };
+                    return;
+                }
 
-                WS_Client.PositionData destData = new WS_Client.PositionData
+                // Handle both mouse and touch input
+                if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
                 {
-                    x = localDestination.x,
-                    y = localDestination.y,
-                };
+                    isMouseDown = true;
+                }
 
-                // Debug.Log("UpdateServerPosition: posData=" + posData.x + " - " + posData.y + " - destData=" + destData.x + " - " + destData.y);
-                WS_Client.Instance.UpdateServerPosition(posData, destData);
+                if (Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
+                {
+                    isMouseDown = false;
+                }
+
+                // Also set isMouseDown to false if no touches are detected
+                if (Input.touchCount == 0 && !Input.GetMouseButton(0))
+                {
+                    isMouseDown = false;
+                }
+
+                if (isMouseDown) 
+                {
+                    calLocalDestination();
+                }
+
+                // Throttle network updates
+                if (Time.time - lastNetworkUpdateTime >= networkUpdateInterval)
+                {
+                    lastNetworkUpdateTime = Time.time;
+                    
+                    // Check WS_Client.Instance exists before using it
+                    if (WS_Client.Instance != null)
+                    {
+                        WS_Client.PositionData posData = new WS_Client.PositionData
+                        {
+                            x = this.transform.localPosition.x,
+                            y = this.transform.localPosition.y,
+                        };
+
+                        WS_Client.PositionData destData = new WS_Client.PositionData
+                        {
+                            x = localDestination.x,
+                            y = localDestination.y,
+                        };
+
+                        // Debug.Log("UpdateServerPosition: posData=" + posData.x + " - " + posData.y + " - destData=" + destData.x + " - " + destData.y);
+                        WS_Client.Instance.UpdateServerPosition(posData, destData);
+                    }
+                }
             }
+
+            if(!this.IsLocalPlayer)
+            {
+                FollowLocalDestination();
+            }
+            UpdateAnimation();
         }
-
-        if(!this.IsLocalPlayer)
+        catch (System.Exception ex)
         {
-            FollowLocalDestination();
+            Debug.LogError($"Error in CharacterController.FixedUpdate for {gameObject.name}: {ex.Message}\n{ex.StackTrace}");
         }
-        UpdateAnimation();
     }
 
     private void calLocalDestination() {
@@ -314,79 +342,94 @@ public class CharacterController : UserData
 
     private void UpdateAnimation()
     {
-        Vector3 movement = localDestination - transform.localPosition;
-        float distance = Vector3.Distance(transform.localPosition, localDestination);
-
-        float speed = movement.magnitude;
-
-    //    Debug.Log("Speed:" + speed);
-
-        if (speed > 0f)
+        try
         {
-            // Debug.Log("movement x:" + movement.x);
-            // Debug.Log("movement y:" + Mathf.Abs(movement.y));
+            Vector3 movement = localDestination - transform.localPosition;
+            float distance = Vector3.Distance(transform.localPosition, localDestination);
 
-            if (movement.x > 0)
+            float speed = movement.magnitude;
+
+        //    Debug.Log("Speed:" + speed);
+
+            if (speed > 0f)
             {
-                this.direction = 2; // 向右
-                if (imageTransform != null)
+                // Debug.Log("movement x:" + movement.x);
+                // Debug.Log("movement y:" + Mathf.Abs(movement.y));
+
+                if (movement.x > 0)
                 {
-                    imageTransform.localScale = new Vector3(-1f, 1f, 1f);
+                    this.direction = 2; // 向右
+                    if (imageTransform != null)
+                    {
+                        imageTransform.localScale = new Vector3(-1f, 1f, 1f);
+                    }
+                } else {
+                    this.direction = 1;// 向左
+                    if (imageTransform != null)
+                    {
+                        imageTransform.localScale = new Vector3(1f, 1f, 1f);
+                    }
                 }
-            } else {
-                this.direction = 1;// 向左
-                if (imageTransform != null)
-                {
-                    imageTransform.localScale = new Vector3(1f, 1f, 1f);
-                }
+                // else
+                // {
+                //     if (movement.y > 0)
+                //     {
+                //         this.direction = 2;// 向上
+                //     }
+                //     else
+                //     {
+                //         this.direction = 1;// 向下
+                //     }
+                // }
             }
-            // else
-            // {
-            //     if (movement.y > 0)
-            //     {
-            //         this.direction = 2;// 向上
-            //     }
-            //     else
-            //     {
-            //         this.direction = 1;// 向下
-            //     }
-            // }
-        }
-        else
-        {
-            this.direction = 0;// 停止
-        }
+            else
+            {
+                this.direction = 0;// 停止
+            }
 
-        if ((!IsLocalPlayer && distance > 0.01f) || (IsLocalPlayer && isMouseDown))
-        {
-            PlayWalkingAnimation();
+            if ((!IsLocalPlayer && distance > 0.01f) || (IsLocalPlayer && isMouseDown))
+            {
+                PlayWalkingAnimation();
+            }
+            else 
+            {
+                StopWalkingAnimation();
+            }
         }
-        else 
+        catch (System.Exception ex)
         {
-            StopWalkingAnimation();
+            Debug.LogError($"Error in UpdateAnimation for {gameObject.name}: {ex.Message}");
         }
-
     }
 
     public void TriggerCorrectAnimation()
     {
-        imageTransform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
+        if (imageTransform != null)
+        {
+            imageTransform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
+        }
     }
 
     public void ResetTrigger()
     {
-        imageTransform.localScale = new Vector3(1f, 1f, 1f);
+        if (imageTransform != null)
+        {
+            imageTransform.localScale = new Vector3(1f, 1f, 1f);
+        }
     }
 
     public void showAnswerBubble(int show)
     {
-        if (show == 1)
+        if (answerBubbleTransform != null)
         {
-            answerBubbleTransform.gameObject.SetActive(true);
-        }
-        else
-        {
-            answerBubbleTransform.gameObject.SetActive(false);
+            if (show == 1)
+            {
+                answerBubbleTransform.gameObject.SetActive(true);
+            }
+            else
+            {
+                answerBubbleTransform.gameObject.SetActive(false);
+            }
         }
     }
 }
