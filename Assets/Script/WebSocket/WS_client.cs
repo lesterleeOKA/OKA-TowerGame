@@ -449,6 +449,9 @@ public class WS_Client : MonoBehaviour
                     case "ready":
                         this.userInfo = message.content.userInfo;
                         break;
+                    case "inPlayingRoom":
+                        Debug.LogWarning("inPlayingRoom : " + jsonString);
+                        break;
                     case "test":
                         testReceived = true;
                         break;
