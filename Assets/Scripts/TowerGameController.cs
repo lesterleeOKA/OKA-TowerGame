@@ -483,7 +483,7 @@ public class TowerGameController : GameBaseController
                 submitWrongAnswerHandler();
                 break;
             case "disconnected":
-                disconnectedUI.GetComponent<CanvasGroup>().alpha = 1;
+                disconnectedUI.SetActive(true);
                 break;
             default:
                 break;
@@ -492,7 +492,7 @@ public class TowerGameController : GameBaseController
 
     public void hideDisconnectedUI()
     {
-        disconnectedUI.GetComponent<CanvasGroup>().alpha = 0;
+        disconnectedUI.SetActive(false);
     }
 
     private IEnumerator updateScoreUI()
@@ -839,12 +839,20 @@ public class TowerGameController : GameBaseController
             }
 
             // Remove answers that no longer exist
+            // Create a list to avoid modifying dictionary during iteration
+            var answersToRemove = new List<int>();
             foreach (var kv in answerObjectsById)
             {
                 if (!currentAnswerIds.Contains(kv.Key))
                 {
-                    RemoveAnswerObject(kv.Key);
+                    answersToRemove.Add(kv.Key);
                 }
+            }
+            
+            // Now remove them safely
+            foreach (var answerId in answersToRemove)
+            {
+                RemoveAnswerObject(answerId);
             }
         }
 
