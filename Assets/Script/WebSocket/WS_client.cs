@@ -285,7 +285,7 @@ public class WS_Client : MonoBehaviour
         }
 
         // 环境检测逻辑：如果域名以"dev"开头，则使用开发服务器
-        if (currentDomain.StartsWith("dev"))
+        if (currentDomain.StartsWith("dev") || currentDomain.StartsWith("uat"))
         {
             return developmentUrl;
         }
@@ -379,6 +379,7 @@ public class WS_Client : MonoBehaviour
 
         var fullUrl = baseUrl + query;
         websocket = new WebSocket(fullUrl);
+        Debug.Log("WebSocket URL: " + fullUrl);
 
         websocket.OnOpen += OnWebSocketOpen;
 
