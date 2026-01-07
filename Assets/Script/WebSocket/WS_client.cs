@@ -40,6 +40,7 @@ public class WS_Client : MonoBehaviour
     public string localhostUrl = "ws://localhost:8000/";
     public string localhostUrl_copy = "ws://localhost:8000/";
     public string developmentUrl = "wss://ws.openknowledge.hk:8084";
+    public string uatUrl = "wss://ws.openknowledge.hk:8082";
     public string productionUrl = "wss://ws.openknowledge.hk";
     const string WS_API_BASE_URL = "https://ws.openknowledge.hk/api/towerGame";//"https://ws.openknowledge.hk:8084/api/metaverse";//"https://ws.openknowledge.hk/api/metaverse";
     public const int TIMEOUT_TIMELIMIT = 15;
@@ -285,9 +286,13 @@ public class WS_Client : MonoBehaviour
         }
 
         // 环境检测逻辑：如果域名以"dev"开头，则使用开发服务器
-        if (currentDomain.StartsWith("dev") || currentDomain.StartsWith("uat"))
+        if (currentDomain.StartsWith("dev"))
         {
             return developmentUrl;
+        }
+        else if(currentDomain.StartsWith("uat"))
+        {
+            return uatUrl;
         }
         else
         {
