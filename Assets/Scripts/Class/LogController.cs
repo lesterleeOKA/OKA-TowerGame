@@ -14,8 +14,6 @@ public class LogController : MonoBehaviour
         {
             Instance = this;
         }
-
-        Debug.Log("Current Environment--------------------------------------------------" + LoaderConfig.Instance?.currentHostName.ToString());
     }
 
     public void UpdateVersion(string env)
