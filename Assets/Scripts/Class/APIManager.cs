@@ -1104,6 +1104,13 @@ public static class APIConstant
 
     public static string GetCurrentAccountAPI(LoaderConfig loader)
     {
+        // Defensive check ¡X avoid NullReference when LoaderConfig or its CurrentHostName isn't initialized yet.
+        if (loader == null || string.IsNullOrEmpty(loader.CurrentHostName))
+        {
+            Debug.LogWarning("GetCurrentAccountAPI: LoaderConfig or CurrentHostName is null/empty. Returning empty API.");
+            return string.Empty;
+        }
+
         if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
             loader.CurrentHostName.Contains("uat.starwishparty.com") ||
             loader.CurrentHostName.Contains("pre.starwishparty.com") ||
@@ -1114,7 +1121,7 @@ public static class APIConstant
         }
         else
         {
-            return "";
+            return string.Empty;
         }
     }
 

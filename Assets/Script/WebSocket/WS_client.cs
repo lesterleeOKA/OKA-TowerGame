@@ -8,11 +8,13 @@ using System.Linq; // 添加这一行
 public class WS_Client : MonoBehaviour
 {
     private static WS_Client _instance;
+    private static bool isQuitting = false;
     public static WS_Client Instance
     {
         get
         {
             // 如果实例不存在，尝试在场景中查找
+            if (isQuitting) return null;
             if (_instance == null)
             {
                 _instance = FindObjectOfType<WS_Client>();
@@ -347,17 +349,24 @@ public class WS_Client : MonoBehaviour
 
     public async void Connect(Action onConnectCompleted = null)
     {
+        if (isQuitting || this == null)
+        {
+            Debug.Log("WS_Client.Connect skipped because object is destroyed or application is quitting.");
+            return;
+        }
+
         Debug.Log("Connect: " + GetCurrentUrl());
-        
+
         // Cancel any existing repeating invokes to prevent duplicates
-        CancelInvoke("SendTest");
-        CancelInvoke("ConstantSyncData");
-        
+        try { CancelInvoke("SendTest"); } catch { }
+        try { CancelInvoke("ConstantSyncData"); } catch { }
+
         // Close existing websocket if it exists
         if (websocket != null && websocket.State == WebSocketState.Open)
         {
             Debug.Log("关闭现有WebSocket连接...");
             await websocket.Close();
+            websocket = null;
         }
         
         // var baseUrl = WEBSHOCKET_URL; // "wss://ws.openknowledge.hk"
@@ -468,10 +477,20 @@ public class WS_Client : MonoBehaviour
 
         // // waiting for messages\
         await websocket.Connect();
-        // Keep sending messages at every 5s
-        InvokeRepeating("SendTest", 0.0f, 5f);
-        // // Keep sending game data at every 0.1s
-        InvokeRepeating("ConstantSyncData", 0.0f, 0.1f);
+
+        if (!isQuitting && this != null && gameObject != null)
+        {
+            try
+            {
+                InvokeRepeating("SendTest", 0.0f, 5f);
+                InvokeRepeating("ConstantSyncData", 0.0f, 0.1f);
+            }
+            catch (MissingReferenceException)
+            {
+                // object destroyed between connect and invoke scheduling
+                Debug.LogWarning("WS_Client destroyed before InvokeRepeating could be scheduled.");
+            }
+        }
 
 
         onConnectCompleted?.Invoke();
@@ -1001,9 +1020,63 @@ public class WS_Client : MonoBehaviour
         }
     }
 
+    private async void OnDestroy()
+    {
+        isQuitting = true;
+        // Cancel repeated invokes
+        try { CancelInvoke("SendTest"); } catch { }
+        try { CancelInvoke("ConstantSyncData"); } catch { }
+
+        if (websocket != null)
+        {
+            try
+            {
+                // unsubscribe the handler we added
+                websocket.OnOpen -= OnWebSocketOpen;
+                // Other handlers added with lambdas cannot be unsubscribed here normally.
+            }
+            catch { }
+
+            // Close socket safely
+            try
+            {
+                if (websocket.State == WebSocketState.Open)
+                {
+                    await websocket.Close();
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Error closing websocket in OnDestroy: {e.Message}");
+            }
+
+            websocket = null;
+        }
+
+        // Clear singleton if this was the instance
+        if (_instance == this)
+        {
+            _instance = null;
+        }
+
+        Debug.Log("WS_Client destroyed, invokes canceled, and WebSocket closed.");
+    }
+
     private async void OnApplicationQuit()
     {
-        await websocket.Close();
+        isQuitting = true;
+        try
+        {
+            CancelInvoke("SendTest");
+            CancelInvoke("ConstantSyncData");
+        }
+        catch { }
+
+        if (websocket != null)
+        {
+            try { await websocket.Close(); }
+            catch { }
+        }
     }
 
     public void setReady(bool state) {

@@ -1,9 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 // Class to hold all costume textures for a single costume
 [System.Serializable]
@@ -69,6 +70,7 @@ public class TowerGameController : GameBaseController
     /// <summary>
     /// minmap
     /// </summary>
+    public RectTransform minimapParent;
     public RawImage minimapRawImage;              // assign the minimap RawImage in Inspector
     public RectTransform minimapMarkerPrefab;                    // small UI prefab (Image) for markers; set pivot (0.5,0.5)
     public RectTransform minimapMarkersParent;                   // parent under the minimap canvas (can be the RawImage rectTransform)
@@ -98,6 +100,28 @@ public class TowerGameController : GameBaseController
             WS_Client.Instance.OnOrderChanged += HandleOrderChanged;
         }
 
+        if (this.minimapParent == null)
+        {
+            this.minimapParent = this.minimapRawImage.rectTransform.parent as RectTransform;
+        }
+
+        var minimapScaler = this.minimapParent.GetComponent<CanvasScaler>();
+        if (minimapScaler != null)
+        {
+            var referenceResolution = minimapScaler.referenceResolution;
+            if (this.minimapParent.sizeDelta.x != referenceResolution.x)
+            {
+                float scaleFactor = Mathf.Clamp(referenceResolution.x / this.minimapParent.sizeDelta.x, 0.85f, 1.5f);
+                //Debug.Log(scaleFactor);
+
+                float scaledPosX = this.minimapRawImage.rectTransform.localPosition.x * scaleFactor;
+                float scaledPosY = this.minimapRawImage.rectTransform.localPosition.y;
+
+                //Debug.Log(this.minimapRawImage.rectTransform.localPosition);
+                this.minimapRawImage.rectTransform.localPosition = new Vector3(scaledPosX, scaledPosY, 0f);
+            }
+        }
+
         // Wait for starwishApiCaller to be ready before fetching costume data
         StartCoroutine(WaitForStarwishApi());
 
@@ -124,39 +148,67 @@ public class TowerGameController : GameBaseController
         finishLoading = true;
     }
 
-    protected async Task fetchAccountCostumeId() {
-        try 
-        {string jsonResponse = await LoaderConfig.Instance.apiManager.getCurrentAccount();
-            
-            Debug.Log("jsonResponse: " + jsonResponse);
-            // Parse the JSON response
-            if (!string.IsNullOrEmpty(jsonResponse))
+    protected async Task fetchAccountCostumeId()
+    {
+        try
+        {
+            if (LoaderConfig.Instance == null)
             {
-                try
+                Debug.LogWarning("fetchAccountCostumeId: LoaderConfig.Instance is null. Aborting fetch.");
+                return;
+            }
+
+            var api = LoaderConfig.Instance.apiManager;
+            if (api == null)
+            {
+                Debug.LogWarning("fetchAccountCostumeId: LoaderConfig.Instance.apiManager is null. Aborting fetch.");
+                return;
+            }
+
+            string jsonResponse = null;
+            try
+            {
+                jsonResponse = await api.getCurrentAccount();
+            }
+            catch (Exception apiEx)
+            {
+                Debug.LogError($"getCurrentAccount() threw: {apiEx.Message}\n{apiEx.StackTrace}");
+                return;
+            }
+
+            Debug.Log("jsonResponse: " + (jsonResponse ?? "null"));
+
+            if (string.IsNullOrEmpty(jsonResponse))
+            {
+                Debug.LogWarning("fetchAccountCostumeId: api returned empty response.");
+                return;
+            }
+
+            try
+            {
+                StarwishPartyAccountResponse accountResponse = JsonUtility.FromJson<StarwishPartyAccountResponse>(jsonResponse);
+
+                if (accountResponse != null &&
+                    accountResponse.data != null &&
+                    accountResponse.data.equipped_costume_data != null &&
+                    !string.IsNullOrEmpty(accountResponse.data.equipped_costume_data.costume_id))
                 {
-                    StarwishPartyAccountResponse accountResponse = JsonUtility.FromJson<StarwishPartyAccountResponse>(jsonResponse);
-                    
-                    if (accountResponse != null && 
-                        accountResponse.data != null && 
-                        accountResponse.data.equipped_costume_data != null && 
-                        !string.IsNullOrEmpty(accountResponse.data.equipped_costume_data.costume_id))
-                    {
-                        accountCostumeId = accountResponse.data.equipped_costume_data.costume_id;
-                    }
-                    else
-                    {
-                        Debug.LogWarning("No equipped costume found in account response");
-                    }
+                    accountCostumeId = accountResponse.data.equipped_costume_data.costume_id;
+                    Debug.Log($"fetchAccountCostumeId: accountCostumeId = {accountCostumeId}");
                 }
-                catch (System.Exception parseEx)
+                else
                 {
-                    Debug.LogError($"Failed to parse account data JSON: {parseEx.Message}");
+                    Debug.LogWarning("fetchAccountCostumeId: No equipped costume found in account response");
                 }
             }
+            catch (Exception parseEx)
+            {
+                Debug.LogError($"Failed to parse account data JSON: {parseEx.Message}\n{parseEx.StackTrace}");
+            }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            Debug.LogError($"Failed to fetch account costume ID: {ex.Message}");
+            Debug.LogError($"Failed to fetch account costume ID: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
