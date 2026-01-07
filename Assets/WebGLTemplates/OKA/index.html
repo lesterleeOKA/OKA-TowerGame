@@ -142,13 +142,13 @@
 
 	  	let unityInstance;
 
-		window.onbeforeunload = function(e) {
+		/*window.onbeforeunload = function(e) {
 			console.log("Calling OnClose from Browser!");
 			unityInstance.SendMessage('Loader', 'QuitGame');
 			var dialogText = "You game has been saved!  Would you like to continue unloading the page?";
 			e.returnValue = dialogText;
 			return dialogText;
-		};
+		};*/
 
       var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");

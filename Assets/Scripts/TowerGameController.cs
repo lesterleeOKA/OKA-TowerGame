@@ -111,7 +111,7 @@ public class TowerGameController : GameBaseController
             var referenceResolution = minimapScaler.referenceResolution;
             if (this.minimapParent.sizeDelta.x != referenceResolution.x)
             {
-                float scaleFactor = Mathf.Clamp(referenceResolution.x / this.minimapParent.sizeDelta.x, 0.85f, 1.5f);
+                float scaleFactor = Mathf.Clamp(referenceResolution.x / this.minimapParent.sizeDelta.x, 0.8f, 1.5f);
                 //Debug.Log(scaleFactor);
 
                 float scaledPosX = this.minimapRawImage.rectTransform.localPosition.x * scaleFactor;
