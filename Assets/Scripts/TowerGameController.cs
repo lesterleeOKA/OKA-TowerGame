@@ -517,6 +517,7 @@ public class TowerGameController : GameBaseController
                 resetStartingPos();
                 break;
             case "endGame":
+                StartCoroutine(updateScoreUI());
                 readyButton.SetActive(true);
                 onTopUI.GetComponent<CanvasGroup>().alpha = 0;
                 base.endGame();
