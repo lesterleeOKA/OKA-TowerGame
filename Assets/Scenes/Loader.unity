@@ -435,7 +435,7 @@ MonoBehaviour:
     gameSettingScore: -1
     gameTotalStars: 3
   apiManager:
-    jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcyMS04OWU2YTA1NWVjYzM5Mzk3ZTc0NzgxN2M5ZjBjOTRmOGJiNzQzYTNmMDBkMTNhZGU1Y2E5NGU0YjRmNmNlZmFlIiwiZXhwaXJlcyI6MTc2NjQ4MTkzMiwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjUtMTItMTYgMDk6MjU6MzIgR01UIiwidWlkIjoiNTQzNzIxIiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMzEuMyIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.kYbHdR9ycE1ZRuxFXmLjXHbc_R2KnfDnH0_gl_2jP8w
+    jwt: 
     appId: 
     gameSettingJson: 
     questionJson: 
@@ -484,7 +484,7 @@ MonoBehaviour:
         score: 0
         percent: 0
   unitKey: 
-  testURL: https://uat.starwishparty.com/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjQ5NzIwNy1lOGUyMzkyYmFmNTlhYWE2MjY3MTYwMTBkNWE3MmM3N2QxYTkwZWU3OTZjYmZmYTM0NzZiZjNmZjdjYjQ2N2E4IiwiZXhwaXJlcyI6MTc2ODM2NjczMCwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDEtMDcgMDQ6NTg6NTAgR01UIiwidWlkIjoiNDk3MjA3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNyIsInZlcnNpb24iOiIyLjguMzYuIiwiZGV2aWNlIjoid2luZG93cyJ9.ww6bKEPejm_yS2XeO6i5s3CPy2pVbOo96KelDXiaPaQ
+  testURL: https://uat.starwishparty.com/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjQ5NzIwNy00NzVhYzNmOTY5ZTg0NzdhN2ZiNDBiMDkzM2Y2NzNmY2JlN2VkOWQ5M2QxODlmMWRmODFhYzJmM2VkZTIyYThjIiwiZXhwaXJlcyI6MTc2ODQ0MDkzNSwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDEtMDggMDE6MzU6MzUgR01UIiwidWlkIjoiNDk3MjA3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNyIsInZlcnNpb24iOiIyLjguMzYuIiwiZGV2aWNlIjoid2luZG93cyJ9.-4CljjRByJaqF6Q3fEGLNXLGDUC7MsqSG1ghlsA8NjY
   skipAudioPanel: 0
 --- !u!4 &734659897
 Transform:
@@ -688,7 +688,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxMS00MzY0ZTlmYmE3NzA2M2Q4MjdjZWY0NjMzMGYwMjlhZmU2ZTIyNWZhOTk1MGMzMTRiMzRkNjAyNjY5NGUzYWIwIiwiZXhwaXJlcyI6MTc2MzYxMDE0NywidGltZSI6IjIwMjUtMTAtMjEgMTE6NDI6MjciLCJ1aWQiOiI1MTEiLCJ1c2VyX3JvbGUiOiIzIiwic2Nob29sX2lkIjoiMjcyIiwiaXAiOiIxNjkuMjU0LjEyOS40IiwidmVyc2lvbiI6IjIuOC4zNiIsImRldmljZSI6Im1hYyJ9.LT8f4UNEB3nnW6BY2FMPQXZVMUzQ-6NyCJT08gqSx1s
-  localhostUrl: wss://ws.openknowledge.hk:8084
+  localhostUrl: wss://ws.openknowledge.hk:8082
   localhostUrl_copy: ws://localhost:8000/
   developmentUrl: wss://ws.openknowledge.hk:8084
   uatUrl: wss://ws.openknowledge.hk:8082

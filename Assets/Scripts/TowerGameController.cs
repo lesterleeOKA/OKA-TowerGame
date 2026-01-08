@@ -79,6 +79,14 @@ public class TowerGameController : GameBaseController
 
     private Dictionary<string, RectTransform> minimapMarkersByKey = new Dictionary<string, RectTransform>();
 
+    // throttle SyncPlayers to reduce per-frame cost (seconds)
+    public float syncPlayersInterval = 0.1f;
+    private float lastSyncPlayersTime = 0f;
+
+    // team colors cached once
+    private static readonly Color TeamAColor = new Color(0.1647059f, 0.6666667f, 0.8784314f, 1f); // blue
+    private static readonly Color TeamBColor = new Color(0.9647059f, 0.572549f, 0.1294118f, 1f); // yellow
+
 
     protected override void Awake()
     {
@@ -672,27 +680,51 @@ public class TowerGameController : GameBaseController
                     marker = instance;
 
                     // Optional tint local player
-                    var img = instance.GetComponent<UnityEngine.UI.Image>();
+                    var img = instance.GetComponent<Image>();
                     if (img != null)
                     {
-                        bool isMarkerLocal = (WS_Client.Instance.public_UserInfo != null && player.uid == WS_Client.Instance.public_UserInfo.uid);
-                        img.color = isMarkerLocal ? new Color(0.28f, 0.85f, 0.29f, 1f) /*green*/ : new Color(0.85f, 0.28f, 0.28f, 1f) /*red*/;
-                        
-                        // Safely access costume with bounds checking
+                        // determine team once
+                        int team = -1;
+                        if (!string.IsNullOrEmpty(player.player_id))
+                        {
+                            // parse "playerN" safely
+                            string idDigits = player.player_id.StartsWith("player", StringComparison.OrdinalIgnoreCase)
+                                ? player.player_id.Substring(6)
+                                : player.player_id;
+                            if (int.TryParse(idDigits, out int parsedIndex))
+                            {
+                                team = Mathf.Max(0, (parsedIndex - 1) % 2);
+                            }
+                        }
+                        if (team == -1)
+                        {
+                            team = (player.uid % 2 == 0) ? 0 : 1;
+                        }
+
+                        Color desiredColor = (team == 0) ? TeamAColor : TeamBColor;
+                        // Only update color if different (avoids UI rebind cost)
+                        if (img.color != desiredColor)
+                        {
+                            img.color = desiredColor;
+                        }
+
+                        // Only set sprite if necessary
+                        Sprite desiredSprite = null;
                         if (!string.IsNullOrEmpty(player.costume_id) && int.TryParse(player.costume_id, out int costumeIndex))
                         {
                             int arrayIndex = costumeIndex - 1;
                             if (arrayIndex >= 0 && arrayIndex < this.characterSets.Length && this.characterSets[arrayIndex] != null)
                             {
-                                img.sprite = SetUI.ConvertTextureToSprite(this.characterSets[arrayIndex].defaultIcon as Texture2D);
-                            }
-                            else
-                            {
-                                Debug.LogWarning($"Invalid costume index {arrayIndex} for player {player.uid}. CharacterSets length: {this.characterSets.Length}");
+                                desiredSprite = SetUI.ConvertTextureToSprite(this.characterSets[arrayIndex].defaultIcon as Texture2D);
                             }
                         }
-                        img.SetNativeSize();
-                        img.rectTransform.sizeDelta = new Vector2(64, 64);
+
+                        if (desiredSprite != null && img.sprite != desiredSprite)
+                        {
+                            img.sprite = desiredSprite;
+                            img.SetNativeSize(); // call once when sprite actually changes
+                            img.rectTransform.sizeDelta = new Vector2(64, 64);
+                        }
                     }
                 }
 
@@ -747,7 +779,11 @@ public class TowerGameController : GameBaseController
         try
         {
             // If no data, nothing to do
-            if (finishLoading) SyncPlayers();
+            if (finishLoading && Time.time - lastSyncPlayersTime >= syncPlayersInterval)
+            {
+                lastSyncPlayersTime = Time.time;
+                SyncPlayers();
+            }   
 
             if (Input.GetKeyDown(KeyCode.P))
             {
@@ -1222,7 +1258,7 @@ public class TowerGameController : GameBaseController
         else
         {
             // Fallback to world position if not a UI element
-            answerObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, position.z);
+            answerObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, 0f);
         }
 
         // Set text on TextMeshProUGUI component in child
