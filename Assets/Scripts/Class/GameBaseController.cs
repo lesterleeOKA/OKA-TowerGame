@@ -20,7 +20,7 @@ public class GameBaseController : MonoBehaviour
 
     protected virtual void Start()
     {
-        SetUI.Set(this.TopUILayer, false, 0f);
+        // SetUI.Set(this.TopUILayer, false, 0f);
         SetUI.Set(this.getScorePopup, false, 0f);
         SetUI.Set(this.TopRightUILayer, true, 0f);
         if (this.getScorePopup != null) this.originalGetScorePos = this.getScorePopup.transform.localPosition;

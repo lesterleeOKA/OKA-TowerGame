@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028331, g: 0.2257133, b: 0.3069217, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -426,7 +425,7 @@ MonoBehaviour:
       data: []
     playersMovingSpeed: 1.2
     retry_times: 3
-    helpItemTypeOfId: 4
+    helpItemTypeOfId: 3
     returnUrl: 
     showFPS: 1
     qa_font_alignment: 1
@@ -484,7 +483,7 @@ MonoBehaviour:
         score: 0
         percent: 0
   unitKey: 
-  testURL: https://uat.starwishparty.com/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjQ5NzIwNy00NzVhYzNmOTY5ZTg0NzdhN2ZiNDBiMDkzM2Y2NzNmY2JlN2VkOWQ5M2QxODlmMWRmODFhYzJmM2VkZTIyYThjIiwiZXhwaXJlcyI6MTc2ODQ0MDkzNSwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDEtMDggMDE6MzU6MzUgR01UIiwidWlkIjoiNDk3MjA3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuNyIsInZlcnNpb24iOiIyLjguMzYuIiwiZGV2aWNlIjoid2luZG93cyJ9.-4CljjRByJaqF6Q3fEGLNXLGDUC7MsqSG1ghlsA8NjY
+  testURL: https://dev.openknowledge.hk/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxNy03ZmI1MDI3NmRkMmNiZTA4OGZiM2Q2Y2RlYmJiOGRiYWZlZDJmY2Y2MzVkNzZiMmI2ODE1OWE2OWUyYTkwNWZiIiwiZXhwaXJlcyI6MTc2ODQ3MDYxMywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDEtMDggMDk6NTA6MTMgR01UIiwidWlkIjoiNTE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMzEuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.K2D-yniyoC3-DX9-r_1CS9qhC8W9bCm-WeIXyWzBits
   skipAudioPanel: 0
 --- !u!4 &734659897
 Transform:
@@ -687,8 +686,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 875967ed28cd34d5eb53ef12d061b3b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxMS00MzY0ZTlmYmE3NzA2M2Q4MjdjZWY0NjMzMGYwMjlhZmU2ZTIyNWZhOTk1MGMzMTRiMzRkNjAyNjY5NGUzYWIwIiwiZXhwaXJlcyI6MTc2MzYxMDE0NywidGltZSI6IjIwMjUtMTAtMjEgMTE6NDI6MjciLCJ1aWQiOiI1MTEiLCJ1c2VyX3JvbGUiOiIzIiwic2Nob29sX2lkIjoiMjcyIiwiaXAiOiIxNjkuMjU0LjEyOS40IiwidmVyc2lvbiI6IjIuOC4zNiIsImRldmljZSI6Im1hYyJ9.LT8f4UNEB3nnW6BY2FMPQXZVMUzQ-6NyCJT08gqSx1s
-  localhostUrl: wss://ws.openknowledge.hk:8082
+  jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxNy03ZmI1MDI3NmRkMmNiZTA4OGZiM2Q2Y2RlYmJiOGRiYWZlZDJmY2Y2MzVkNzZiMmI2ODE1OWE2OWUyYTkwNWZiIiwiZXhwaXJlcyI6MTc2ODQ3MDYxMywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDEtMDggMDk6NTA6MTMgR01UIiwidWlkIjoiNTE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMzEuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.K2D-yniyoC3-DX9-r_1CS9qhC8W9bCm-WeIXyWzBits
+  localhostUrl: wss://ws.openknowledge.hk:8084
   localhostUrl_copy: ws://localhost:8000/
   developmentUrl: wss://ws.openknowledge.hk:8084
   uatUrl: wss://ws.openknowledge.hk:8082

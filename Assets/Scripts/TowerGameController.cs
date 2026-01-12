@@ -106,6 +106,13 @@ public class TowerGameController : GameBaseController
         if (WS_Client.Instance != null)
         {
             WS_Client.Instance.OnOrderChanged += HandleOrderChanged;
+            
+            // Check if there's a pending order that arrived before we subscribed
+            if (!string.IsNullOrEmpty(WS_Client.Instance.pendingOrder))
+            {
+                HandleOrderChanged(WS_Client.Instance.pendingOrder);
+                WS_Client.Instance.pendingOrder = ""; // Clear after processing
+            }
         }
 
         if (this.minimapParent == null)
@@ -573,7 +580,12 @@ public class TowerGameController : GameBaseController
 
         
         List<WS_Client.QuestionData> questions = WS_Client.Instance.GameData.questions;
-        onTopUI.GetComponent<CanvasGroup>().alpha = 1;
+        
+        CanvasGroup onTopUICanvas = onTopUI.GetComponent<CanvasGroup>();
+        if (onTopUICanvas != null) {
+            onTopUICanvas.alpha = 1;
+        }
+        
         GameObject bg_FillInBlank = onTopUI.transform.Find("Bg/QABoard/bg_FillInBlank").gameObject;
         bg_FillInBlank.GetComponent<CanvasGroup>().alpha = 1;
         
@@ -583,7 +595,7 @@ public class TowerGameController : GameBaseController
             round = WS_Client.Instance.GameData.round;
             yield return new WaitForSeconds(0.1f);
         }
-
+        Debug.Log("updateQuestionUI: round = " + onTopUI);
         if (round > 0) {
             bg_FillInBlank.GetComponentInChildren<TextMeshProUGUI>().text = WS_Client.Instance.GameData.questions[round-1].content;
             currentQuestionId = round;
@@ -1247,19 +1259,19 @@ public class TowerGameController : GameBaseController
         var answerObj = GameObject.Instantiate(answerPrefab, this.globalParent);
         answerObj.name = "Answer_" + answer.id;
 
-        // Scale position for UI (multiply by 500 for canvas coordinates)
-        Vector2 uiPosition = new Vector2(position.x, position.y);
-
         // Use RectTransform for UI positioning
         RectTransform rectTransform = answerObj.GetComponent<RectTransform>();
         if (rectTransform != null)
         {
+            // Scale position for UI with offset for center alignment
+            Vector2 uiPosition = new Vector2(position.x, position.y);
+            Debug.Log("uiPosition: " + uiPosition + " position: " + position);
             rectTransform.anchoredPosition = uiPosition;
         }
         else
         {
             // Fallback to world position if not a UI element
-            answerObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, 0f);
+            answerObj.transform.position = new Vector3(position.x, position.y, 0f);
         }
 
         // Set text on TextMeshProUGUI component in child

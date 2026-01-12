@@ -35,6 +35,8 @@ public class WS_Client : MonoBehaviour
     public string jwt = "eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxMS00MzY0ZTlmYmE3NzA2M2Q4MjdjZWY0NjMzMGYwMjlhZmU2ZTIyNWZhOTk1MGMzMTRiMzRkNjAyNjY5NGUzYWIwIiwiZXhwaXJlcyI6MTc2MzYxMDE0NywidGltZSI6IjIwMjUtMTAtMjEgMTE6NDI6MjciLCJ1aWQiOiI1MTEiLCJ1c2VyX3JvbGUiOiIzIiwic2Nob29sX2lkIjoiMjcyIiwiaXAiOiIxNjkuMjU0LjEyOS40IiwidmVyc2lvbiI6IjIuOC4zNiIsImRldmljZSI6Im1hYyJ9.LT8f4UNEB3nnW6BY2FMPQXZVMUzQ-6NyCJT08gqSx1s";
     private string roomId = "";
     private string player_id = "";
+    public string pendingReconnectRoomId = "";
+    public string pendingOrder = "";
 
     // const string WEBSHOCKET_URL = "wss://ws.openknowledge.hk:8084";//dev : "wss://ws.openknowledge.hk:8084";  // prod : "wss://ws.openknowledge.hk";
     public string localhostUrl = "ws://localhost:8000/";
@@ -430,7 +432,11 @@ public class WS_Client : MonoBehaviour
                             // Debug.LogWarning("Order received: " + message.content.order);
                             // Debug.LogWarning("OnMessage! " + jsonString);
                             
+                            // Store order for scenes that haven't loaded yet
+                            pendingOrder = message.content.order;
+                            
                             // Fire the event to notify subscribers
+                            Debug.Log("Order received WS_Client: " + message.content.order);
                             OnOrderChanged?.Invoke(message.content.order);
                         }
 
@@ -466,6 +472,7 @@ public class WS_Client : MonoBehaviour
                         break;
                     case "inPlayingRoom":
                         Debug.LogWarning("inPlayingRoom : " + jsonString);
+                        pendingReconnectRoomId = message.content.roomId;
                         break;
                     case "test":
                         testReceived = true;
@@ -721,6 +728,7 @@ public class WS_Client : MonoBehaviour
 
     void disconnected()
     {
+        pendingOrder = "disconnected";
         OnOrderChanged?.Invoke("disconnected");
     }
 
