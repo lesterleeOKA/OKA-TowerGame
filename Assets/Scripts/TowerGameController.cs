@@ -28,6 +28,7 @@ public class TowerGameController : GameBaseController
     public GameObject YouWin;
     public GameObject YouLose;
     public GameObject readyButton;
+    public GameObject readyTeamsUI;
     public GameObject blueTeamScore;
     public GameObject orangeTeamScore;
     public GameObject disconnectedUI;
@@ -38,6 +39,7 @@ public class TowerGameController : GameBaseController
     public Camera trackingCamera;
     private int playerID = 0;
     public Text debugText;
+    public string loadAssetUrlPrefix = "https://oka.blob.core.windows.net/media/";
 
     //this variable is only used in "next round order call" right now, change webSocket for start round position
     [SerializeField]
@@ -72,21 +74,27 @@ public class TowerGameController : GameBaseController
     /// </summary>
     public RectTransform minimapParent;
     public RawImage minimapRawImage;              // assign the minimap RawImage in Inspector
-    public RectTransform minimapMarkerPrefab;                    // small UI prefab (Image) for markers; set pivot (0.5,0.5)
+    public Sprite minimapBluePlayerMarker;
+    public Sprite minimapOrangePlayerMarker;
+    public Sprite minimapBlueOtherMarker;
+    public Sprite minimapOrangeOtherMarker;
+    public Sprite minimapAnswerMarker;
     public RectTransform minimapMarkersParent;                   // parent under the minimap canvas (can be the RawImage rectTransform)
     public Vector2 minimapWorldBottomLeft = new Vector2(-50f, -50f); // world coords that map to minimap bottom-left
     public Vector2 minimapWorldTopRight = new Vector2(50f, 50f);
 
     private Dictionary<string, RectTransform> minimapMarkersByKey = new Dictionary<string, RectTransform>();
+    private Dictionary<int, RectTransform> minimapAnswerMarkersByKey = new Dictionary<int, RectTransform>();
 
+    public GameObject qPic;
+    public GameObject qAudio;
+    public GameObject qNormal;
+    public GameObject qFillInBlank;
+    public LoadImage loadImage;
+    public LoadAudio loadAudio;
     // throttle SyncPlayers to reduce per-frame cost (seconds)
     public float syncPlayersInterval = 0.1f;
     private float lastSyncPlayersTime = 0f;
-
-    // team colors cached once
-    private static readonly Color TeamAColor = new Color(0.1647059f, 0.6666667f, 0.8784314f, 1f); // blue
-    private static readonly Color TeamBColor = new Color(0.9647059f, 0.572549f, 0.1294118f, 1f); // yellow
-
 
     protected override void Awake()
     {
@@ -512,25 +520,25 @@ public class TowerGameController : GameBaseController
             case "removePlayer":
             break;
             case "reconnectPlayer":
-                readyButton.SetActive(false);
+                showReadyUI(false);
                 checkAnswerVisibility();
                 StartCoroutine(updateQuestionUI());
                 // SyncPlayers();
                 break;
             case "startGame":
-                readyButton.SetActive(false);
+                showReadyUI(false);
                 StartGame.Instance.startGameSequence();
                 StartCoroutine(updateQuestionUI());
                 resetStartingPos();
                 break;
             case "endGame":
                 StartCoroutine(updateScoreUI());
-                readyButton.SetActive(true);
+                showReadyUI(true);
                 onTopUI.GetComponent<CanvasGroup>().alpha = 0;
                 base.endGame();
                 break;
             case "resetGame":
-                readyButton.SetActive(true);
+                showReadyUI(true);
                 onTopUI.GetComponent<CanvasGroup>().alpha = 0;
                 resetStartingPos();
                 // Add your logic here
@@ -558,6 +566,11 @@ public class TowerGameController : GameBaseController
         }
     }
 
+    private void showReadyUI(bool show) {
+        readyButton.SetActive(show);
+        readyTeamsUI.SetActive(show);
+    }
+
     public void hideDisconnectedUI()
     {
         disconnectedUI.SetActive(false);
@@ -572,32 +585,80 @@ public class TowerGameController : GameBaseController
         orangeTeamScore.GetComponent<TextMeshProUGUI>().text = WS_Client.Instance.GameData.teamScore[1].ToString();
     }
 
+    private void resetQuestionUI() {
+        qNormal.SetActive(false);
+        qNormal.GetComponent<CanvasGroup>().alpha = 0;
+        qPic.SetActive(false);
+        qPic.GetComponent<CanvasGroup>().alpha = 0;
+        qAudio.SetActive(false);
+        qAudio.GetComponent<CanvasGroup>().alpha = 0;
+        qAudio.GetComponentInChildren<Button>().interactable = false;
+        qAudio.GetComponentInChildren<AudioSource>().clip = null;
+        qFillInBlank.SetActive(false);
+        qFillInBlank.GetComponent<CanvasGroup>().alpha = 0;
+    }
+
     private IEnumerator updateQuestionUI()
     {
-        while (WS_Client.Instance.GameData == null) {
+        while (WS_Client.Instance.GameData == null && WS_Client.Instance.GameData.questions == null) {
             yield return new WaitForSeconds(0.1f);
         }
 
-        
-        List<WS_Client.QuestionData> questions = WS_Client.Instance.GameData.questions;
-        
+        int round = WS_Client.Instance.GameData.round;
+        WS_Client.QuestionData question = WS_Client.Instance.GameData.questions[round-1];
+        // StartCoroutine(loadImage.Load(question.questionType, question.media[0], tex => {
+        //     qPic.GetComponentInChildren<RawImage>().texture = tex;
+        // }));
+        // StartCoroutine(loadAudio.Load(question.media[0], audio => {
+        //     qAudio.GetComponentInChildren<AudioSource>().clip = audio;
+        // }));
+        Debug.Log("updateQuestionUI: round = " + round + " - question = " + question.content + " - questionMedia = " + question.media);
+        resetQuestionUI();
+        switch (question.questionType) {
+            case "text":
+                qNormal.GetComponentInChildren<TextMeshProUGUI>().text = question.content;
+                qNormal.SetActive(true);
+                qNormal.GetComponent<CanvasGroup>().alpha = 1;
+            break;
+            case "picture":
+                var imageUrl = loadAssetUrlPrefix + question.media[0];
+                StartCoroutine(loadImage.Load("", imageUrl, tex => {
+                    qPic.GetComponentInChildren<RawImage>().texture = tex;
+                }));
+                qPic.SetActive(true);
+                qPic.GetComponent<CanvasGroup>().alpha = 1;
+            break;
+            case "audio":
+                var audioUrl = loadAssetUrlPrefix + question.media[0];
+                StartCoroutine(loadAudio.Load("", audioUrl, audio => {
+                    qAudio.GetComponentInChildren<AudioSource>().clip = audio;
+                    qAudio.GetComponentInChildren<AudioSource>().Play();
+                    qAudio.GetComponentInChildren<Button>().interactable = true;
+                }));
+                qAudio.SetActive(true);
+                qAudio.GetComponent<CanvasGroup>().alpha = 1;
+            break;
+            case "fillInBlank":
+                qNormal.GetComponentInChildren<TextMeshProUGUI>().text = question.content;
+                qFillInBlank.SetActive(true);
+                qFillInBlank.GetComponent<CanvasGroup>().alpha = 1;
+            break;
+        }
         CanvasGroup onTopUICanvas = onTopUI.GetComponent<CanvasGroup>();
         if (onTopUICanvas != null) {
             onTopUICanvas.alpha = 1;
         }
         
-        GameObject bg_FillInBlank = onTopUI.transform.Find("Bg/QABoard/bg_FillInBlank").gameObject;
-        bg_FillInBlank.GetComponent<CanvasGroup>().alpha = 1;
+        // GameObject bg_FillInBlank = onTopUI.transform.Find("Bg/QABoard/bg_FillInBlank").gameObject;
+        // bg_FillInBlank.GetComponent<CanvasGroup>().alpha = 1;
         
-        int round = WS_Client.Instance.GameData.round;
         //wait until round != currentQuestionId
         while (round == currentQuestionId) {
             round = WS_Client.Instance.GameData.round;
             yield return new WaitForSeconds(0.1f);
         }
-        Debug.Log("updateQuestionUI: round = " + onTopUI);
         if (round > 0) {
-            bg_FillInBlank.GetComponentInChildren<TextMeshProUGUI>().text = WS_Client.Instance.GameData.questions[round-1].content;
+            // bg_FillInBlank.GetComponentInChildren<TextMeshProUGUI>().text = WS_Client.Instance.GameData.questions[round-1].content;
             currentQuestionId = round;
         }
     }
@@ -660,7 +721,7 @@ public class TowerGameController : GameBaseController
             }
 
             // --- Minimap marker update (merged here to avoid a second players pass) ---
-            if (minimapRawImage != null && minimapMarkerPrefab != null && minimapMarkersParent != null)
+            if (minimapRawImage != null && minimapMarkersParent != null)
             {
                 // Determine world position for marker (prefer authoritative server position)
                 Vector2 worldPos = Vector2.zero;
@@ -678,67 +739,63 @@ public class TowerGameController : GameBaseController
 
                 if (!minimapMarkersByKey.TryGetValue(key, out var marker) || marker == null)
                 {
-                    // Instantiate as child of minimapRawImage.rectTransform (so local coordinates match)
+                    // Determine team first (needed to select correct sprite)
+                    int team = -1;
+                    if (!string.IsNullOrEmpty(player.player_id))
+                    {
+                        // parse "playerN" safely
+                        string idDigits = player.player_id.StartsWith("player", StringComparison.OrdinalIgnoreCase)
+                            ? player.player_id.Substring(6)
+                            : player.player_id;
+                        if (int.TryParse(idDigits, out int parsedIndex))
+                        {
+                            team = Mathf.Max(0, (parsedIndex - 1) % 2);
+                        }
+                    }
+                    if (team == -1)
+                    {
+                        team = (player.uid % 2 == 0) ? 0 : 1;
+                    }
+
+                    // Determine if local player
+                    bool isLocalPlayer = false;
+                    if (playerControllersByKey.TryGetValue(key, out var cc) && cc != null)
+                    {
+                        isLocalPlayer = cc.IsLocalPlayer;
+                    }
+
+                    // Select appropriate sprite based on team and local player status
+                    Sprite spriteToUse = null;
+                    if (team == 0) // Blue team
+                    {
+                        spriteToUse = isLocalPlayer ? minimapBluePlayerMarker : minimapBlueOtherMarker;
+                    }
+                    else // Orange team
+                    {
+                        spriteToUse = isLocalPlayer ? minimapOrangePlayerMarker : minimapOrangeOtherMarker;
+                    }
+
+                    // Create new GameObject with Image component as child of minimapRawImage.rectTransform
                     RectTransform parentRT = minimapRawImage.rectTransform;
-                    RectTransform instance = GameObject.Instantiate(minimapMarkerPrefab, parentRT);
-                    instance.gameObject.name = $"MinimapMarker_{key}";
+                    GameObject markerObj = new GameObject($"MinimapMarker_{key}");
+                    markerObj.transform.SetParent(parentRT, false);
+                    
+                    RectTransform instance = markerObj.AddComponent<RectTransform>();
+                    Image markerImage = markerObj.AddComponent<Image>();
+                    markerImage.sprite = spriteToUse;
+                    markerImage.raycastTarget = false; // Disable raycasting for performance
 
                     // Ensure marker uses centered anchors/pivot and neutral scale so anchoredPosition behaves predictably
                     instance.anchorMin = new Vector2(0.5f, 0.5f);
                     instance.anchorMax = new Vector2(0.5f, 0.5f);
                     instance.pivot = new Vector2(0.5f, 0.5f);
                     instance.localScale = Vector3.one;
+                    
+                    // Set size (adjust these values based on your sprite size preferences)
+                    if (!isLocalPlayer) instance.sizeDelta = new Vector2(20f, 20f);
 
                     minimapMarkersByKey[key] = instance;
                     marker = instance;
-
-                    // Optional tint local player
-                    var img = instance.GetComponent<Image>();
-                    if (img != null)
-                    {
-                        // determine team once
-                        int team = -1;
-                        if (!string.IsNullOrEmpty(player.player_id))
-                        {
-                            // parse "playerN" safely
-                            string idDigits = player.player_id.StartsWith("player", StringComparison.OrdinalIgnoreCase)
-                                ? player.player_id.Substring(6)
-                                : player.player_id;
-                            if (int.TryParse(idDigits, out int parsedIndex))
-                            {
-                                team = Mathf.Max(0, (parsedIndex - 1) % 2);
-                            }
-                        }
-                        if (team == -1)
-                        {
-                            team = (player.uid % 2 == 0) ? 0 : 1;
-                        }
-
-                        Color desiredColor = (team == 0) ? TeamAColor : TeamBColor;
-                        // Only update color if different (avoids UI rebind cost)
-                        if (img.color != desiredColor)
-                        {
-                            img.color = desiredColor;
-                        }
-
-                        // Only set sprite if necessary
-                        Sprite desiredSprite = null;
-                        if (!string.IsNullOrEmpty(player.costume_id) && int.TryParse(player.costume_id, out int costumeIndex))
-                        {
-                            int arrayIndex = costumeIndex - 1;
-                            if (arrayIndex >= 0 && arrayIndex < this.characterSets.Length && this.characterSets[arrayIndex] != null)
-                            {
-                                desiredSprite = SetUI.ConvertTextureToSprite(this.characterSets[arrayIndex].defaultIcon as Texture2D);
-                            }
-                        }
-
-                        if (desiredSprite != null && img.sprite != desiredSprite)
-                        {
-                            img.sprite = desiredSprite;
-                            img.SetNativeSize(); // call once when sprite actually changes
-                            img.rectTransform.sizeDelta = new Vector2(64, 64);
-                        }
-                    }
                 }
 
                 // Update marker position using the function that returns local map coords when markers are children
@@ -937,6 +994,42 @@ public class TowerGameController : GameBaseController
                         }
                     }
                 }
+
+                // --- Minimap marker for answers ---
+                if (minimapRawImage != null && minimapAnswerMarker != null && answer.position != null && answer.position.Length >= 2)
+                {
+                    Vector2 worldPos = new Vector2(answer.position[0], answer.position[1]);
+                    Vector2 anchoredPos = WorldToMinimapAnchoredPosition(worldPos);
+
+                    if (!minimapAnswerMarkersByKey.TryGetValue(answer.id, out var answerMarker) || answerMarker == null)
+                    {
+                        // Create new answer marker
+                        RectTransform parentRT = minimapRawImage.rectTransform;
+                        GameObject markerObj = new GameObject($"MinimapAnswerMarker_{answer.id}");
+                        markerObj.transform.SetParent(parentRT, false);
+
+                        RectTransform instance = markerObj.AddComponent<RectTransform>();
+                        Image markerImage = markerObj.AddComponent<Image>();
+                        markerImage.sprite = minimapAnswerMarker;
+                        markerImage.raycastTarget = false;
+
+                        // Centered anchors/pivot
+                        instance.anchorMin = new Vector2(0.5f, 0.5f);
+                        instance.anchorMax = new Vector2(0.5f, 0.5f);
+                        instance.pivot = new Vector2(0.5f, 0.5f);
+                        instance.localScale = Vector3.one;
+                        instance.sizeDelta = new Vector2(15f, 15f); // Slightly smaller than player markers
+
+                        minimapAnswerMarkersByKey[answer.id] = instance;
+                        answerMarker = instance;
+                    }
+
+                    // Update marker position
+                    if (answerMarker != null)
+                    {
+                        answerMarker.anchoredPosition = anchoredPos;
+                    }
+                }
             }
 
             // Remove answers that no longer exist
@@ -954,6 +1047,16 @@ public class TowerGameController : GameBaseController
             foreach (var answerId in answersToRemove)
             {
                 RemoveAnswerObject(answerId);
+                
+                // Also remove minimap marker for this answer
+                if (minimapAnswerMarkersByKey.TryGetValue(answerId, out var answerMarker))
+                {
+                    if (answerMarker != null)
+                    {
+                        Destroy(answerMarker.gameObject);
+                    }
+                    minimapAnswerMarkersByKey.Remove(answerId);
+                }
             }
         }
 
@@ -1265,7 +1368,6 @@ public class TowerGameController : GameBaseController
         {
             // Scale position for UI with offset for center alignment
             Vector2 uiPosition = new Vector2(position.x, position.y);
-            Debug.Log("uiPosition: " + uiPosition + " position: " + position);
             rectTransform.anchoredPosition = uiPosition;
         }
         else

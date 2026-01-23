@@ -30,7 +30,6 @@ public class Timer : MonoBehaviour
 
         if (!this.endGame)
         {
-            Debug.Log("currentTime: " + this.currentTime);
             if(this.currentTime > 0f)
             {
                 if(this.currentTime < 10f)

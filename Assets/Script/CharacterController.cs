@@ -8,10 +8,10 @@ using UnityEngine.UI;
 public class CharacterController : UserData
 {
     public Camera detectCamera;
-    public float followSpeed = 800f;
-    public float acc = 320f;
+    public float followSpeed = 1600f;
+    public float acc = 640f;
     public GameObject answerObject;
-    private float currectSpeed = 320f;
+    private float currectSpeed = 640f;
     private Vector3 lastPosition;
     private Transform imageTransform;
     private Transform answerBubbleTransform;
@@ -332,7 +332,7 @@ public class CharacterController : UserData
             Debug.Log("Teleporting player due to large desync: distance=" + distance);
             transform.localPosition = new Vector3(localDestination.x, localDestination.y, transform.localPosition.z);
         }
-        else if (distance > 0.01f)
+        else if (distance > 10f)
         {
             currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, followSpeed);
             // Debug.Log("FollowLocalDestination: transform.localPosition=" + transform.localPosition + " - localDestination=" + localDestination + " - distance=" + distance + " - currectSpeed=" + currectSpeed + " - (currectSpeed + acc * Time.deltaTime)=" + (currectSpeed + acc * Time.deltaTime) + " - followSpeed=" + followSpeed);

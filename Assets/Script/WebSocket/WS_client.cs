@@ -206,6 +206,8 @@ public class WS_Client : MonoBehaviour
         public string content;
         public float[] position;
         public int score;
+        public string questionType; // "text" , "picture" , "audio" , "fillInBlank"
+        public string[] media;
     }
 
     [System.Serializable]

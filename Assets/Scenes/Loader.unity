@@ -523,7 +523,7 @@ MonoBehaviour:
     maxRetryCount: 3
     retryDelaySeconds: 1
     loadImageMethod: 1
-    imageType: 1
+    imageType: 2
     enableRetry: 1
     allTextures: []
   loadAudio:
@@ -687,6 +687,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxNy03ZmI1MDI3NmRkMmNiZTA4OGZiM2Q2Y2RlYmJiOGRiYWZlZDJmY2Y2MzVkNzZiMmI2ODE1OWE2OWUyYTkwNWZiIiwiZXhwaXJlcyI6MTc2ODQ3MDYxMywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDEtMDggMDk6NTA6MTMgR01UIiwidWlkIjoiNTE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMzEuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.K2D-yniyoC3-DX9-r_1CS9qhC8W9bCm-WeIXyWzBits
+  pendingReconnectRoomId: 
+  pendingOrder: 
   localhostUrl: wss://ws.openknowledge.hk:8084
   localhostUrl_copy: ws://localhost:8000/
   developmentUrl: wss://ws.openknowledge.hk:8084
