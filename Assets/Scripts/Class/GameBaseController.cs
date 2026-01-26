@@ -20,7 +20,7 @@ public class GameBaseController : MonoBehaviour
 
     protected virtual void Start()
     {
-        // SetUI.Set(this.TopUILayer, false, 0f);
+        SetUI.Set(this.TopUILayer, false, 0f);
         SetUI.Set(this.getScorePopup, false, 0f);
         SetUI.Set(this.TopRightUILayer, true, 0f);
         if (this.getScorePopup != null) this.originalGetScorePos = this.getScorePopup.transform.localPosition;
@@ -36,7 +36,7 @@ public class GameBaseController : MonoBehaviour
 
     public virtual void endGame()
     {
-        // SetUI.Set(this.TopUILayer, false, 0f);
+         SetUI.Set(this.TopUILayer, false, 0f);
         // SetUI.Set(this.GameUILayer, false, 0f);
         // SetUI.Set(this.TopRightUILayer, false, 0f);
         int[] teamScores = new int[2];

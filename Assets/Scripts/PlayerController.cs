@@ -79,7 +79,6 @@ public class PlayerController : UserData
             }
         }*/
 
-        this.GetComponent<GroupMoving>().enabled = enableMove;
         this.GetComponent<EdgeCollider2D>().enabled = enableMove;
     }
 
@@ -151,7 +150,7 @@ public class PlayerController : UserData
         return char.ToUpper(str[0]) + str.Substring(1).ToLower();
     }
 
-    public void checkAnswer(int currentTime, Action onCompleted = null)
+    /*public void checkAnswer(int currentTime, Action onCompleted = null)
     {
         if (!this.IsCheckedAnswer)
         {
@@ -228,7 +227,7 @@ public class PlayerController : UserData
                 onCompleted?.Invoke();
             }));
         }
-    }
+    }*/
 
     public void resetRetryTime()
     {
@@ -237,7 +236,7 @@ public class PlayerController : UserData
         this.IsTriggerToNextQuestion = false;
     }
 
-    public IEnumerator showAnswerResult(bool correct, Action onCorrectCompleted = null, Action onFailureCompleted = null)
+   /* public IEnumerator showAnswerResult(bool correct, Action onCorrectCompleted = null, Action onFailureCompleted = null)
     {
         float delay = 2f;
         if (correct)
@@ -268,9 +267,9 @@ public class PlayerController : UserData
             onFailureCompleted?.Invoke();
         }
         this.scoring.correct = false;
-    }
+    }*/
 
-    public void characterReset()
+    /*public void characterReset()
     {
         // this.characterTransform.localPosition = this.startPosition;
         this.collectedCell.Clear();
@@ -344,6 +343,6 @@ public class PlayerController : UserData
                 this.collectedCell.RemoveAt(this.collectedCell.Count - 1);
             }
         }
-    }
+    }*/
 
 }

@@ -105,7 +105,7 @@ public class ScoreEnding
     }
     public void updateFinalScore(int score, int star, Sprite[] starsImageSprites, Action onCompleted = null)
     {
-        if (starsImageSprites == null) return;
+       /* if (starsImageSprites == null) return;
 
         if (this.scoreText != null)
         {
@@ -122,7 +122,7 @@ public class ScoreEnding
         }
         else if (loaderApiManager.IsLoginedRainbowOne)
         {
-            this.calculateByGameRate(score);
+            this.calculate/ByGameRate(score);
         }
         else
         {
@@ -145,10 +145,10 @@ public class ScoreEnding
             }
         }
 
-        onCompleted?.Invoke();
+        onCompleted?.Invoke();*/
     }
 
-    void calculateByGameRate(int score)
+   /* void calculateByGameRate(int score)
     {
         int totalQuestions = 0;
         int eachQuestionScore = 10;
@@ -174,5 +174,5 @@ public class ScoreEnding
             this.starNumber = 1;
         else
             this.starNumber = 0;
-    }
+    }*/
 }

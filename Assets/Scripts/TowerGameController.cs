@@ -27,8 +27,8 @@ public class TowerGameController : GameBaseController
     public Transform globalParent;
     public GameObject YouWin;
     public GameObject YouLose;
-    public GameObject readyButton;
-    public GameObject readyTeamsUI;
+    public CanvasGroup readyButton;
+    public CanvasGroup readyTeamsUI;
     public GameObject blueTeamScore;
     public GameObject orangeTeamScore;
     public GameObject disconnectedUI;
@@ -39,7 +39,6 @@ public class TowerGameController : GameBaseController
     public Camera trackingCamera;
     private int playerID = 0;
     public Text debugText;
-    public string loadAssetUrlPrefix = "https://oka.blob.core.windows.net/media/";
 
     //this variable is only used in "next round order call" right now, change webSocket for start round position
     [SerializeField]
@@ -86,12 +85,6 @@ public class TowerGameController : GameBaseController
     private Dictionary<string, RectTransform> minimapMarkersByKey = new Dictionary<string, RectTransform>();
     private Dictionary<int, RectTransform> minimapAnswerMarkersByKey = new Dictionary<int, RectTransform>();
 
-    public GameObject qPic;
-    public GameObject qAudio;
-    public GameObject qNormal;
-    public GameObject qFillInBlank;
-    public LoadImage loadImage;
-    public LoadAudio loadAudio;
     // throttle SyncPlayers to reduce per-frame cost (seconds)
     public float syncPlayersInterval = 0.1f;
     private float lastSyncPlayersTime = 0f;
@@ -177,14 +170,14 @@ public class TowerGameController : GameBaseController
         {
             if (LoaderConfig.Instance == null)
             {
-                Debug.LogWarning("fetchAccountCostumeId: LoaderConfig.Instance is null. Aborting fetch.");
+                LogController.Instance.debug("fetchAccountCostumeId: LoaderConfig.Instance is null. Aborting fetch.");
                 return;
             }
 
             var api = LoaderConfig.Instance.apiManager;
             if (api == null)
             {
-                Debug.LogWarning("fetchAccountCostumeId: LoaderConfig.Instance.apiManager is null. Aborting fetch.");
+                LogController.Instance.debug("fetchAccountCostumeId: LoaderConfig.Instance.apiManager is null. Aborting fetch.");
                 return;
             }
 
@@ -195,15 +188,15 @@ public class TowerGameController : GameBaseController
             }
             catch (Exception apiEx)
             {
-                Debug.LogError($"getCurrentAccount() threw: {apiEx.Message}\n{apiEx.StackTrace}");
+                LogController.Instance.debugError($"getCurrentAccount() threw: {apiEx.Message}\n{apiEx.StackTrace}");
                 return;
             }
 
-            Debug.Log("jsonResponse: " + (jsonResponse ?? "null"));
+            LogController.Instance.debug("jsonResponse: " + (jsonResponse ?? "null"));
 
             if (string.IsNullOrEmpty(jsonResponse))
             {
-                Debug.LogWarning("fetchAccountCostumeId: api returned empty response.");
+                LogController.Instance.debug("fetchAccountCostumeId: api returned empty response.");
                 return;
             }
 
@@ -217,21 +210,21 @@ public class TowerGameController : GameBaseController
                     !string.IsNullOrEmpty(accountResponse.data.equipped_costume_data.costume_id))
                 {
                     accountCostumeId = accountResponse.data.equipped_costume_data.costume_id;
-                    Debug.Log($"fetchAccountCostumeId: accountCostumeId = {accountCostumeId}");
+                    LogController.Instance.debug($"fetchAccountCostumeId: accountCostumeId = {accountCostumeId}");
                 }
                 else
                 {
-                    Debug.LogWarning("fetchAccountCostumeId: No equipped costume found in account response");
+                    LogController.Instance.debug("fetchAccountCostumeId: No equipped costume found in account response");
                 }
             }
             catch (Exception parseEx)
             {
-                Debug.LogError($"Failed to parse account data JSON: {parseEx.Message}\n{parseEx.StackTrace}");
+                LogController.Instance.debugError($"Failed to parse account data JSON: {parseEx.Message}\n{parseEx.StackTrace}");
             }
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Failed to fetch account costume ID: {ex.Message}\n{ex.StackTrace}");
+            LogController.Instance.debugError($"Failed to fetch account costume ID: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
@@ -249,7 +242,7 @@ public class TowerGameController : GameBaseController
 
         if (Mathf.Approximately(maxX, minX) || Mathf.Approximately(maxY, minY))
         {
-            Debug.LogWarning("Minimap world bounds invalid (min == max). Check minimapWorldBottomLeft/topRight.");
+            LogController.Instance.debug("Minimap world bounds invalid (min == max). Check minimapWorldBottomLeft/topRight.");
             return Vector2.zero;
         }
 
@@ -261,7 +254,7 @@ public class TowerGameController : GameBaseController
         float worldH = maxY - minY;
         if (Mathf.Approximately(worldW, 0f) || Mathf.Approximately(worldH, 0f))
         {
-            Debug.LogWarning("Invalid world size for minimap mapping.");
+            LogController.Instance.debug("Invalid world size for minimap mapping.");
             return Vector2.zero;
         }
 
@@ -341,163 +334,6 @@ public class TowerGameController : GameBaseController
         return inner;
     }
 
-
-    // protected async Task fetchCostumeData() {
-    //     try 
-    //     {
-    //         // Wait for APIManager to be initialized
-    //         if (LoaderConfig.Instance == null || LoaderConfig.Instance.apiManager == null)
-    //         {
-    //             Debug.LogError("LoaderConfig.Instance.apiManager is null. Make sure LoaderConfig is properly initialized.");
-    //             return;
-    //         }
-
-    //         string jsonResponse = await LoaderConfig.Instance.apiManager.getCostumeData();
-    //         costumeDataJson = jsonResponse;
-    //         Debug.Log($"costumeData loaded: {costumeDataJson}");
-
-    //         // Parse JSON to get all costumes
-    //         if (!string.IsNullOrEmpty(costumeDataJson))
-    //         {
-    //             try
-    //             {
-    //                 CostumeListResponse costumeResponse = JsonUtility.FromJson<CostumeListResponse>(costumeDataJson);
-
-    //                 if (costumeResponse != null && 
-    //                     costumeResponse.data != null && 
-    //                     costumeResponse.data.Length > 0)
-    //                 {
-
-    //                     // Store costume data and start loading images for each costume
-    //                     foreach (CostumeData costume in costumeResponse.data)
-    //                     {
-    //                         if (costume != null && !string.IsNullOrEmpty(costume.costume_id))
-    //                         {
-    //                             // Store costume data
-    //                             costumeDataById[costume.costume_id] = costume;
-
-    //                             // Initialize CostumeTextures object for this costume
-    //                             if (!costumeTexturesById.ContainsKey(costume.costume_id))
-    //                             {
-    //                                 costumeTexturesById[costume.costume_id] = new CostumeTextures();
-    //                             }
-
-    //                             // Load stand image
-    //                             if (!string.IsNullOrEmpty(costume.img_src_stand))
-    //                             {
-    //                                 loadingImagesCount++;
-    //                                 StartCoroutine(LoadCostumeImage(
-    //                                     costume.costume_id, 
-    //                                     costume.img_src_stand, 
-    //                                     "stand"
-    //                                 ));
-    //                             }
-
-    //                             // Load walk image
-    //                             if (!string.IsNullOrEmpty(costume.img_src_walk))
-    //                             {
-    //                                 loadingImagesCount++;
-    //                                 StartCoroutine(LoadCostumeImage(
-    //                                     costume.costume_id, 
-    //                                     costume.img_src_walk, 
-    //                                     "walk"
-    //                                 ));
-    //                             }
-
-    //                             // Load jump image
-    //                             if (!string.IsNullOrEmpty(costume.img_src_jump))
-    //                             {
-    //                                 loadingImagesCount++;
-    //                                 StartCoroutine(LoadCostumeImage(
-    //                                     costume.costume_id, 
-    //                                     costume.img_src_jump, 
-    //                                     "jump"
-    //                                 ));
-    //                             }
-    //                         }
-    //                     }
-
-    //                     // Wait for all images to finish loading
-    //                     Debug.Log($"Started loading {loadingImagesCount} costume images. Waiting for completion...");
-    //                     int maxWaitSeconds = 30; // Maximum wait time
-    //                     float waitedTime = 0f;
-    //                     while (loadingImagesCount > 0 && waitedTime < maxWaitSeconds)
-    //                     {
-    //                         await Task.Delay(100); // Wait 100ms between checks
-    //                         waitedTime += 0.1f;
-    //                     }
-
-    //                     if (loadingImagesCount > 0)
-    //                     {
-    //                         Debug.LogWarning($"Timed out waiting for costume images. {loadingImagesCount} images still loading.");
-    //                     }
-    //                     else
-    //                     {
-    //                         Debug.Log("All costume images loaded successfully!");
-    //                     }
-    //                 }
-    //                 else
-    //                 {
-    //                     Debug.LogWarning("No costume data found in response");
-    //                 }
-    //             }
-    //             catch (System.Exception parseEx)
-    //             {
-    //                 Debug.LogError($"Failed to parse costume data JSON: {parseEx.Message}");
-    //             }
-    //         }
-    //     }
-    //     catch (System.Exception ex)
-    //     {
-    //         Debug.LogError($"Failed to fetch costume data: {ex.Message}");
-    //     }
-    // }
-
-    // private IEnumerator LoadCostumeImage(string costumeId, string imageUrl, string imageType)
-    // {
-    //     using (UnityEngine.Networking.UnityWebRequest request = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(imageUrl))
-    //     {
-    //         // Set certificate handler to bypass SSL issues if needed
-    //         request.certificateHandler = new WebRequestSkipCert();
-
-    //         yield return request.SendWebRequest();
-
-    //         if (request.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
-    //         {
-    //             Texture2D loadedTexture = UnityEngine.Networking.DownloadHandlerTexture.GetContent(request);
-
-    //             // Store the texture in the appropriate field based on imageType
-    //             if (costumeTexturesById.ContainsKey(costumeId))
-    //             {
-    //                 CostumeTextures costumeTextures = costumeTexturesById[costumeId];
-
-    //                 switch (imageType.ToLower())
-    //                 {
-    //                     case "stand":
-    //                         costumeTextures.standTexture = loadedTexture;
-    //                         break;
-    //                     case "walk":
-    //                         costumeTextures.walkTexture = loadedTexture;
-    //                         break;
-    //                     case "jump":
-    //                         costumeTextures.jumpTexture = loadedTexture;
-    //                         break;
-    //                     default:
-    //                         Debug.LogWarning($"Unknown image type '{imageType}' for costume ID {costumeId}");
-    //                         break;
-    //                 }
-    //             }
-    //         }
-    //         else
-    //         {
-    //             Debug.LogError($"Failed to load costume {imageType} image for ID {costumeId}: {request.error}");
-    //         }
-
-    //         // Decrement the loading counter
-    //         loadingImagesCount--;
-    //     }
-    // }
-
     private void OnDestroy()
     {
         // Unsubscribe to prevent memory leaks
@@ -510,7 +346,7 @@ public class TowerGameController : GameBaseController
     // This method will be called whenever the order changes
     private void HandleOrderChanged(string newOrder)
     {
-        Debug.Log($"Order changed to: {newOrder}");
+        LogController.Instance.debug($"Order changed to: {newOrder}");
         
         // Handle different order types
         switch (newOrder)
@@ -522,13 +358,14 @@ public class TowerGameController : GameBaseController
             case "reconnectPlayer":
                 showReadyUI(false);
                 checkAnswerVisibility();
-                StartCoroutine(updateQuestionUI());
+                StartCoroutine(updateQuestionUI(true));
+                SetUI.Set(this.TopUILayer, true, 0f);
                 // SyncPlayers();
                 break;
             case "startGame":
                 showReadyUI(false);
                 StartGame.Instance.startGameSequence();
-                StartCoroutine(updateQuestionUI());
+                StartCoroutine(updateQuestionUI(false));
                 resetStartingPos();
                 break;
             case "endGame":
@@ -545,7 +382,8 @@ public class TowerGameController : GameBaseController
                 break;
             case "nextRound":
                 StartCoroutine(updateScoreUI());
-                StartCoroutine(updateQuestionUI());
+                StartCoroutine(updateQuestionUI(true));
+                SetUI.Set(this.TopUILayer, true, 0f);
                 resetStartingPos();
                 // Add your logic here
                 break;
@@ -567,8 +405,8 @@ public class TowerGameController : GameBaseController
     }
 
     private void showReadyUI(bool show) {
-        readyButton.SetActive(show);
-        readyTeamsUI.SetActive(show);
+        SetUI.Set(this.readyButton, show);
+        SetUI.Set(this.readyTeamsUI, show);
     }
 
     public void hideDisconnectedUI()
@@ -585,80 +423,20 @@ public class TowerGameController : GameBaseController
         orangeTeamScore.GetComponent<TextMeshProUGUI>().text = WS_Client.Instance.GameData.teamScore[1].ToString();
     }
 
-    private void resetQuestionUI() {
-        qNormal.SetActive(false);
-        qNormal.GetComponent<CanvasGroup>().alpha = 0;
-        qPic.SetActive(false);
-        qPic.GetComponent<CanvasGroup>().alpha = 0;
-        qAudio.SetActive(false);
-        qAudio.GetComponent<CanvasGroup>().alpha = 0;
-        qAudio.GetComponentInChildren<Button>().interactable = false;
-        qAudio.GetComponentInChildren<AudioSource>().clip = null;
-        qFillInBlank.SetActive(false);
-        qFillInBlank.GetComponent<CanvasGroup>().alpha = 0;
-    }
-
-    private IEnumerator updateQuestionUI()
+    private IEnumerator updateQuestionUI(bool _autoPlayAudio = false)
     {
         while (WS_Client.Instance.GameData == null && WS_Client.Instance.GameData.questions == null) {
             yield return new WaitForSeconds(0.1f);
         }
 
         int round = WS_Client.Instance.GameData.round;
-        WS_Client.QuestionData question = WS_Client.Instance.GameData.questions[round-1];
-        // StartCoroutine(loadImage.Load(question.questionType, question.media[0], tex => {
-        //     qPic.GetComponentInChildren<RawImage>().texture = tex;
-        // }));
-        // StartCoroutine(loadAudio.Load(question.media[0], audio => {
-        //     qAudio.GetComponentInChildren<AudioSource>().clip = audio;
-        // }));
-        Debug.Log("updateQuestionUI: round = " + round + " - question = " + question.content + " - questionMedia = " + question.media);
-        resetQuestionUI();
-        switch (question.questionType) {
-            case "text":
-                qNormal.GetComponentInChildren<TextMeshProUGUI>().text = question.content;
-                qNormal.SetActive(true);
-                qNormal.GetComponent<CanvasGroup>().alpha = 1;
-            break;
-            case "picture":
-                var imageUrl = loadAssetUrlPrefix + question.media[0];
-                StartCoroutine(loadImage.Load("", imageUrl, tex => {
-                    qPic.GetComponentInChildren<RawImage>().texture = tex;
-                }));
-                qPic.SetActive(true);
-                qPic.GetComponent<CanvasGroup>().alpha = 1;
-            break;
-            case "audio":
-                var audioUrl = loadAssetUrlPrefix + question.media[0];
-                StartCoroutine(loadAudio.Load("", audioUrl, audio => {
-                    qAudio.GetComponentInChildren<AudioSource>().clip = audio;
-                    qAudio.GetComponentInChildren<AudioSource>().Play();
-                    qAudio.GetComponentInChildren<Button>().interactable = true;
-                }));
-                qAudio.SetActive(true);
-                qAudio.GetComponent<CanvasGroup>().alpha = 1;
-            break;
-            case "fillInBlank":
-                qNormal.GetComponentInChildren<TextMeshProUGUI>().text = question.content;
-                qFillInBlank.SetActive(true);
-                qFillInBlank.GetComponent<CanvasGroup>().alpha = 1;
-            break;
-        }
-        CanvasGroup onTopUICanvas = onTopUI.GetComponent<CanvasGroup>();
-        if (onTopUICanvas != null) {
-            onTopUICanvas.alpha = 1;
-        }
-        
-        // GameObject bg_FillInBlank = onTopUI.transform.Find("Bg/QABoard/bg_FillInBlank").gameObject;
-        // bg_FillInBlank.GetComponent<CanvasGroup>().alpha = 1;
-        
-        //wait until round != currentQuestionId
+        WS_Client.QuestionData question = WS_Client.Instance.GameData.questions[round-1];      
+        QuestionController.Instance.nextQuestion(_autoPlayAudio);
         while (round == currentQuestionId) {
             round = WS_Client.Instance.GameData.round;
             yield return new WaitForSeconds(0.1f);
         }
         if (round > 0) {
-            // bg_FillInBlank.GetComponentInChildren<TextMeshProUGUI>().text = WS_Client.Instance.GameData.questions[round-1].content;
             currentQuestionId = round;
         }
     }
@@ -692,7 +470,7 @@ public class TowerGameController : GameBaseController
             {
                 Vector3 location = Vector3.zero;
 
-                Debug.Log("CreatePlayerFromData 1: " + location + " - " + key + " - " + isLocal);
+                LogController.Instance.debug("CreatePlayerFromData 1: " + location + " - " + key + " - " + isLocal);
                 if (player.position != null && player.position.Length >= 2)
                 {
                     location = new Vector3(player.position[0], player.position[1], 0f);
@@ -839,7 +617,7 @@ public class TowerGameController : GameBaseController
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Error in SyncPlayers: {ex.Message}\n{ex.StackTrace}");
+            LogController.Instance.debugError($"Error in SyncPlayers: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
@@ -875,7 +653,7 @@ public class TowerGameController : GameBaseController
         // Debug.Log($"Obstacles: {WS_Client.Instance.GameData.obstacles.Count}");
         // Debug.Log($"=== End Game Data ===");
         foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
-            Debug.Log($"player: {player.uid} - {player.costume_id}");
+            LogController.Instance.debug($"player: {player.uid} - {player.costume_id}");
         }
     }
 
@@ -938,7 +716,7 @@ public class TowerGameController : GameBaseController
                             }
                             else
                             {
-                                Debug.LogWarning($"Answer with id {player.answer_id} not found for player {player.uid}");
+                                LogController.Instance.debug($"Answer with id {player.answer_id} not found for player {player.uid}");
                             }
                         }
                         
@@ -951,9 +729,9 @@ public class TowerGameController : GameBaseController
                 }
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            Debug.LogError($"Error in FixedUpdate: {ex.Message}\n{ex.StackTrace}");
+            LogController.Instance.debugError($"Error in FixedUpdate: {ex.Message}\n{ex.StackTrace}");
         }
 
         // Process answers
@@ -1058,69 +836,7 @@ public class TowerGameController : GameBaseController
                     minimapAnswerMarkersByKey.Remove(answerId);
                 }
             }
-        }
-
-        // // Process obstacles 
-        // if (WS_Client.Instance.GameData.obstacles != null)
-        // {
-        //     var currentObstacleIds = new HashSet<int>();
-
-        //     // Debug.Log($"=== 障碍物处理开始 ===");
-        //     // Debug.Log($"当前帧障碍物数量: {WS_Client.Instance.GameData.obstacles.Count}");
-
-        //     foreach (var obstacle in WS_Client.Instance.GameData.obstacles)
-        //     {
-        //         if (obstacle.id == 0)
-        //         {
-        //             // Debug.LogWarning("跳过ID为空的障碍物");
-        //             continue;
-        //         }
-
-        //         currentObstacleIds.Add(obstacle.id);
-        //         //  Debug.Log($"处理障碍物: ID={obstacle.id}, Position=[{obstacle.position?[0]}, {obstacle.position?[1]}]");
-        //         if (!obstacleObjectsById.ContainsKey(obstacle.id))
-        //         {
-        //             // Create obstacle at position from data - 与answer相同的创建逻辑
-        //             // Debug.Log($"创建新障碍物: {obstacle.id}");
-        //             Vector3 obstaclePos = Vector3.zero;
-        //             if (obstacle.position != null && obstacle.position.Length >= 2)
-        //             {
-        //                 obstaclePos = new Vector3(obstacle.position[0], obstacle.position[1], 0f);
-        //             }
-        //             CreateObstacleObject(obstacle, obstaclePos);
-        //         }
-        //         else
-        //         {
-        //             var obstacleObj = obstacleObjectsById[obstacle.id];
-        //             if (obstacleObj != null && obstacle.position != null && obstacle.position.Length >= 2)
-        //             {
-        //                 Vector2 uiPosition = new Vector2(obstacle.position[0], obstacle.position[1]);
-
-        //                 RectTransform rectTransform = obstacleObj.GetComponent<RectTransform>();
-        //                 if (rectTransform != null)
-        //                 {
-        //                     rectTransform.anchoredPosition = uiPosition;
-        //                 }
-        //                 else
-        //                 {
-        //                     obstacleObj.transform.localPosition = new Vector3(uiPosition.x, uiPosition.y, 0f);
-        //                 }
-
-        //                 // Debug.Log($"Updated obstacle {obstacle.id} position to ({obstacle.position[0]}, {obstacle.position[1]})");
-        //             }
-        //         }
-        //     }
-
-        //     // Remove obstacles that no longer exist - 与answer相同的清理逻辑
-        //     foreach (var kv in obstacleObjectsById)
-        //     {
-        //         if (!currentObstacleIds.Contains(kv.Key))
-        //         {
-        //             RemoveObstacleObject(kv.Key);
-        //         }
-        //     }
-
-        // }
+        }        
     }
 
     private void resetStartingPos()
@@ -1137,7 +853,7 @@ public class TowerGameController : GameBaseController
         {
             if (player == null)
             {
-                Debug.LogError("Attempted to create player from null PlayerData");
+                LogController.Instance.debugError("Attempted to create player from null PlayerData");
                 return;
             }
             
@@ -1149,7 +865,7 @@ public class TowerGameController : GameBaseController
 
             if (string.IsNullOrEmpty(player.player_id))
             {
-                Debug.LogError($"Player {player.uid} has null or empty player_id");
+                LogController.Instance.debugError($"Player {player.uid} has null or empty player_id");
                 return;
             }
 
@@ -1167,7 +883,7 @@ public class TowerGameController : GameBaseController
         
         if (characterController == null)
         {
-            Debug.LogError("playerPrefab missing CharacterController component");
+            LogController.Instance.debugError("playerPrefab missing CharacterController component");
             GameObject.Destroy(characterController.gameObject);
             return;
         }
@@ -1189,7 +905,7 @@ public class TowerGameController : GameBaseController
         characterController.setPlayerTag(playerTags[playerIndex]);
         if (isLocal)
         {
-            Debug.Log($"Local player created for uid={uid}");
+            LogController.Instance.debug($"Local player created for uid={uid}");
         }
 
         playerControllersByKey[key] = characterController;
@@ -1216,21 +932,21 @@ public class TowerGameController : GameBaseController
             }
             else
             {
-                Debug.LogError($"Invalid costume_id {player.costume_id} for player {player.uid}. Valid range: 1-{this.characterSets.Length}");
+                    LogController.Instance.debugError($"Invalid costume_id {player.costume_id} for player {player.uid}. Valid range: 1-{this.characterSets.Length}");
             }
         }
         else
         {
-            Debug.LogWarning($"Player {player.uid} has invalid or empty costume_id: {player.costume_id}");
+                LogController.Instance.debug($"Player {player.uid} has invalid or empty costume_id: {player.costume_id}");
         }
 
             // keep an incremental id for legacy naming if needed
             this.playerID = Mathf.Max(this.playerID, uid + 1);
-            Debug.Log($"Created player GameObject for uid={uid} at {startPos} (isLocal={isLocal})");
+            LogController.Instance.debug($"Created player GameObject for uid={uid} at {startPos} (isLocal={isLocal})");
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            Debug.LogError($"Error creating player from data: {ex.Message}\n{ex.StackTrace}");
+            LogController.Instance.debugError($"Error creating player from data: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
@@ -1243,7 +959,7 @@ public class TowerGameController : GameBaseController
                 // Find matching scoreboard
                 GameObject scoreboardObj = System.Array.Find(this.scoreboardControllers, obj => obj.GetComponent<scoreboardController>().key == cc.key);
                 if (scoreboardObj != null) {
-                    Debug.Log("RemovePlayer: scoreboardObj=" + scoreboardObj.name + cc.key);
+                    LogController.Instance.debug("RemovePlayer: scoreboardObj=" + scoreboardObj.name + cc.key);
                     scoreboardController matchingScoreboard = scoreboardObj.GetComponent<scoreboardController>();
                     if (matchingScoreboard != null) {
                         matchingScoreboard.resetScoreboard();
@@ -1251,7 +967,7 @@ public class TowerGameController : GameBaseController
                 }
                 this.characterControllers.Remove(cc);
                 GameObject.Destroy(cc.gameObject);
-                Debug.Log($"[TowerGameController] Removed player GameObject for key={key}");
+                LogController.Instance.debug($"[TowerGameController] Removed player GameObject for key={key}");
             }
             playerControllersByKey.Remove(key);
         }
@@ -1268,94 +984,15 @@ public class TowerGameController : GameBaseController
                 GameObject.Destroy(marker.gameObject);
             }
             minimapMarkersByKey.Remove(key);
-            Debug.Log($"[TowerGameController] Removed minimap marker for key={key}");
+            LogController.Instance.debug($"[TowerGameController] Removed minimap marker for key={key}");
         }
     }
-
-    // private void CreateQuestionObject(WS_Client.QuestionData question, Vector3 position)
-    // {
-    //     Debug.Log($"CreateQuestionObject: {question.id} - {question.content}");
-    //     if (questionPrefab == null)
-    //     {
-    //         Debug.LogError("questionPrefab is not assigned!");
-    //         return;
-    //     }
-
-    //     if (question.content == null)
-    //     {
-    //         Debug.LogError("question.content is null!");
-    //         return;
-    //     }
-
-    //     var questionObj = GameObject.Instantiate(questionPrefab, this.globalParent);
-    //     questionObj.name = "Question_" + question.id;
-
-    //     // Use RectTransform for UI positioning
-    //     RectTransform rectTransform = questionObj.GetComponent<RectTransform>();
-    //     if (rectTransform != null)
-    //     {
-    //         rectTransform.anchoredPosition = new Vector2(position.x, position.y);
-    //     }
-    //     else
-    //     {
-    //         // Fallback to world position if not a UI element
-    //         questionObj.transform.position = position;
-    //     }
-
-    //     // Set text on TextMeshProUGUI component in child
-    //     // TextMeshProUGUI textComponent = questionObj.GetComponentInChildren<TextMeshProUGUI>();
-    //     // Debug.Log($"question.content: {question.content}");
-    //     // if (textComponent != null)
-    //     // {
-    //     //     textComponent.text = question.content;
-    //     // }
-
-    //     // Add QuestionTrigger component for collision detection
-    //     QuestionTrigger questionTrigger = questionObj.GetComponent<QuestionTrigger>();
-    //     if (questionTrigger == null)
-    //     {
-    //         questionTrigger = questionObj.AddComponent<QuestionTrigger>();
-    //     }
-    //     questionTrigger.questionId = question.id;
-    //     questionTrigger.questionData = question;
-    //     Debug.Log($"Added QuestionTrigger component to {question.id}");
-
-    //     questionObj.gameObject.SetActive(true);
-
-    //     // questionUIText.GetComponent<TextMeshProUGUI>().text = question.content;
-    //     onTopUI.GetComponent<CanvasGroup>().alpha = 1;
-    //     GameObject bg_FillInBlank = onTopUI.transform.Find("Bg/QABoard/bg_FillInBlank").gameObject;
-    //     bg_FillInBlank.GetComponent<CanvasGroup>().alpha = 1;
-    //     bg_FillInBlank.GetComponentInChildren<TextMeshProUGUI>().text = question.content;
-
-    //     // Store the question data (you can add a component to store this if needed)
-    //     // For now, just track the GameObject
-    //     questionObjectsById[question.id] = questionObj;
-    //     questions.Add(question);
-
-    // }
-
-    // private void RemoveQuestionObject(int id)
-    // {
-    //     if (questionObjectsById.TryGetValue(id, out var questionObj))
-    //     {
-    //         if (questionObj != null)
-    //         {
-    //             GameObject.Destroy(questionObj);
-    //             Debug.Log($"[TowerGameController] Removed question GameObject for id={id}");
-    //         }
-    //         questionObjectsById.Remove(id);
-
-    //         // Remove from list
-    //         questions.RemoveAll(q => q.id == id);
-    //     }
-    // }
 
     private void CreateAnswerObject(WS_Client.AnswerData answer, Vector3 position)
     {
         if (answerPrefab == null)
         {
-            Debug.LogError("answerPrefab is not assigned!");
+            LogController.Instance.debugError("answerPrefab is not assigned!");
             return;
         }
 
@@ -1390,14 +1027,6 @@ public class TowerGameController : GameBaseController
         }
         answerTrigger.answerId = answer.id;
 
-        // BoxCollider2D boxCollider = answerObj.GetComponent<BoxCollider2D>();
-        // if (boxCollider == null)
-        // {
-        //     boxCollider = answerObj.AddComponent<BoxCollider2D>();
-        // }
-        // boxCollider.isTrigger = true;
-        // boxCollider.size = new Vector2(300f, 120f); 
-
         answerObj.gameObject.SetActive(true);
 
         // Store the answer data
@@ -1429,7 +1058,7 @@ public class TowerGameController : GameBaseController
             if (answer != null)
             {
                 answer.isOnPlayer = 1;
-                Debug.Log($"Set answer {answerId} isOnPlayer to 1");
+                LogController.Instance.debug($"Set answer {answerId} isOnPlayer to 1");
 
                 WS_Client.Instance.updateAnswerOnPlayer(answerId);
             }
@@ -1521,7 +1150,7 @@ public class TowerGameController : GameBaseController
             if (player.isAnswerVisible == 0) {
                 CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
                 if (characterController != null) {
-                    characterController.showAnswerBubble(0);
+                    characterController.showAnswerBubble(0, "");
                 }
             }
         }

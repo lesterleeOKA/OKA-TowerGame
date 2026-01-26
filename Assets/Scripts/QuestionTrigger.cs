@@ -94,7 +94,7 @@ public class QuestionTrigger : MonoBehaviour
 
                                 WS_Client.Instance.submitAnswer(answerTrigger.answerId);
                             
-                                characterController.showAnswerBubble(0);
+                                characterController.showAnswerBubble(0, "");
                                 characterController.answerObject = null;
                             }
                             

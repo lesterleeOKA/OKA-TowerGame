@@ -679,19 +679,7 @@ MonoBehaviour:
   m_VerticalScrollbarSpacing: -3
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &120518870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2239,7 +2227,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a7d861f3fcba314ca43b16537135c7a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  reconnectRoomUI: {fileID: 892149280}
+  reconnectRoomUI: {fileID: 892149284}
   reconnectRoomId: 0
 --- !u!225 &543053284
 CanvasGroup:
@@ -3498,13 +3486,14 @@ GameObject:
   - component: {fileID: 892149281}
   - component: {fileID: 892149283}
   - component: {fileID: 892149282}
+  - component: {fileID: 892149284}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: ReconnectPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &892149281
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3564,6 +3553,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 892149280}
   m_CullTransparentMesh: 1
+--- !u!225 &892149284
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 892149280}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!1 &914273117
 GameObject:
   m_ObjectHideFlags: 0
@@ -6935,7 +6936,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 116854494}
   m_Direction: 2
   m_Value: 1
-  m_Size: 0.21336633
+  m_Size: 0.42673266
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

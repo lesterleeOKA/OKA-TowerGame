@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -14,7 +13,8 @@ public class CharacterController : UserData
     private float currectSpeed = 640f;
     private Vector3 lastPosition;
     private Transform imageTransform;
-    private Transform answerBubbleTransform;
+    public CanvasGroup answerBubble;
+    public TMPro.TextMeshProUGUI answerText;
     public int direction = 0;
     public string key = "";
     public bool IsLocalPlayer = false; 
@@ -39,7 +39,6 @@ public class CharacterController : UserData
     {
         lastPosition = transform.position;
         imageTransform = transform.Find("image");
-        answerBubbleTransform = transform.Find("AnswerBubble");
     }
 
     public void setLocalPlayer(bool _isLocalPlayer = false)
@@ -93,14 +92,14 @@ public class CharacterController : UserData
         );
 
         // Apply the stand texture immediately (idle state)
-        SetIdleTexture();
+        this.SetIdleTexture();
     }
 
     private void SetIdleTexture()
     {
         if (standSprite == null)
         {
-            Debug.LogWarning($"SetIdleTexture: standSprite is NULL for {gameObject.name}");
+            LogController.Instance.debug($"SetIdleTexture: standSprite is NULL for {gameObject.name}");
             return;
         }
 
@@ -110,7 +109,7 @@ public class CharacterController : UserData
         }
         else
         {
-            Debug.LogError($"SetIdleTexture: No image component found on {gameObject.name}! imageTransform={imageTransform != null}");
+            LogController.Instance.debugError($"SetIdleTexture: No image component found on {gameObject.name}! imageTransform={imageTransform != null}");
         }
     }
 
@@ -126,7 +125,7 @@ public class CharacterController : UserData
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Error starting walking animation for {gameObject.name}: {ex.Message}");
+            LogController.Instance.debugError($"Error starting walking animation for {gameObject.name}: {ex.Message}");
             walkingCoroutine = null;
         }
     }
@@ -145,7 +144,7 @@ public class CharacterController : UserData
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Error stopping walking animation for {gameObject.name}: {ex.Message}");
+            LogController.Instance.debugError($"Error stopping walking animation for {gameObject.name}: {ex.Message}");
             // Ensure we reset the coroutine reference even if StopCoroutine fails
             walkingCoroutine = null;
         }
@@ -278,7 +277,7 @@ public class CharacterController : UserData
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Error in CharacterController.FixedUpdate for {gameObject.name}: {ex.Message}\n{ex.StackTrace}");
+            LogController.Instance.debugError($"Error in CharacterController.FixedUpdate for {gameObject.name}: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
@@ -329,7 +328,7 @@ public class CharacterController : UserData
 
         if (!IsLocalPlayer && distance > 500f)
         {
-            Debug.Log("Teleporting player due to large desync: distance=" + distance);
+            LogController.Instance.debug("Teleporting player due to large desync: distance=" + distance);
             transform.localPosition = new Vector3(localDestination.x, localDestination.y, transform.localPosition.z);
         }
         else if (distance > 10f)
@@ -349,13 +348,8 @@ public class CharacterController : UserData
 
             float speed = movement.magnitude;
 
-        //    Debug.Log("Speed:" + speed);
-
             if (speed > 0f)
             {
-                // Debug.Log("movement x:" + movement.x);
-                // Debug.Log("movement y:" + Mathf.Abs(movement.y));
-
                 if (movement.x > 0)
                 {
                     this.direction = 2; // 向右
@@ -370,17 +364,6 @@ public class CharacterController : UserData
                         imageTransform.localScale = new Vector3(1f, 1f, 1f);
                     }
                 }
-                // else
-                // {
-                //     if (movement.y > 0)
-                //     {
-                //         this.direction = 2;// 向上
-                //     }
-                //     else
-                //     {
-                //         this.direction = 1;// 向下
-                //     }
-                // }
             }
             else
             {
@@ -398,7 +381,7 @@ public class CharacterController : UserData
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Error in UpdateAnimation for {gameObject.name}: {ex.Message}");
+            LogController.Instance.debugError($"Error in UpdateAnimation for {gameObject.name}: {ex.Message}");
         }
     }
 
@@ -418,18 +401,14 @@ public class CharacterController : UserData
         }
     }
 
-    public void showAnswerBubble(int show)
+    public void showAnswerBubble(int show, string _answer = "")
     {
-        if (answerBubbleTransform != null)
+        SetUI.Set(this.answerBubble, show == 1);
+        if(this.answerText != null)
         {
-            if (show == 1)
-            {
-                answerBubbleTransform.gameObject.SetActive(true);
-            }
-            else
-            {
-                answerBubbleTransform.gameObject.SetActive(false);
-            }
-        }
+            this.answerText.text = _answer;
+        }   
+
+        AudioController.Instance?.PlayAudio(9);
     }
 }

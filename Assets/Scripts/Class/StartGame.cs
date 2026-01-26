@@ -19,8 +19,7 @@ public class StartGame : MonoBehaviour
     }
     // Start is called before the first frame update
     void Start()
-    {
-        
+    {    
         this.cg = GetComponent<CanvasGroup>();
         SetUI.Set(this.cg, true, 0f);
     }
@@ -28,9 +27,9 @@ public class StartGame : MonoBehaviour
     public void startGameSequence() {
         this.startedGame = false;
         this.startCountDown = true;
-        this.count = 0f; 
-        this.lastPlayTime = Time.time;  
-        SetUI.Set(this.cg, true, 0f);  
+        this.count = 0f;
+        this.lastPlayTime = Time.time - playDelay;
+        SetUI.Set(this.cg, true, 0f);
         this.startupCountDown.Init();
     }
 

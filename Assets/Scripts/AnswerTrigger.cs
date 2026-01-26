@@ -86,9 +86,8 @@ public class AnswerTrigger : MonoBehaviour
         if (characterController != null)
         {
             WS_Client.AnswerData currentAnswerData = WS_Client.Instance.GameData?.answers?.Find(a => a.id == answerId);
-            characterController.showAnswerBubble(1);
             characterController.answerObject = this.gameObject;
-            characterController.transform.Find("AnswerBubble").GetComponentInChildren<TextMeshProUGUI>().text = currentAnswerData?.content ?? "";
+            characterController.showAnswerBubble(1, currentAnswerData?.content ?? "");
             if (TowerGameController.Instance != null && currentAnswerData != null)
             {
                 TowerGameController.Instance.OnAnswerObjectTrigger(this.gameObject, answerId, currentAnswerData);
