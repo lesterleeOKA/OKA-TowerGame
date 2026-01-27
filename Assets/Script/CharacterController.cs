@@ -403,7 +403,7 @@ public class CharacterController : UserData
 
     public void showAnswerBubble(int show, string _answer = "")
     {
-        SetUI.Set(this.answerBubble, show == 1);
+        SetUI.Set(this.answerBubble, show == 1? true : false);
         if(this.answerText != null)
         {
             this.answerText.text = _answer;

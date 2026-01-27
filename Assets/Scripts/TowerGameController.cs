@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // Class to hold all costume textures for a single costume
-[System.Serializable]
+[Serializable]
 public class CostumeTextures
 {
     public Texture2D standTexture;
@@ -700,31 +700,28 @@ public class TowerGameController : GameBaseController
                 CharacterController characterController = characterControllers != null ? characterControllers.Find(c => c.UserId == player.uid) : null;
                 if (characterController != null)
                 {
-                    Transform answerBubble = characterController.transform.Find("AnswerBubble");
-                    if (answerBubble != null)
+                    if (characterController.answerBubble != null)
                     {
-                        answerBubble.gameObject.SetActive(player.isAnswerVisible != 0);
-                        
-                        // Safely get answer content
-                        string answerContent = "";
-                        if (player.answer_id != 0 && WS_Client.Instance.GameData.answers != null)
+                        SetUI.Set(characterController.answerBubble, player.isAnswerVisible != 0);
+                    }
+
+                    string answerContent = "";
+                    if (player.answer_id != 0 && WS_Client.Instance.GameData.answers != null)
+                    {
+                        var answer = WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id);
+                        if (answer != null)
                         {
-                            var answer = WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id);
-                            if (answer != null)
-                            {
-                                answerContent = answer.content;
-                            }
-                            else
-                            {
-                                LogController.Instance.debug($"Answer with id {player.answer_id} not found for player {player.uid}");
-                            }
+                            answerContent = answer.content;
                         }
-                        
-                        TextMeshProUGUI textComponent = answerBubble.GetComponentInChildren<TextMeshProUGUI>();
-                        if (textComponent != null)
+                        else
                         {
-                            textComponent.text = answerContent;
+                            LogController.Instance.debug($"Answer with id {player.answer_id} not found for player {player.uid}");
                         }
+                    }
+
+                    if (characterController.answerText != null)
+                    {
+                        characterController.answerText.text = answerContent;
                     }
                 }
             }
