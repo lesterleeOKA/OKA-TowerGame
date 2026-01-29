@@ -22,6 +22,10 @@ public class CanvasMapPan : MonoBehaviour
     void LateUpdate()
     {
         if(mapRect == null) mapRect = GameObject.FindGameObjectWithTag("GameBackground").GetComponent<RectTransform>();
+
+        mapRect.localScale = new Vector3(TowerGameController.Instance.clientMapScale, TowerGameController.Instance.clientMapScale, 
+          1f);
+
         if (playerRect == null) { 
             if(GameObject.FindGameObjectWithTag("MainPlayer") != null)
                 playerRect = GameObject.FindGameObjectWithTag("MainPlayer").GetComponent<RectTransform>();
@@ -29,13 +33,14 @@ public class CanvasMapPan : MonoBehaviour
         if (playerRect == null || canvasRect == null) return;
 
         // Player position relative to map center
-        Vector2 playerLocal = playerRect.anchoredPosition;
+        Vector2 playerLocal = playerRect.anchoredPosition * TowerGameController.Instance.clientMapScale;
 
         // Desired map anchored position so player appears at followTarget in canvas space:
         Vector2 desiredMapPos = followTarget - playerLocal;
 
         // Compute clamped range so map does not reveal outside the texture.
-        Vector2 mapSize = mapRect.rect.size;
+        Vector2 mapSize = mapRect.rect.size * TowerGameController.Instance.clientMapScale;
+
         Vector2 canvasSize = canvasRect.rect.size;
 
         // If map is larger than canvas, compute half difference as clamp extents.

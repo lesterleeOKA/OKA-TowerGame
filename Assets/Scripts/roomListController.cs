@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
@@ -9,6 +8,7 @@ public class roomListController : MonoBehaviour
 {
     public TextMeshProUGUI roomNoText;
     public TextMeshProUGUI playerNoText;
+    public GameObject indicator;
     public Button joinButton;
     public int roomId;
 
@@ -21,30 +21,43 @@ public class roomListController : MonoBehaviour
         roomListRefresh();
     }
 
-    void FixedUpdate()
+    void Update()
     {
         roomListRefresh();
 
         if (WS_Client.Instance.websocket == null || WS_Client.Instance.websocket.State != WebSocketState.Open) {
-            playerNoText.text = "-/6";
+            playerNoText.text = "<color=#FF000000>0</color>/6";
             joinButton.interactable = false;
             return;
         }
-        
-        if (WS_Client.Instance.RoomList != null)
+        else
         {
-            
-            if (room == null) {
-                playerNoText.text = "-/6";
-                joinButton.interactable = false;
-            } else {
-                playerNoText.text = room.roomMembers.ToString() + "/6";
-                if (room.roomMembers >= 6 || room.roomStatus == "playing") {
+            if (WS_Client.Instance.RoomList != null)
+            {
+
+                if (room == null)
+                {
+                    playerNoText.text = "<color=#FF000000>0</color>/6";
                     joinButton.interactable = false;
-                } else {
-                    joinButton.interactable = true;
+                }
+                else
+                {
+                    playerNoText.text = room.roomMembers.ToString() + "/6";
+                    if (room.roomMembers >= 6 || room.roomStatus == "playing")
+                    {
+                        joinButton.interactable = false;
+                    }
+                    else
+                    {
+                        joinButton.interactable = true;
+                    }
                 }
             }
+        }
+
+        if (this.indicator != null)
+        {
+            this.indicator.SetActive(!joinButton.interactable);
         }
     }
 
@@ -59,7 +72,7 @@ public class roomListController : MonoBehaviour
                 return;
             }
         }
-        playerNoText.text = "-/6";
+        playerNoText.text = "<color=#FF000000>0</color>/6";
         StartCoroutine(RetryFindRoom());
     }
 

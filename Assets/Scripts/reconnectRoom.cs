@@ -1,8 +1,11 @@
+using System.Text;
+using TMPro;
 using UnityEngine;
 
 public class reconnectRoom : MonoBehaviour
 {
     public CanvasGroup reconnectRoomUI;
+    public TextMeshProUGUI reconnectRoomName;
     public int reconnectRoomId;
 
     void Update() {
@@ -17,6 +20,12 @@ public class reconnectRoom : MonoBehaviour
     public void showReconnectRoomUI(string roomId) {
         SetUI.Set(this.reconnectRoomUI, true);
         reconnectRoomId = int.Parse(roomId.Replace("room", ""));
+        if(this.reconnectRoomName != null) {
+            StringBuilder roomName =  new StringBuilder();
+            roomName.Append("Re-Join ");
+            roomName.Append(roomId);
+            this.reconnectRoomName.text = roomName.ToString();
+        }
     }
 
     public void ReconnectRoom()

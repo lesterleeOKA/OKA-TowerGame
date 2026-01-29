@@ -1,16 +1,19 @@
 using SimpleJSON;
 using System;
 using System.Collections;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
-using System.Threading.Tasks;
 
 [Serializable]
 public class APIManager
 {
+    [Tooltip("Starwish party supported domains")]
+    public string[] starwishPartyDomains;
     [Tooltip("Account Jwt token, upload data jwt")]
     public string jwt;
     [Tooltip("Created App/Book current id")]
@@ -100,7 +103,7 @@ public class APIManager
     private void HandleError(string message, Action onCompleted, bool showErrorBox = false)
     {
         this.errorMessage = message;
-        LogController.Instance?.debug(this.errorMessage);
+        Debug.LogWarning(this.errorMessage);
         this.IsShowLoginErrorBox = showErrorBox;
         onCompleted?.Invoke();
     }
@@ -186,13 +189,19 @@ public class APIManager
 
                         this.questionJson = jsonNode[APIConstant.QuestionDataHeaderName].ToString(); // Question json data;
                         this.accountJson = jsonNode["account"].ToString(); // Account json data;
+
                         string accountIdString = jsonNode["account"]["id"];
-                        int accountId = int.Parse(accountIdString);
-                        this.accountId = accountId;
-                        //LogController.Instance?.debug("accountJson: " + this.accountJson);
+                        if (!string.IsNullOrEmpty(accountIdString))
+                        {
+                            int accountId = int.Parse(accountIdString);
+                            this.accountId = accountId;
+                        }
                         string accountUidString = jsonNode["account"]["uid"];
-                        int accountUid = int.Parse(accountUidString);
-                        this.accountUid = accountUid;
+                        if (!string.IsNullOrEmpty(accountUidString))
+                        {
+                            int accountUid = int.Parse(accountUidString);
+                            this.accountUid = accountUid;
+                        }
 
                         this.photoDataUrl = jsonNode["photo"].ToString(); // Account json data;
                         this.gameSettingJson = jsonNode["setting"].ToString();
@@ -275,11 +284,7 @@ public class APIManager
                         //E.g
                         //Debug.Log(jsonNode["account"]["display_name"].ToString());
                         var loader = LoaderConfig.Instance;
-                        if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
-                            loader.CurrentHostName.Contains("uat.starwishparty.com") ||
-                            loader.CurrentHostName.Contains("pre.starwishparty.com") ||
-                            loader.CurrentHostName.Contains("www.starwishparty.com") ||
-                            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
+                        if (APIConstant.isLoginedStarwishPartySite(loader))
                         {
                             yield return this.GetStarwishAccountData(() =>
                             {
@@ -341,7 +346,7 @@ public class APIManager
 
                     if (retryCount >= this.maxRetries)
                     {
-                        this.HandleError("Error loading Starwish account API after retries.", onCompleted, true);
+                        this.HandleError("Error loading Starwish account API after retries.", onCompleted, false);
                         yield break;
                     }
 
@@ -391,7 +396,7 @@ public class APIManager
         }
     }
 
-    public async Task<string> getCostumeData()
+    /*public async Task<string> getCostumeData()
     {
         string api = APIConstant.GetCostumeDataAPI(LoaderConfig.Instance);
         LogController.Instance?.debug("called costume data api: " + api);
@@ -399,6 +404,9 @@ public class APIManager
         if (string.IsNullOrEmpty(api))
         {
             LogController.Instance.debug("Current site not support costume data api.");
+
+            this.errorMessage = "Current site not support costume data api.";
+            Debug.LogError(this.errorMessage);
             return null;
         }
 
@@ -443,7 +451,7 @@ public class APIManager
         }
 
         return jsonResponse;
-    }
+    }*/
 
     public async Task<string> getCurrentAccount()
     {
@@ -452,7 +460,8 @@ public class APIManager
 
         if (string.IsNullOrEmpty(api))
         {
-            LogController.Instance.debug("Current site not support current account api.");
+            this.errorMessage = "Current site not support current account api.";
+            Debug.LogError(this.errorMessage);
             return null;
         }
 
@@ -506,7 +515,8 @@ public class APIManager
 
         if (string.IsNullOrEmpty(api))
         {
-            LogController.Instance.debug("Current site not support inventory api.");
+            this.errorMessage = "Current site not support inventory api.";
+            Debug.LogError(this.errorMessage);
             onCompleted?.Invoke();
             yield break;
         }
@@ -539,8 +549,7 @@ public class APIManager
 
                 if (retryCount >= this.maxRetries)
                 {
-                    LogController.Instance.debugError("Failed to load inventory after maximum retries.");
-                    onCompleted?.Invoke();
+                    this.HandleError("getHelpToolInventory error", onCompleted, false);
                     yield break;
                 }
 
@@ -591,8 +600,7 @@ public class APIManager
 
                 if (retryCount >= this.maxRetries)
                 {
-                    LogController.Instance.debugError("Failed to use help tool after maximum retries.");
-                    onCompleted?.Invoke();
+                    this.HandleError("useHelpTool error", onCompleted, false);
                     yield break;
                 }
 
@@ -639,8 +647,7 @@ public class APIManager
 
                     if (retryCount >= this.maxRetries)
                     {
-                        LogController.Instance.debugError("Failed to add currency after maximum retries.");
-                        onCompleted?.Invoke();
+                        this.HandleError("AddCurrency: Failed to add currency after maximum retries.", onCompleted, false);
                         yield break;
                     }
 
@@ -1055,7 +1062,7 @@ public static class APIConstant
 
     public static string GameAddCurrencyAPI(LoaderConfig loader)
     {
-        return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/accounts/add-currency";
+        return $"{StarwishpartySiteDomain(loader)}/OKAGames/public/index.php/api/accounts/add-currency";
     }
 
     public static string GameAppQuestionDataAPI(LoaderConfig loader, string _dataKey = "", string _jwt = "")
@@ -1066,79 +1073,64 @@ public static class APIConstant
 
     public static string GetStarwishPartyAccountAPI(LoaderConfig loader)
     {
-        return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/accounts/{loader.apiManager.accountUid}";
+        return $"{StarwishpartySiteDomain(loader)}/OKAGames/public/index.php/api/accounts/{loader.apiManager.accountUid}";
     }
 
     public static string GetHelpToolInventoryAPI(LoaderConfig loader)
     {
-        if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
-            loader.CurrentHostName.Contains("uat.starwishparty.com") ||
-            loader.CurrentHostName.Contains("pre.starwishparty.com") ||
-            loader.CurrentHostName.Contains("www.starwishparty.com") ||
-            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
+        return $"{StarwishpartySiteDomain(loader)}/OKAGames/public/index.php/api/help-tools/user/inventory";
+    }
+
+    public static string UpdateUseOfHelpToolAPI(LoaderConfig loader)
+    {
+        return $"{StarwishpartySiteDomain(loader)}/OKAGames/public/index.php/api/help-tools/use";
+    }
+
+    static string StarwishpartySiteDomain(LoaderConfig loader)
+    {
+        string domain = "";
+        if (isLoginedStarwishPartySite(loader))
         {
-            return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/help-tools/user/inventory";
+            //test prod
+            if (loader.CurrentHostName.Contains("www.starwishparty.com") ||
+                loader.CurrentHostName.Contains("pro.starwishparty.com") ||
+                loader.CurrentHostName.Contains("rainbowone.app"))
+                domain = "pro.starwishparty.com";
+            else
+                domain = loader.CurrentHostName;
         }
-        else
-        {
-            return "";
-        }
+
+        return domain;
+    }
+
+    public static bool isLoginedStarwishPartySite(LoaderConfig loader)
+    {
+        bool isLogined = loader.apiManager.IsLogined;
+        if (!isLogined) return false;
+        /*bool isLoginedStarwishParty = 
+                          loader.CurrentHostName.Contains("dev.starwishparty.com") ||
+                          loader.CurrentHostName.Contains("uat.starwishparty.com") ||
+                          loader.CurrentHostName.Contains("pre.starwishparty.com") ||
+                          loader.CurrentHostName.Contains("www.starwishparty.com") ||
+                          loader.CurrentHostName.Contains("rainbowone.app") ||
+                          loader.CurrentHostName.Contains("www.rainbowone.app");*/
+        return loader.apiManager.starwishPartyDomains.Any(domain => loader.CurrentHostName.Contains(domain, StringComparison.OrdinalIgnoreCase));
     }
 
     public static string GetCostumeDataAPI(LoaderConfig loader)
     {
-        Debug.Log("GetCostumeDataAPI: " + loader.CurrentHostName);
-        if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
-            loader.CurrentHostName.Contains("uat.starwishparty.com") ||
-            loader.CurrentHostName.Contains("pre.starwishparty.com") ||
-            loader.CurrentHostName.Contains("www.starwishparty.com") ||
-            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
-        {
-            return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/costumes";
-        }
-        else
-        {
-            return "";
-        }
+        return $"{StarwishpartySiteDomain(loader)}/OKAGames/public/index.php/api/costumes";
     }
 
     public static string GetCurrentAccountAPI(LoaderConfig loader)
     {
         // Defensive check ¡X avoid NullReference when LoaderConfig or its CurrentHostName isn't initialized yet.
-        if (loader == null || string.IsNullOrEmpty(loader.CurrentHostName))
+        if (loader == null || string.IsNullOrEmpty(StarwishpartySiteDomain(loader)))
         {
             Debug.LogWarning("GetCurrentAccountAPI: LoaderConfig or CurrentHostName is null/empty. Returning empty API.");
             return string.Empty;
         }
-
-        if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
-            loader.CurrentHostName.Contains("uat.starwishparty.com") ||
-            loader.CurrentHostName.Contains("pre.starwishparty.com") ||
-            loader.CurrentHostName.Contains("www.starwishparty.com") ||
-            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
-        {
-            return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/accounts/current";
-        }
-        else
-        {
-            return string.Empty;
-        }
-    }
-
-    public static string UpdateUseOfHelpToolAPI(LoaderConfig loader)
-    {
-        if (loader.CurrentHostName.Contains("dev.starwishparty.com") ||
-            loader.CurrentHostName.Contains("uat.starwishparty.com") ||
-            loader.CurrentHostName.Contains("pre.starwishparty.com") ||
-            loader.CurrentHostName.Contains("www.starwishparty.com") ||
-            loader.CurrentHostName.Contains("dev.openknowledge.hk"))
-        {
-            return $"{loader.CurrentHostName}/OKAGames/public/index.php/api/help-tools/use";
-        }
-        else
-        {
-            return "";
-        }
+        return $"{StarwishpartySiteDomain(loader)}/OKAGames/public/index.php/api/accounts/current";
     }
 
     public static string blobServerRelativePath
@@ -1149,6 +1141,7 @@ public static class APIConstant
             {
                 HostName.dev => "https://okadev.blob.core.windows.net/media/",
                 HostName.uat => "https://okauat.blob.core.windows.net/media/",
+                HostName.preprod => "https://okapreprod.blob.core.windows.net/media/",
                 HostName.prod => "https://oka.blob.core.windows.net/media/",
                 _ => throw new NotImplementedException()
             };

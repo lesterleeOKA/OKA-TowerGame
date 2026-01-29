@@ -89,6 +89,8 @@ public class TowerGameController : GameBaseController
     public float syncPlayersInterval = 0.1f;
     private float lastSyncPlayersTime = 0f;
 
+    public float clientMapScale = 1.0f; 
+
     protected override void Awake()
     {
         if (Instance == null)
@@ -360,7 +362,6 @@ public class TowerGameController : GameBaseController
                 checkAnswerVisibility();
                 StartCoroutine(updateQuestionUI(true));
                 SetUI.Set(this.TopUILayer, true, 0f);
-                // SyncPlayers();
                 break;
             case "startGame":
                 showReadyUI(false);
@@ -471,11 +472,12 @@ public class TowerGameController : GameBaseController
                 Vector3 location = Vector3.zero;
 
                 LogController.Instance.debug("CreatePlayerFromData 1: " + location + " - " + key + " - " + isLocal);
-                if (player.position != null && player.position.Length >= 2)
-                {
-                    location = new Vector3(player.position[0], player.position[1], 0f);
-                }
-                CreatePlayerFromData(player, location, key, isLocal);
+
+                    if (player.position != null && player.position.Length >= 2)
+                    {
+                        var originalPosition = new Vector2(player.position[0], player.position[1]);
+                        this.CreatePlayerFromData(player, originalPosition, key, isLocal);
+                    }
             }
 
             // mark as present for this cycle (used for player removal and minimap cleanup)
@@ -488,12 +490,13 @@ public class TowerGameController : GameBaseController
                 {
                     if (cc != null)
                     {
-                        Vector3 otherPlayerPos = Vector3.zero;
+                        Vector2 otherPlayerPos = Vector3.zero;
                         if (player.position != null && player.position.Length >= 2)
                         {
-                            otherPlayerPos = new Vector3(player.position[0], player.position[1], 0f);
+                            //otherPlayerPos = MapServerToLocal();
+                            otherPlayerPos = new Vector2(player.position[0], player.position[1]);
+                            cc.setLocalDestination(otherPlayerPos);
                         }
-                        cc.setLocalDestination(otherPlayerPos);
                     }
                 }
             }
@@ -548,7 +551,7 @@ public class TowerGameController : GameBaseController
                     {
                         spriteToUse = isLocalPlayer ? minimapBluePlayerMarker : minimapBlueOtherMarker;
                     }
-                    else // Orange team
+                    else // Red team
                     {
                         spriteToUse = isLocalPlayer ? minimapOrangePlayerMarker : minimapOrangeOtherMarker;
                     }
@@ -570,8 +573,53 @@ public class TowerGameController : GameBaseController
                     instance.localScale = Vector3.one;
                     
                     // Set size (adjust these values based on your sprite size preferences)
-                    if (!isLocalPlayer) instance.sizeDelta = new Vector2(20f, 20f);
+                    if (!isLocalPlayer) { 
+                        instance.sizeDelta = new Vector2(20f, 20f);
+                    }
+                    else { 
+                        RectTransform subIcon = new GameObject("Icon").AddComponent<RectTransform>();
+                        subIcon.SetParent(instance, false);
+                        subIcon.anchorMin = new Vector2(0.5f, 0.5f);
+                        subIcon.anchorMax = new Vector2(0.5f, 0.5f);
+                        subIcon.pivot = new Vector2(0.5f, 0.5f);
+                        subIcon.localScale = Vector3.one;
+                        subIcon.anchoredPosition = Vector2.zero;
+                        subIcon.sizeDelta = new Vector2(12f, 12f);
+                        RawImage iconImage = subIcon.gameObject.AddComponent<RawImage>();
+                        iconImage.raycastTarget = false;
 
+                        Texture iconTex = null;
+                        if (!string.IsNullOrEmpty(player.costume_id) && int.TryParse(player.costume_id, out int costumeId))
+                        {
+                            int csIndex = costumeId - 1;
+                            if (characterSets != null && csIndex >= 0 && csIndex < characterSets.Length && characterSets[csIndex] != null)
+                            {
+                                // characterSets[].defaultIcon is expected to be a Texture2D or Texture
+                                iconTex = characterSets[csIndex].defaultIcon;
+                                if (iconTex == null && characterSets[csIndex].defaultIcon != null)
+                                {
+                                    // fallback if defaultIcon is a Sprite
+                                    iconImage.texture = iconTex;
+                                }
+                            }
+                        }
+
+                        if (iconTex != null)
+                        {
+                            iconImage.texture = iconTex;
+                            // optional: preserve aspect by adjusting size (keeps icon readable)
+                            float aspect = (iconTex.width > 0 && iconTex.height > 0) ? (float)iconTex.width / iconTex.height : 1f;
+                            if (aspect >= 1f)
+                                subIcon.sizeDelta = new Vector2(75f, 75f / aspect);
+                            else
+                                subIcon.sizeDelta = new Vector2(75f * aspect, 75f);
+                        }
+                        else
+                        {
+                            // No icon — hide child to avoid empty visuals
+                            iconImage.enabled = false;
+                        }
+                    }
                     minimapMarkersByKey[key] = instance;
                     marker = instance;
                 }
@@ -896,9 +944,10 @@ public class TowerGameController : GameBaseController
 
         // set world-space start position
         characterController.transform.localPosition = startPos;
+        characterController.transform.localScale = Vector3.one * (1f /this.clientMapScale);
 
-        // mark local player for client-side control
-        characterController.setLocalPlayer(isLocal);
+            // mark local player for client-side control
+            characterController.setLocalPlayer(isLocal);
         characterController.setPlayerTag(playerTags[playerIndex]);
         if (isLocal)
         {
@@ -997,17 +1046,17 @@ public class TowerGameController : GameBaseController
         answerObj.name = "Answer_" + answer.id;
 
         // Use RectTransform for UI positioning
+
+        Vector3 local = new Vector2(position.x, position.y);
         RectTransform rectTransform = answerObj.GetComponent<RectTransform>();
         if (rectTransform != null)
         {
-            // Scale position for UI with offset for center alignment
-            Vector2 uiPosition = new Vector2(position.x, position.y);
-            rectTransform.anchoredPosition = uiPosition;
+            rectTransform.anchoredPosition = new Vector2(local.x, local.y);
+            rectTransform.localScale = Vector3.one * (1f / this.clientMapScale);
         }
         else
         {
-            // Fallback to world position if not a UI element
-            answerObj.transform.position = new Vector3(position.x, position.y, 0f);
+            answerObj.transform.position = local;
         }
 
         // Set text on TextMeshProUGUI component in child

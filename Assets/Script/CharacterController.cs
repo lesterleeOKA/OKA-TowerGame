@@ -281,9 +281,10 @@ public class CharacterController : UserData
         }
     }
 
-    private void calLocalDestination() {
-        if(this.detectCamera == null) this.detectCamera = Camera.main;
-        
+    private void calLocalDestination()
+    {
+        if (this.detectCamera == null) this.detectCamera = Camera.main;
+
         // Get input position from touch or mouse
         Vector3 inputPosition;
         if (Input.touchCount > 0)
@@ -295,26 +296,47 @@ public class CharacterController : UserData
             inputPosition = Input.mousePosition;
         }
 
-        inputPosition.z = detectCamera.WorldToScreenPoint(transform.position).z;
-        inputPosition = detectCamera.ScreenToWorldPoint(inputPosition);
+        // Use plane-ray intersection (stable) instead of ScreenToWorldPoint with a z that can jitter.
+        Ray ray = (this.detectCamera != null) ? this.detectCamera.ScreenPointToRay(inputPosition) : Camera.main.ScreenPointToRay(inputPosition);
+        // plane at object's Z (world)
+        Plane plane = new Plane(Vector3.forward, new Vector3(0f, 0f, transform.position.z));
+        if (plane.Raycast(ray, out float enter))
+        {
+            Vector3 worldPoint = ray.GetPoint(enter);
 
-        // Calculate direction and move 0.2 seconds worth of distance in that direction
-        Vector3 direction = (inputPosition - transform.position).normalized;
-        Vector3 worldDestination = transform.position + direction * (followSpeed * 0.2f);
-        
-        // Convert world position to local position (relative to parent)
-        if (transform.parent != null)
-        {
-            localDestination = transform.parent.InverseTransformPoint(worldDestination);
+            // Calculate direction and move a small step toward touch point
+            Vector3 dir = (worldPoint - transform.position);
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                dir.Normalize();
+                // keep similar step size as original but safer: use 0.2 * followSpeed
+
+                var newFollowSpeed = followSpeed * (1 / TowerGameController.Instance.clientMapScale);   
+                Vector3 worldDestination = transform.position + dir * newFollowSpeed;
+
+                if (transform.parent != null)
+                {
+                    localDestination = transform.parent.InverseTransformPoint(worldDestination);
+                }
+                else
+                {
+                    localDestination = worldDestination;
+                }
+
+                // Maintain the character's local z position
+                localDestination.z = transform.localPosition.z;
+
+                // Move immediately one step (preserve original pattern), but guard small oscillations
+                // Do NOT call FollowLocalDestination unconditionally; instead move only if significant
+                float displayDist = Vector3.Distance(transform.localPosition, localDestination);
+                if (displayDist > 0.01f)
+                {
+                    // small immediate move to reduce perceived input lag
+                    var step = Mathf.Min(newFollowSpeed * Time.fixedDeltaTime, displayDist);
+                    transform.localPosition = Vector3.MoveTowards(transform.localPosition, localDestination, step);
+                }
+            }
         }
-        else
-        {
-            localDestination = worldDestination;
-        }
-        
-        // Maintain the character's local z position
-        localDestination.z = transform.localPosition.z;
-        FollowLocalDestination();
     }
 
     public void setLocalDestination(Vector3 destination)
@@ -333,8 +355,8 @@ public class CharacterController : UserData
         }
         else if (distance > 10f)
         {
-            currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, followSpeed);
-            // Debug.Log("FollowLocalDestination: transform.localPosition=" + transform.localPosition + " - localDestination=" + localDestination + " - distance=" + distance + " - currectSpeed=" + currectSpeed + " - (currectSpeed + acc * Time.deltaTime)=" + (currectSpeed + acc * Time.deltaTime) + " - followSpeed=" + followSpeed);
+            var newFollowSpeed = followSpeed * (1 / TowerGameController.Instance.clientMapScale);
+            currectSpeed = Mathf.Min(currectSpeed + acc * Time.deltaTime, newFollowSpeed);
             transform.localPosition = Vector3.MoveTowards(transform.localPosition, localDestination, currectSpeed * Time.deltaTime);
         }
     }
@@ -348,20 +370,28 @@ public class CharacterController : UserData
 
             float speed = movement.magnitude;
 
+            // add a horizontal deadzone to avoid rapid left/right flips
+            const float horizontalDeadzone = 0.15f;
+
             if (speed > 0f)
             {
-                if (movement.x > 0)
+                if (Mathf.Abs(movement.x) > horizontalDeadzone)
                 {
-                    this.direction = 2; // 向右
-                    if (imageTransform != null)
+                    if (movement.x > 0)
                     {
-                        imageTransform.localScale = new Vector3(-1f, 1f, 1f);
+                        this.direction = 2; // 向右
+                        if (imageTransform != null)
+                        {
+                            imageTransform.localScale = new Vector3(-1f, 1f, 1f);
+                        }
                     }
-                } else {
-                    this.direction = 1;// 向左
-                    if (imageTransform != null)
+                    else
                     {
-                        imageTransform.localScale = new Vector3(1f, 1f, 1f);
+                        this.direction = 1;// 向左
+                        if (imageTransform != null)
+                        {
+                            imageTransform.localScale = new Vector3(1f, 1f, 1f);
+                        }
                     }
                 }
             }
@@ -374,7 +404,7 @@ public class CharacterController : UserData
             {
                 PlayWalkingAnimation();
             }
-            else 
+            else
             {
                 StopWalkingAnimation();
             }
@@ -403,7 +433,7 @@ public class CharacterController : UserData
 
     public void showAnswerBubble(int show, string _answer = "")
     {
-        SetUI.Set(this.answerBubble, show == 1? true : false);
+        SetUI.Set(this.answerBubble, show == 1);
         if(this.answerText != null)
         {
             this.answerText.text = _answer;
