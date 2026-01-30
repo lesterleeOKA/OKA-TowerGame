@@ -51,7 +51,6 @@ public class roomListController : MonoBehaviour
                     {
                         joinButton.interactable = true;
                     }
-                    joinButton.interactable = true;
                     this.indicator.SetActive(false);
                 }
             }
