@@ -18,13 +18,14 @@ public class roomListController : MonoBehaviour
     {
         joinButton.onClick.AddListener(JoinRoom);
         roomNoText.text = "Room " + roomId.ToString();
+        if (this.indicator == null) this.indicator.SetActive(true);
         roomListRefresh();
     }
 
     void Update()
     {
         roomListRefresh();
-
+        if (this.indicator == null) return;
         if (WS_Client.Instance.websocket == null || WS_Client.Instance.websocket.State != WebSocketState.Open) {
             playerNoText.text = "<color=#FF000000>0</color>/6";
             joinButton.interactable = false;
@@ -34,7 +35,6 @@ public class roomListController : MonoBehaviour
         {
             if (WS_Client.Instance.RoomList != null)
             {
-
                 if (room == null)
                 {
                     playerNoText.text = "<color=#FF000000>0</color>/6";
@@ -51,13 +51,10 @@ public class roomListController : MonoBehaviour
                     {
                         joinButton.interactable = true;
                     }
+                    joinButton.interactable = true;
+                    this.indicator.SetActive(false);
                 }
             }
-        }
-
-        if (this.indicator != null)
-        {
-            this.indicator.SetActive(!joinButton.interactable);
         }
     }
 

@@ -27,8 +27,9 @@ public class TowerGameController : GameBaseController
     public Transform globalParent;
     public GameObject YouWin;
     public GameObject YouLose;
-    public CanvasGroup readyButton;
+    public CanvasGroup readyUI;
     public CanvasGroup readyTeamsUI;
+    public GameObject readyBtn, cancelBtn;
     public GameObject blueTeamScore;
     public GameObject orangeTeamScore;
     public GameObject disconnectedUI;
@@ -406,8 +407,10 @@ public class TowerGameController : GameBaseController
     }
 
     private void showReadyUI(bool show) {
-        SetUI.Set(this.readyButton, show);
+        SetUI.Set(this.readyUI, show);
         SetUI.Set(this.readyTeamsUI, show);
+        this.readyBtn?.SetActive(show);
+        this.cancelBtn?.SetActive(!show);
     }
 
     public void hideDisconnectedUI()

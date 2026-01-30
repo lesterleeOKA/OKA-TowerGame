@@ -21,11 +21,9 @@ public class CharacterController : UserData
     private Vector3 localDestination = Vector3.zero;
     public bool isMouseDown = false; 
     public CanvasGroup localPlayer;
-    
     // Network throttling
     private float lastNetworkUpdateTime = 0f;
     public float networkUpdateInterval = 0.1f; // Send updates every 0.1 seconds (10 times per second)
-
     private Texture2D standTexture;
     private Texture2D walkTexture;
     private Sprite standSprite;
@@ -34,19 +32,25 @@ public class CharacterController : UserData
     private AspectRatioFitter aspectRatio;
     private Coroutine walkingCoroutine;
     public float textureAnimationFrameRate = 2f;
+    private Vector3 smoothVelocity = Vector3.zero;
+    private float smoothTime = 0.08f; // tune this to reduce fling; lower = snappier, higher = smoother
+    private float maxMoveSpeed => followSpeed * (1 / TowerGameController.Instance.clientMapScale); // maximum units per second
 
     void Start()
     {
         lastPosition = transform.position;
         imageTransform = transform.Find("image");
-    }
 
+        if (transform.parent != null)
+            localDestination = transform.localPosition;
+        else
+            localDestination = transform.position;
+    }
     public void setLocalPlayer(bool _isLocalPlayer = false)
     {
         this.IsLocalPlayer = _isLocalPlayer;
         SetUI.Set(this.localPlayer, _isLocalPlayer);
     }
-
     public void setPlayerTag(Sprite tag)
     {
         Transform playerTagTransform = transform.Find("playerTag");
@@ -59,7 +63,6 @@ public class CharacterController : UserData
             }
         }
     }
-
     public void SetCostumeTextures(Texture2D stand, Texture2D walk)
     {
         // Initialize image components if not done yet (in case this is called before Start)
@@ -74,27 +77,22 @@ public class CharacterController : UserData
                 aspectRatio.aspectRatio = (float)stand.width / (float)stand.height;
             }
         }
-
         this.standTexture = stand;
         this.walkTexture = walk;
-
         // Create and cache sprites to avoid creating them during animation
         this.standSprite = Sprite.Create(
             standTexture,
             new Rect(0, 0, standTexture.width, standTexture.height),
             new Vector2(0.5f, 0.5f)
         );
-
         this.walkSprite = Sprite.Create(
             walkTexture,
             new Rect(0, 0, walkTexture.width, walkTexture.height),
             new Vector2(0.5f, 0.5f)
         );
-
         // Apply the stand texture immediately (idle state)
         this.SetIdleTexture();
     }
-
     private void SetIdleTexture()
     {
         if (standSprite == null)
@@ -102,7 +100,6 @@ public class CharacterController : UserData
             LogController.Instance.debug($"SetIdleTexture: standSprite is NULL for {gameObject.name}");
             return;
         }
-
         if (characterUIImage != null)
         {
             characterUIImage.sprite = standSprite;
@@ -112,7 +109,6 @@ public class CharacterController : UserData
             LogController.Instance.debugError($"SetIdleTexture: No image component found on {gameObject.name}! imageTransform={imageTransform != null}");
         }
     }
-
     // Start the walking animation
     private void PlayWalkingAnimation()
     {
@@ -129,7 +125,6 @@ public class CharacterController : UserData
             walkingCoroutine = null;
         }
     }
-
     // Stop the walking animation
     private void StopWalkingAnimation()
     {
@@ -149,7 +144,6 @@ public class CharacterController : UserData
             walkingCoroutine = null;
         }
     }
-
     // Coroutine to alternate between walk and stand textures
     private IEnumerator WalkingAnimationCoroutine()
     {
@@ -172,8 +166,6 @@ public class CharacterController : UserData
             yield return new WaitForSeconds(1f / textureAnimationFrameRate);
         }
     }
-
-
     //Fixed the touch and mouse click conflict with UI Buttons
     private bool IsPointerOverUIButton()
     {
@@ -188,7 +180,6 @@ public class CharacterController : UserData
         {
             pointerData.position = Input.mousePosition;
         }
-
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(pointerData, results);
 
@@ -206,11 +197,9 @@ public class CharacterController : UserData
                 if (t.GetComponent<Button>() != null) return true;
             }
         }
-
         return false;
     }
-
-    void FixedUpdate()
+    void Update()
     {
         try
         {
@@ -218,20 +207,28 @@ public class CharacterController : UserData
             {
                 if (this.IsPointerOverUIButton())
                 {
+                    isMouseDown = false;
+                    if (transform.parent != null)
+                        localDestination = transform.localPosition;
+                    else
+                        localDestination = transform.position;
+                    smoothVelocity = Vector3.zero;
                     return;
                 }
-
                 // Handle both mouse and touch input
                 if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
                 {
                     isMouseDown = true;
                 }
-
                 if (Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
                 {
                     isMouseDown = false;
+                    if (transform.parent != null)
+                        localDestination = transform.localPosition;
+                    else
+                        localDestination = transform.position;
+                    smoothVelocity = Vector3.zero;
                 }
-
                 // Also set isMouseDown to false if no touches are detected
                 if (Input.touchCount == 0 && !Input.GetMouseButton(0))
                 {
@@ -242,7 +239,6 @@ public class CharacterController : UserData
                 {
                     calLocalDestination();
                 }
-
                 // Throttle network updates
                 if (Time.time - lastNetworkUpdateTime >= networkUpdateInterval)
                 {
@@ -268,16 +264,49 @@ public class CharacterController : UserData
                     }
                 }
             }
-
-            if(!this.IsLocalPlayer)
-            {
-                FollowLocalDestination();
-            }
             UpdateAnimation();
+            lastPosition = transform.localPosition;
         }
         catch (System.Exception ex)
         {
             LogController.Instance.debugError($"Error in CharacterController.FixedUpdate for {gameObject.name}: {ex.Message}\n{ex.StackTrace}");
+        }
+    }
+
+    void LateUpdate()
+    {
+        Vector3 current = (transform.parent != null) ? transform.localPosition : transform.position;
+        Vector3 target = localDestination;
+
+        float dt = Time.deltaTime;
+        float maxStep = maxMoveSpeed * dt;
+
+        // Smooth damp towards target. Use maxStep limiter to avoid large per-frame jumps.
+        Vector3 next = Vector3.SmoothDamp(current, target, ref smoothVelocity, smoothTime, maxMoveSpeed, dt);
+
+        // clamp per-frame movement to maxStep to avoid fling when target suddenly jumps
+        Vector3 delta = next - current;
+        if (delta.magnitude > maxStep)
+        {
+            next = current + delta.normalized * maxStep;
+            smoothVelocity = Vector3.zero;
+        }
+
+        // Stop threshold: snap to target and clear velocity when very close
+        const float stopThreshold = 0.02f;
+        if ((target - current).magnitude <= stopThreshold)
+        {
+            smoothVelocity = Vector3.zero;
+            next = target;
+        }
+
+        if (transform.parent != null)
+        {
+            transform.localPosition = new Vector3(next.x, next.y, transform.localPosition.z);
+        }
+        else
+        {
+            transform.position = new Vector3(next.x, next.y, transform.position.z);
         }
     }
 
@@ -288,53 +317,32 @@ public class CharacterController : UserData
         // Get input position from touch or mouse
         Vector3 inputPosition;
         if (Input.touchCount > 0)
-        {
             inputPosition = Input.GetTouch(0).position;
-        }
         else
-        {
             inputPosition = Input.mousePosition;
-        }
 
-        // Use plane-ray intersection (stable) instead of ScreenToWorldPoint with a z that can jitter.
+        // Convert screen point to world point on plane of character z
         Ray ray = (this.detectCamera != null) ? this.detectCamera.ScreenPointToRay(inputPosition) : Camera.main.ScreenPointToRay(inputPosition);
-        // plane at object's Z (world)
         Plane plane = new Plane(Vector3.forward, new Vector3(0f, 0f, transform.position.z));
         if (plane.Raycast(ray, out float enter))
         {
             Vector3 worldPoint = ray.GetPoint(enter);
 
-            // Calculate direction and move a small step toward touch point
-            Vector3 dir = (worldPoint - transform.position);
+            // Set a target some distance in direction of the pointer, but do not snap
+            Vector3 dir = (worldPoint - ((transform.parent != null) ? transform.parent.TransformPoint(transform.localPosition) : transform.position));
             if (dir.sqrMagnitude > 0.0001f)
             {
                 dir.Normalize();
-                // keep similar step size as original but safer: use 0.2 * followSpeed
+                Vector3 worldDestination = (transform.parent != null ? transform.parent.TransformPoint(transform.localPosition) : transform.position) + dir * maxMoveSpeed;
 
-                var newFollowSpeed = followSpeed * (1 / TowerGameController.Instance.clientMapScale);   
-                Vector3 worldDestination = transform.position + dir * newFollowSpeed;
-
+                // store as local if parent exists, otherwise world pos
                 if (transform.parent != null)
-                {
                     localDestination = transform.parent.InverseTransformPoint(worldDestination);
-                }
                 else
-                {
                     localDestination = worldDestination;
-                }
 
-                // Maintain the character's local z position
+                // keep z consistent
                 localDestination.z = transform.localPosition.z;
-
-                // Move immediately one step (preserve original pattern), but guard small oscillations
-                // Do NOT call FollowLocalDestination unconditionally; instead move only if significant
-                float displayDist = Vector3.Distance(transform.localPosition, localDestination);
-                if (displayDist > 0.01f)
-                {
-                    // small immediate move to reduce perceived input lag
-                    var step = Mathf.Min(newFollowSpeed * Time.fixedDeltaTime, displayDist);
-                    transform.localPosition = Vector3.MoveTowards(transform.localPosition, localDestination, step);
-                }
             }
         }
     }
@@ -348,7 +356,7 @@ public class CharacterController : UserData
     {
         float distance = Vector3.Distance(transform.localPosition, localDestination);
 
-        if (!IsLocalPlayer && distance > 500f)
+        if (!this.IsLocalPlayer && distance > 500f)
         {
             LogController.Instance.debug("Teleporting player due to large desync: distance=" + distance);
             transform.localPosition = new Vector3(localDestination.x, localDestination.y, transform.localPosition.z);

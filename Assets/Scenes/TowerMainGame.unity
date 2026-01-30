@@ -9761,7 +9761,7 @@ GameObject:
   - component: {fileID: 1220003939}
   - component: {fileID: 1220003941}
   m_Layer: 0
-  m_Name: Ready
+  m_Name: ReadyUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16782,8 +16782,10 @@ MonoBehaviour:
   globalParent: {fileID: 1988803150}
   YouWin: {fileID: 617150445}
   YouLose: {fileID: 105608703}
-  readyButton: {fileID: 1220003941}
+  readyUI: {fileID: 1220003941}
   readyTeamsUI: {fileID: 1744716751}
+  readyBtn: {fileID: 1744329420}
+  cancelBtn: {fileID: 1914952085}
   blueTeamScore: {fileID: 7327611160911327911}
   orangeTeamScore: {fileID: 7167399269508502555}
   disconnectedUI: {fileID: 2001023313}
