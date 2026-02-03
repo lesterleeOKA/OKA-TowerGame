@@ -25,8 +25,6 @@ public class TowerGameController : GameBaseController
     public GameObject answerPrefab;
     public GameObject obstaclePrefab;
     public Transform globalParent;
-    public GameObject YouWin;
-    public GameObject YouLose;
     public CanvasGroup readyUI;
     public CanvasGroup readyTeamsUI;
     public GameObject readyBtn, cancelBtn;
@@ -577,7 +575,7 @@ public class TowerGameController : GameBaseController
                     
                     // Set size (adjust these values based on your sprite size preferences)
                     if (!isLocalPlayer) { 
-                        instance.sizeDelta = new Vector2(20f, 20f);
+                        instance.sizeDelta = new Vector2(30f, 30f);
                     }
                     else { 
                         RectTransform subIcon = new GameObject("Icon").AddComponent<RectTransform>();

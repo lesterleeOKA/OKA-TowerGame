@@ -82,6 +82,19 @@ public static class SetUI
         }
     }
 
+    public static void SetDelayFade(CanvasGroup _cg = null, bool _status = false, float _duration = 0f, float _endValue = 0f, float _delay=0f, Action _onComplete = null)
+    {
+        if (_cg != null)
+        {
+            _cg.DOFade(_status ? 1f : _endValue, _duration).SetDelay(_delay).OnComplete(() => {
+                if (_onComplete != null)
+                    _onComplete.Invoke();
+            });
+            _cg.interactable = _status;
+            _cg.blocksRaycasts = _status;
+        }
+    }
+
     public static void SetInteract(CanvasGroup _cg = null, bool _status = false)
     {
         if (_cg != null)

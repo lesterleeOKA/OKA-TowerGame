@@ -19,11 +19,24 @@ public class CanvasMapPan : MonoBehaviour
 
     private Vector2 velocity;
 
+    public CanvasGroup fadingLayer;
+
+    private void Awake()
+    {
+        SetUI.SetDelayFade(this.fadingLayer, true);
+    }
+
+    private void Start()
+    {
+        if (mapRect == null) mapRect = GameObject.FindGameObjectWithTag("GameBackground").GetComponent<RectTransform>();
+        SetUI.SetDelayFade(this.fadingLayer, false, 2f, 0f, 1f);
+    }
+
     void LateUpdate()
     {
-        if(mapRect == null) mapRect = GameObject.FindGameObjectWithTag("GameBackground").GetComponent<RectTransform>();
-
-        mapRect.localScale = new Vector3(TowerGameController.Instance.clientMapScale, TowerGameController.Instance.clientMapScale, 
+        if (mapRect == null) return;
+        mapRect.localScale = new Vector3(
+            TowerGameController.Instance.clientMapScale, TowerGameController.Instance.clientMapScale, 
           1f);
 
         if (playerRect == null) { 
