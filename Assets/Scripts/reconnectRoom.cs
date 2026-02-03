@@ -10,16 +10,21 @@ public class reconnectRoom : MonoBehaviour
 
     void Update() {
         // Check if there's a pending reconnect room ID from WS_Client
-        if (WS_Client.Instance != null && !string.IsNullOrEmpty(WS_Client.Instance.pendingReconnectRoomId))
+        string _pendingReconnectRoomId = WS_Client.Instance?.pendingReconnectRoomId;
+        if (WS_Client.Instance != null && !string.IsNullOrEmpty(_pendingReconnectRoomId))
         {
+            Debug.Log("Pending Reconnect Room ID: " + _pendingReconnectRoomId);
+            reconnectRoomId = int.Parse(_pendingReconnectRoomId.Replace("room", ""));
             this.showReconnectRoomUI(WS_Client.Instance.pendingReconnectRoomId);
-            WS_Client.Instance.pendingReconnectRoomId = ""; // Clear after using
+        }
+        else
+        {
+            SetUI.Set(this.reconnectRoomUI, false);
         }
     }
 
     public void showReconnectRoomUI(string roomId) {
         SetUI.Set(this.reconnectRoomUI, true);
-        reconnectRoomId = int.Parse(roomId.Replace("room", ""));
         if(this.reconnectRoomName != null) {
             StringBuilder roomName =  new StringBuilder();
             roomName.Append("Re-Join ");
@@ -34,5 +39,6 @@ public class reconnectRoom : MonoBehaviour
         SetUI.Set(this.reconnectRoomUI, false);
         reconnectRoomId = 0;
         LoaderConfig.Instance?.changeScene(2);
+        WS_Client.Instance.pendingReconnectRoomId = "";
     }
 }

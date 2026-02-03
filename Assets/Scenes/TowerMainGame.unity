@@ -12406,6 +12406,18 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+      - m_Target: {fileID: 2027992707}
+        m_TargetAssemblyTypeName: AudioControl, Assembly-CSharp
+        m_MethodName: playBtnClick
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1543322582
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13664,6 +13676,18 @@ MonoBehaviour:
         m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
         m_MethodName: SetActive
         m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+      - m_Target: {fileID: 2027992707}
+        m_TargetAssemblyTypeName: AudioControl, Assembly-CSharp
+        m_MethodName: playBtnClick
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -16783,7 +16807,7 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 6acdb03a9aafb6b4ca315beab1df46c8, type: 3}
     - {fileID: 21300000, guid: 290986a05ff81c74da3cb1187618eca3, type: 3}
     scoreEndings:
-    - name: P1
+    - name: T1
       starNumber: 0
       scoreText: {fileID: 3319000435467137835}
       stars_list:
@@ -16794,7 +16818,7 @@ MonoBehaviour:
       - {fileID: 115249396372323417}
       - {fileID: 562177881931917249}
       - {fileID: 732848188386471444}
-    - name: P2
+    - name: T2
       starNumber: 0
       scoreText: {fileID: 5703655147460239231}
       stars_list:
@@ -16816,6 +16840,8 @@ MonoBehaviour:
   answerPrefab: {fileID: 5690817824625537194, guid: ebb2dbef36b38d341a7c17b3cc78cf60, type: 3}
   obstaclePrefab: {fileID: 3668556306711772515, guid: e6d133f5d65f37141ad7cb7804c5c253, type: 3}
   globalParent: {fileID: 1988803150}
+  YouWin: {fileID: 0}
+  YouLose: {fileID: 0}
   readyUI: {fileID: 1220003941}
   readyTeamsUI: {fileID: 1744716751}
   readyBtn: {fileID: 1744329420}
@@ -16930,12 +16956,6 @@ MonoBehaviour:
   minimapWorldTopRight: {x: 7673, y: 4319}
   syncPlayersInterval: 0.1
   clientMapScale: 0.6
-  initialAnswerPoolSize: 8
-  initialObstaclePoolSize: 8
-  initialMinimapMarkerPoolSize: 16
-  initialMinimapAnswerMarkerPoolSize: 8
-  minimapPlayerMarkerPrefab: {fileID: 0}
-  minimapAnswerMarkerPrefab: {fileID: 0}
 --- !u!114 &2027992709
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17462,6 +17482,18 @@ MonoBehaviour:
       - m_Target: {fileID: 2027992708}
         m_TargetAssemblyTypeName: TowerGameController, Assembly-CSharp
         m_MethodName: loadRoomList
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+      - m_Target: {fileID: 2027992707}
+        m_TargetAssemblyTypeName: AudioControl, Assembly-CSharp
+        m_MethodName: playBtnClick
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -24349,7 +24381,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0.43137255}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -25192,6 +25224,7 @@ GameObject:
   - component: {fileID: 3944357197479468702}
   - component: {fileID: 1131758728121327580}
   - component: {fileID: 1406341547104785628}
+  - component: {fileID: 5427188338574541267}
   m_Layer: 5
   m_Name: QuitBtn
   m_TagString: Untagged
@@ -25199,6 +25232,111 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &5427188338574541267
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5427188338574541266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0390bd8b8ffd640b34fe25065ff1df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  updateType: 0
+  isSpeedBased: 0
+  hasOnStart: 0
+  hasOnPlay: 0
+  hasOnUpdate: 0
+  hasOnStepComplete: 0
+  hasOnComplete: 0
+  hasOnTweenCreated: 0
+  hasOnRewind: 0
+  onStart:
+    m_PersistentCalls:
+      m_Calls: []
+  onPlay:
+    m_PersistentCalls:
+      m_Calls: []
+  onUpdate:
+    m_PersistentCalls:
+      m_Calls: []
+  onStepComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  onComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  onTweenCreated:
+    m_PersistentCalls:
+      m_Calls: []
+  onRewind:
+    m_PersistentCalls:
+      m_Calls: []
+  targetIsSelf: 1
+  targetGO: {fileID: 0}
+  tweenTargetIsTargetGO: 1
+  delay: 0
+  duration: 0.5
+  easeType: 1
+  easeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  loopType: 1
+  loops: -1
+  id: 
+  isRelative: 0
+  isFrom: 0
+  isIndependentUpdate: 0
+  autoKill: 0
+  isActive: 1
+  isValid: 1
+  target: {fileID: 4694589768966680696}
+  animationType: 2
+  targetType: 11
+  forcedTargetType: 0
+  autoPlay: 1
+  useTargetAsV3: 0
+  endValueFloat: 0
+  endValueV3: {x: 0, y: -280, z: 0}
+  endValueV2: {x: 0, y: 0}
+  endValueColor: {r: 1, g: 1, b: 1, a: 1}
+  endValueString: 
+  endValueRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  endValueTransform: {fileID: 0}
+  optionalBool0: 0
+  optionalFloat0: 0
+  optionalInt0: 0
+  optionalRotationMode: 0
+  optionalScrambleMode: 0
+  optionalString: 
 --- !u!114 &5448999934777094866
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26121,10 +26259,10 @@ RectTransform:
   - {fileID: 4699364457401337557}
   m_Father: {fileID: 1998527767390264370}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 400, y: 266.3883}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 1300, y: 0}
+  m_SizeDelta: {x: 400, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &6261288151385496752
 GameObject:
@@ -30293,10 +30431,10 @@ RectTransform:
   - {fileID: 2817066278173172057}
   m_Father: {fileID: 1998527767390264370}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 400, y: 266.3883}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 200, y: 0}
+  m_SizeDelta: {x: 400, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &8902187291912405004
 GameObject:

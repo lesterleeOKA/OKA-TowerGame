@@ -356,6 +356,6 @@ public class CharacterController : UserData
             this.answerText.text = _answer;
         }   
 
-        AudioController.Instance?.PlayAudio(9);
+        if(show==1) AudioController.Instance?.PlayAudio(9);
     }
 }

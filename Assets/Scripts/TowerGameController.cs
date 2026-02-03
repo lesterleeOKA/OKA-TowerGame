@@ -372,7 +372,7 @@ public class TowerGameController : GameBaseController
                 break;
             case "endGame":
                 StartCoroutine(updateScoreUI());
-                showReadyUI(true);
+                //showReadyUI(false);
                 onTopUI.GetComponent<CanvasGroup>().alpha = 0;
                 base.endGame();
                 break;
@@ -969,9 +969,7 @@ public class TowerGameController : GameBaseController
                 var characterSet = this.characterSets[arrayIndex];
                 if (characterSet.walkingAnimationTextures != null && characterSet.walkingAnimationTextures.Length >= 2)
                 {
-                    characterController.SetCostumeTextures(
-                        characterSet.walkingAnimationTextures[0] as Texture2D,
-                        characterSet.walkingAnimationTextures[1] as Texture2D);
+                    characterController.SetCostumeTextures(characterSet);
                 }
                 
                 if (matchingScoreboard != null)
@@ -1101,15 +1099,16 @@ public class TowerGameController : GameBaseController
     public void OnAnswerObjectTrigger(GameObject answerObject, int answerId, WS_Client.AnswerData answerData)
     {
         // Find and update the answer in GameData
-        if (WS_Client.Instance.GameData?.answers != null)
+        var client = WS_Client.Instance;
+        if (client != null && client.GameData?.answers != null)
         {
-            WS_Client.AnswerData answer = WS_Client.Instance.GameData.answers.Find(a => a.id == answerId);
+            WS_Client.AnswerData answer = client.GameData.answers.Find(a => a.id == answerId);
             if (answer != null)
             {
                 answer.isOnPlayer = 1;
                 LogController.Instance.debug($"Set answer {answerId} isOnPlayer to 1");
 
-                WS_Client.Instance.updateAnswerOnPlayer(answerId);
+                _= WS_Client.Instance.updateAnswerOnPlayer(answerId);
             }
             else
             {
@@ -1174,25 +1173,27 @@ public class TowerGameController : GameBaseController
 
     private IEnumerator HideYouWinAfterDelay(float delay)
     {
+        AudioController.Instance?.PlayAudio(1);
         yield return new WaitForSeconds(delay);
-        YouWin.SetActive(false);
+        this.setGetScorePopup(false);
     }
 
     private IEnumerator HideYouLoseAfterDelay(float delay)
     {
+        AudioController.Instance?.PlayAudio(2);
         yield return new WaitForSeconds(delay);
-        YouLose.SetActive(false);
+        this.setWrongPopup(false);
     }
 
     private void submitCorrectAnswerHandler()
     {
-        YouWin.SetActive(true);
+        this.setGetScorePopup(true);
         StartCoroutine(HideYouWinAfterDelay(3f));
     }
 
     private void submitWrongAnswerHandler()
     {
-        YouLose.SetActive(true);
+        this.setWrongPopup(true);
         StartCoroutine(HideYouLoseAfterDelay(3f));
 
         foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {

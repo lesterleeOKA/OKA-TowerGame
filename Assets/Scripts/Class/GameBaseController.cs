@@ -39,9 +39,16 @@ public class GameBaseController : MonoBehaviour
          SetUI.Set(this.TopUILayer, false, 0f);
         // SetUI.Set(this.GameUILayer, false, 0f);
         // SetUI.Set(this.TopRightUILayer, false, 0f);
+        var client = WS_Client.Instance;
+        if(client == null || client.GameData == null || client.GameData.players == null)
+        {
+            Debug.LogError("GameData or players is null in endGame");
+            return;
+        }
+
         int[] teamScores = new int[2];
-        for (int i = 0; i < WS_Client.Instance.GameData.players.Count; i++) {
-            teamScores[i % 2] += WS_Client.Instance.GameData.players[i].score;
+        for (int i = 0; i < client.GameData.players.Count; i++) {
+            teamScores[i % 2] += client.GameData.players[i].score;
         }
         this.endGamePage.updateFinalScore(0, teamScores[0]);
         this.endGamePage.updateFinalScore(1, teamScores[1]);
