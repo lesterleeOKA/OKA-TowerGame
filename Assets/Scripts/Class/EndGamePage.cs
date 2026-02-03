@@ -105,47 +105,13 @@ public class ScoreEnding
     }
     public void updateFinalScore(int score, int star, Sprite[] starsImageSprites, Action onCompleted = null)
     {
-       /* if (starsImageSprites == null) return;
+        if (starsImageSprites == null) return;
 
         if (this.scoreText != null)
         {
             this.scoreText.Value = score;
-        }
-
-        var loaderApiManager = LoaderConfig.Instance.apiManager;
-        if (loaderApiManager.IsLogined)
-        {
-            if (star > -1)
-                this.starNumber = star;
-            else
-                this.calculateByGameRate(score);
-        }
-        else if (loaderApiManager.IsLoginedRainbowOne)
-        {
-            this.calculate/ByGameRate(score);
-        }
-        else
-        {
-            if (score > 30 && score <= 60)
-                this.starNumber = 1;
-            else if (score > 60 && score <= 90)
-                this.starNumber = 2;
-            else if (score > 90)
-                this.starNumber = 3;
-            else
-                this.starNumber = 0;
-        }
-
-        for (int i = 0; i < this.starNumber; i++)
-        {
-            if (this.show_stars_list[i] != null)
-            {
-                float delay = 1f * i; // Incremental delay of 1 second per star
-                this.show_stars_list[i].transform.DOScale(Vector3.one, 1f).SetDelay(0.5f + delay);
-            }
-        }
-
-        onCompleted?.Invoke();*/
+        }     
+        onCompleted?.Invoke();
     }
 
    /* void calculateByGameRate(int score)

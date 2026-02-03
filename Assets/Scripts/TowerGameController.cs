@@ -423,6 +423,9 @@ public class TowerGameController : GameBaseController
         }
         blueTeamScore.GetComponent<TextMeshProUGUI>().text = WS_Client.Instance.GameData.teamScore[0].ToString();
         orangeTeamScore.GetComponent<TextMeshProUGUI>().text = WS_Client.Instance.GameData.teamScore[1].ToString();
+
+        this.endGamePage.updateFinalScore(0, int.Parse(blueTeamScore.GetComponent<TextMeshProUGUI>().text));
+        this.endGamePage.updateFinalScore(1, int.Parse(orangeTeamScore.GetComponent<TextMeshProUGUI>().text));
     }
 
     private IEnumerator updateQuestionUI(bool _autoPlayAudio = false)
