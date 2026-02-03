@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 990974538172055763}
   - component: {fileID: 2935794267594871711}
   - component: {fileID: 9035948348252377346}
-  - component: {fileID: 3093993511158099550}
   m_Layer: 5
   m_Name: Character
   m_TagString: Player
@@ -78,6 +77,8 @@ MonoBehaviour:
   isMouseDown: 0
   localPlayer: {fileID: 2308318903323463056}
   networkUpdateInterval: 0.1
+  characterAnimation: {fileID: 6192520422191565894}
+  characterUIImage: {fileID: 88783074133120887}
   textureAnimationFrameRate: 4
 --- !u!50 &2935794267594871711
 Rigidbody2D:
@@ -151,27 +152,6 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 116.26526, y: 241.86322}
   m_EdgeRadius: 0
---- !u!95 &3093993511158099550
-Animator:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2199729133312583796}
-  m_Enabled: 0
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 69b96f0b20913514a9090ad54baab839, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &2681735473435199823
 GameObject:
   m_ObjectHideFlags: 0
@@ -516,9 +496,9 @@ GameObject:
   m_Component:
   - component: {fileID: 6902064480338467178}
   - component: {fileID: 586965444709424553}
-  - component: {fileID: 6697893090746634682}
+  - component: {fileID: 88783074133120887}
   - component: {fileID: 1526487672107984864}
-  - component: {fileID: 3164985731322570353}
+  - component: {fileID: 6192520422191565894}
   m_Layer: 5
   m_Name: image
   m_TagString: Untagged
@@ -553,7 +533,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7296481544691439269}
   m_CullTransparentMesh: 1
---- !u!114 &6697893090746634682
+--- !u!114 &88783074133120887
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -562,27 +542,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 7296481544691439269}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 3aa47fa87b1d10743be9e4a93a76cbc0, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_Texture: {fileID: 2800000, guid: b9577880095cba146833d6d3c19ca998, type: 3}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
 --- !u!114 &1526487672107984864
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -596,15 +573,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 2
-  m_AspectRatio: 0.6
---- !u!114 &3164985731322570353
+  m_AspectRatio: 0.86
+--- !u!114 &6192520422191565894
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7296481544691439269}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 37c944897b477d846ae44eca63ef8314, type: 3}
   m_Name: 
@@ -620,10 +597,10 @@ MonoBehaviour:
     walkingAnimationTextures: []
     positionRangeX: {x: 0, y: 0, z: 0}
     positionRangeY: {x: 0, y: 0, z: 0}
-  frameRate: 10
+  frameRate: 4
   runEffect: {fileID: 0}
   boardImage: {fileID: 0}
-  characterImage: {fileID: 0}
+  characterImage: {fileID: 88783074133120887}
   currentFrame: 0
 --- !u!1 &8946675504497628752
 GameObject:

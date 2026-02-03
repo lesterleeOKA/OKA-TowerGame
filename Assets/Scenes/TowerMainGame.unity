@@ -16816,8 +16816,6 @@ MonoBehaviour:
   answerPrefab: {fileID: 5690817824625537194, guid: ebb2dbef36b38d341a7c17b3cc78cf60, type: 3}
   obstaclePrefab: {fileID: 3668556306711772515, guid: e6d133f5d65f37141ad7cb7804c5c253, type: 3}
   globalParent: {fileID: 1988803150}
-  YouWin: {fileID: 617150445}
-  YouLose: {fileID: 105608703}
   readyUI: {fileID: 1220003941}
   readyTeamsUI: {fileID: 1744716751}
   readyBtn: {fileID: 1744329420}
@@ -16932,6 +16930,12 @@ MonoBehaviour:
   minimapWorldTopRight: {x: 7673, y: 4319}
   syncPlayersInterval: 0.1
   clientMapScale: 0.6
+  initialAnswerPoolSize: 8
+  initialObstaclePoolSize: 8
+  initialMinimapMarkerPoolSize: 16
+  initialMinimapAnswerMarkerPoolSize: 8
+  minimapPlayerMarkerPrefab: {fileID: 0}
+  minimapAnswerMarkerPrefab: {fileID: 0}
 --- !u!114 &2027992709
 MonoBehaviour:
   m_ObjectHideFlags: 0

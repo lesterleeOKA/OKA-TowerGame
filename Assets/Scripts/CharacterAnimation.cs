@@ -18,7 +18,10 @@ public class CharacterAnimation : MonoBehaviour
     {
         if (this.characterImage == null) this.characterImage = GetComponent<RawImage>();
         //this.characterImage.material = this.playerMats[this.characterSet.playerNumber];
-        this.GetComponent<ShiningEffect>().material = this.characterImage.material;
+        if (this.GetComponent<ShiningEffect>() != null)
+        {
+            this.GetComponent<ShiningEffect>().material = this.characterImage.material;
+        }
         this.setIdling();
         if (this.boardImage != null)
         {
@@ -52,8 +55,8 @@ public class CharacterAnimation : MonoBehaviour
         {
             if (this.characterImage != null)
             {
-                //this.characterImage.texture = this.characterSet.walkingAnimationTextures[currentFrame];
-                this.characterImage.material.SetTexture("_NewTex_1", this.characterSet.walkingAnimationTextures[currentFrame]);
+                this.characterImage.texture = this.characterSet.walkingAnimationTextures[currentFrame];
+                //this.characterImage.material.SetTexture("_NewTex_1", this.characterSet.walkingAnimationTextures[currentFrame]);
             }
 
             currentFrame = (currentFrame + 1) % this.characterSet.walkingAnimationTextures.Length;
@@ -84,7 +87,7 @@ public class CharacterAnimation : MonoBehaviour
             this.characterImage.GetComponent<AspectRatioFitter>().aspectRatio = (float)this.characterSet.idlingTexture.width / (float)this.characterSet.idlingTexture.height;
 
             this.characterImage.material.SetTexture("_NewTex_1", this.characterSet.idlingTexture);
-            //this.characterImage.texture = this.characterSet.idlingTexture;
+            this.characterImage.texture = this.characterSet.idlingTexture;
         }
     }
 }

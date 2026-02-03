@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -11,8 +10,6 @@ public class CharacterController : UserData
     public float acc = 640f;
     public GameObject answerObject;
     private float currectSpeed = 640f;
-    private Vector3 lastPosition;
-    private Transform imageTransform;
     public CanvasGroup answerBubble;
     public TMPro.TextMeshProUGUI answerText;
     public int direction = 0;
@@ -24,23 +21,18 @@ public class CharacterController : UserData
     // Network throttling
     private float lastNetworkUpdateTime = 0f;
     public float networkUpdateInterval = 0.1f; // Send updates every 0.1 seconds (10 times per second)
-    private Texture2D standTexture;
-    private Texture2D walkTexture;
-    private Sprite standSprite;
-    private Sprite walkSprite;
-    private Image characterUIImage;
-    private AspectRatioFitter aspectRatio;
-    private Coroutine walkingCoroutine;
+    public CharacterAnimation characterAnimation;
+    public RawImage characterUIImage;
     public float textureAnimationFrameRate = 2f;
     private Vector3 smoothVelocity = Vector3.zero;
     private float smoothTime = 0.08f; // tune this to reduce fling; lower = snappier, higher = smoother
     private float maxMoveSpeed => followSpeed * (1 / TowerGameController.Instance.clientMapScale); // maximum units per second
+    private static PointerEventData s_pointerEventData;
+    private static List<RaycastResult> s_raycastResults = new List<RaycastResult>(8);
+
 
     void Start()
     {
-        lastPosition = transform.position;
-        imageTransform = transform.Find("image");
-
         if (transform.parent != null)
             localDestination = transform.localPosition;
         else
@@ -63,142 +55,79 @@ public class CharacterController : UserData
             }
         }
     }
-    public void SetCostumeTextures(Texture2D stand, Texture2D walk)
+    public void SetCostumeTextures(CharacterSet characterSet)
     {
         // Initialize image components if not done yet (in case this is called before Start)
-        if (imageTransform == null)
+
+        if(this.characterAnimation != null)
         {
-            imageTransform = transform.Find("image");
-            if (imageTransform != null)
-            {
-                characterUIImage = imageTransform.GetComponent<Image>();
-                aspectRatio = characterUIImage.GetComponent<AspectRatioFitter>();
-                aspectRatio.aspectMode = AspectRatioFitter.AspectMode.HeightControlsWidth;
-                aspectRatio.aspectRatio = (float)stand.width / (float)stand.height;
-            }
-        }
-        this.standTexture = stand;
-        this.walkTexture = walk;
-        // Create and cache sprites to avoid creating them during animation
-        this.standSprite = Sprite.Create(
-            standTexture,
-            new Rect(0, 0, standTexture.width, standTexture.height),
-            new Vector2(0.5f, 0.5f)
-        );
-        this.walkSprite = Sprite.Create(
-            walkTexture,
-            new Rect(0, 0, walkTexture.width, walkTexture.height),
-            new Vector2(0.5f, 0.5f)
-        );
-        // Apply the stand texture immediately (idle state)
-        this.SetIdleTexture();
-    }
-    private void SetIdleTexture()
-    {
-        if (standSprite == null)
-        {
-            LogController.Instance.debug($"SetIdleTexture: standSprite is NULL for {gameObject.name}");
-            return;
-        }
-        if (characterUIImage != null)
-        {
-            characterUIImage.sprite = standSprite;
-        }
-        else
-        {
-            LogController.Instance.debugError($"SetIdleTexture: No image component found on {gameObject.name}! imageTransform={imageTransform != null}");
+            this.characterAnimation.characterSet = characterSet;
+            this.characterAnimation.setIdling();
         }
     }
-    // Start the walking animation
-    private void PlayWalkingAnimation()
-    {
-        try
-        {
-            // If already walking or no cached sprites, do nothing
-            if (walkingCoroutine != null || walkSprite == null || standSprite == null) return;
 
-            walkingCoroutine = StartCoroutine(WalkingAnimationCoroutine());
-        }
-        catch (System.Exception ex)
-        {
-            LogController.Instance.debugError($"Error starting walking animation for {gameObject.name}: {ex.Message}");
-            walkingCoroutine = null;
-        }
-    }
-    // Stop the walking animation
-    private void StopWalkingAnimation()
-    {
-        try
-        {
-            if (walkingCoroutine != null)
-            {
-                StopCoroutine(walkingCoroutine);
-                walkingCoroutine = null;
-                SetIdleTexture();
-            }
-        }
-        catch (System.Exception ex)
-        {
-            LogController.Instance.debugError($"Error stopping walking animation for {gameObject.name}: {ex.Message}");
-            // Ensure we reset the coroutine reference even if StopCoroutine fails
-            walkingCoroutine = null;
-        }
-    }
-    // Coroutine to alternate between walk and stand textures
-    private IEnumerator WalkingAnimationCoroutine()
-    {
-        bool useWalkSprite = false;
 
-        while (true)
-        {
-            // Use cached sprites instead of creating new ones
-            Sprite currentSprite = useWalkSprite ? walkSprite : standSprite;
-
-            if (characterUIImage != null && currentSprite != null)
-            {
-                characterUIImage.sprite = currentSprite;
-            }
-
-            // Toggle between sprites
-            useWalkSprite = !useWalkSprite;
-
-            // Wait for the frame duration
-            yield return new WaitForSeconds(1f / textureAnimationFrameRate);
-        }
-    }
     //Fixed the touch and mouse click conflict with UI Buttons
     private bool IsPointerOverUIButton()
     {
         if (EventSystem.current == null) return false;
 
-        PointerEventData pointerData = new PointerEventData(EventSystem.current);
-        if (Input.touchCount > 0)
-        {
-            pointerData.position = Input.GetTouch(0).position;
-        }
-        else
-        {
-            pointerData.position = Input.mousePosition;
-        }
-        List<RaycastResult> results = new List<RaycastResult>();
-        EventSystem.current.RaycastAll(pointerData, results);
+        // Reuse static PointerEventData and results to avoid allocations
+        if (s_pointerEventData == null) s_pointerEventData = new PointerEventData(EventSystem.current);
 
-        foreach (var r in results)
+        // Check touches first (multi-touch safe)
+        for (int i = 0; i < Input.touchCount; ++i)
         {
-            if (r.gameObject == null) continue;
-            // check for Button component on the hit GameObject or any parent
-            if (r.gameObject.GetComponent<Button>() != null)
-                return true;
-            // sometimes the Button component is on a parent; walk up
-            Transform t = r.gameObject.transform;
-            while (t.parent != null)
+            Touch t = Input.GetTouch(i);
+
+            s_pointerEventData.pointerId = t.fingerId;
+            s_pointerEventData.position = t.position;
+
+            s_raycastResults.Clear();
+            EventSystem.current.RaycastAll(s_pointerEventData, s_raycastResults);
+
+            for (int r = 0; r < s_raycastResults.Count; ++r)
             {
-                t = t.parent;
-                if (t.GetComponent<Button>() != null) return true;
+                var go = s_raycastResults[r].gameObject;
+                if (go == null) continue;
+
+                // treat as UI only if it, or a parent, has a Button component
+                if (go.GetComponent<Button>() != null) return true;
+                Transform tt = go.transform;
+                while (tt.parent != null)
+                {
+                    tt = tt.parent;
+                    if (tt.GetComponent<Button>() != null) return true;
+                }
             }
         }
+
+        // Mouse fallback: raycast at mouse position and look specifically for Buttons.
+        // Avoid EventSystem.current.IsPointerOverGameObject() because it often returns true for full-screen canvases/blocks.
+        s_pointerEventData.pointerId = -1;
+        s_pointerEventData.position = Input.mousePosition;
+
+        s_raycastResults.Clear();
+        EventSystem.current.RaycastAll(s_pointerEventData, s_raycastResults);
+
+        for (int r = 0; r < s_raycastResults.Count; ++r)
+        {
+            var go = s_raycastResults[r].gameObject;
+            if (go == null) continue;
+
+            if (go.GetComponent<Button>() != null) return true;
+            Transform tt = go.transform;
+            while (tt.parent != null)
+            {
+                tt = tt.parent;
+                if (tt.GetComponent<Button>() != null) return true;
+            }
+        }
+
         return false;
     }
+
+
     void Update()
     {
         try
@@ -208,11 +137,6 @@ public class CharacterController : UserData
                 if (this.IsPointerOverUIButton())
                 {
                     isMouseDown = false;
-                    if (transform.parent != null)
-                        localDestination = transform.localPosition;
-                    else
-                        localDestination = transform.position;
-                    smoothVelocity = Vector3.zero;
                     return;
                 }
                 // Handle both mouse and touch input
@@ -223,15 +147,15 @@ public class CharacterController : UserData
                 if (Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
                 {
                     isMouseDown = false;
+                }
+                // Also set isMouseDown to false if no touches are detected
+                if (Input.touchCount == 0 && !Input.GetMouseButton(0))
+                {
                     if (transform.parent != null)
                         localDestination = transform.localPosition;
                     else
                         localDestination = transform.position;
                     smoothVelocity = Vector3.zero;
-                }
-                // Also set isMouseDown to false if no touches are detected
-                if (Input.touchCount == 0 && !Input.GetMouseButton(0))
-                {
                     isMouseDown = false;
                 }
 
@@ -260,12 +184,11 @@ public class CharacterController : UserData
                         };
 
                         // Debug.Log("UpdateServerPosition: posData=" + posData.x + " - " + posData.y + " - destData=" + destData.x + " - " + destData.y);
-                        WS_Client.Instance.UpdateServerPosition(posData, destData);
+                        _ = WS_Client.Instance.UpdateServerPosition(posData, destData);
                     }
                 }
             }
             UpdateAnimation();
-            lastPosition = transform.localPosition;
         }
         catch (System.Exception ex)
         {
@@ -385,6 +308,7 @@ public class CharacterController : UserData
             {
                 if (Mathf.Abs(movement.x) > horizontalDeadzone)
                 {
+                    var imageTransform = this.characterUIImage?.transform;
                     if (movement.x > 0)
                     {
                         this.direction = 2; // 向右
@@ -408,34 +332,19 @@ public class CharacterController : UserData
                 this.direction = 0;// 停止
             }
 
+            if(this.characterAnimation == null) return;
             if ((!IsLocalPlayer && distance > 0.01f) || (IsLocalPlayer && isMouseDown))
             {
-                PlayWalkingAnimation();
+                this.characterAnimation.PlayWalking(1);
             }
             else
             {
-                StopWalkingAnimation();
+                this.characterAnimation.setIdling();
             }
         }
         catch (System.Exception ex)
         {
             LogController.Instance.debugError($"Error in UpdateAnimation for {gameObject.name}: {ex.Message}");
-        }
-    }
-
-    public void TriggerCorrectAnimation()
-    {
-        if (imageTransform != null)
-        {
-            imageTransform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
-        }
-    }
-
-    public void ResetTrigger()
-    {
-        if (imageTransform != null)
-        {
-            imageTransform.localScale = new Vector3(1f, 1f, 1f);
         }
     }
 

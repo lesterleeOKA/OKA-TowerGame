@@ -522,35 +522,35 @@ public class WS_Client : MonoBehaviour
 #endif
         if (Input.GetKeyDown(KeyCode.G))
         {
-            updateAnswerOnPlayer(1); // 玩家拾取答案
+           _ = updateAnswerOnPlayer(1); // 玩家拾取答案
         }
         if (Input.GetKeyDown(KeyCode.S))
         {
-            submitAnswer(4); // 玩家提交答案
+            _ = submitAnswer(4); // 玩家提交答案
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
-            ready(); // 玩家準備
+            _ = ready(); // 玩家準備
         }
         if (Input.GetKeyDown(KeyCode.C))
         {
-            cancelReady(); // 取消準備
+            _ = cancelReady(); // 取消準備
         }
         if (Input.GetKeyDown(KeyCode.T))
         {
-            setTimer(3);
+            _ = setTimer(3);
         }
         if (Input.GetKeyDown(KeyCode.M))
         {
-            resetGame(); // for DEV 重置遊戲
+            _ = resetGame(); // for DEV 重置遊戲
         }
         if (Input.GetKeyDown(KeyCode.N))
         {
-            nextRound(); // for DEV 下一回合
+            _ = nextRound(); // for DEV 下一回合
         }
         if (Input.GetKeyDown(KeyCode.B))
         {
-            startGame(); // for DEV 開始遊戲
+            _ = startGame(); // for DEV 開始遊戲
         }
         if (Input.GetKeyDown(KeyCode.J))
         {
@@ -1002,26 +1002,31 @@ public class WS_Client : MonoBehaviour
             Debug.LogWarning("WebSocket未连接！");
         }
     }
-    public async Task ready()
+    public Task ready()
     {
-        sendAction("ready");
+        _ = sendAction("ready");
+        return Task.CompletedTask;
     }
-    public async Task cancelReady()
+    public Task cancelReady()
     {
-        sendAction("cancelReady");
+        _ = sendAction("cancelReady");
+        return Task.CompletedTask;
     }
-    public async Task startGame()
+    public Task startGame()
     {
-        sendAction("startGame");
+        _ = sendAction("startGame");
+        return Task.CompletedTask;
     }
 
-    public async Task nextRound()
+    public Task nextRound()
     {
-        sendAction("nextRound");
+        _ = sendAction("nextRound");
+        return Task.CompletedTask;
     }
-    public async Task resetGame()
+    public Task resetGame()
     {
-        sendAction("resetGame");
+        _ = sendAction("resetGame");
+        return Task.CompletedTask;
     }
 
     async void SendWebSocketMessage()
@@ -1102,7 +1107,7 @@ public class WS_Client : MonoBehaviour
         //     if (player != null) {
         //         Debug.Log("setReady: " + newStatus);
         //         player.status = newStatus;
-                sendAction("ready");
+        _ = sendAction("ready");
         //     }
         // }
     }
