@@ -233,6 +233,8 @@ public class CharacterController : UserData
         }
     }
 
+    public bool isMoving = false;
+
     private void calLocalDestination()
     {
         if (this.detectCamera == null) this.detectCamera = Camera.main;
@@ -251,22 +253,45 @@ public class CharacterController : UserData
         {
             Vector3 worldPoint = ray.GetPoint(enter);
 
-            // Set a target some distance in direction of the pointer, but do not snap
-            Vector3 dir = (worldPoint - ((transform.parent != null) ? transform.parent.TransformPoint(transform.localPosition) : transform.position));
-            if (dir.sqrMagnitude > 0.0001f)
+            // Character current world position
+            Vector3 charWorldPos = (transform.parent != null) ? transform.parent.TransformPoint(transform.localPosition) : transform.position;
+
+            // Vector from character to pointer
+            Vector3 delta = worldPoint - charWorldPos;
+            float distanceToPointer = delta.magnitude;
+
+            // If pointer is very close to the character, treat as no movement to avoid jitter
+            const float clickDeadzoneWorld = 0.18f; // tune this (world units)
+            if (distanceToPointer <= clickDeadzoneWorld)
             {
-                dir.Normalize();
-                Vector3 worldDestination = (transform.parent != null ? transform.parent.TransformPoint(transform.localPosition) : transform.position) + dir * maxMoveSpeed;
-
-                // store as local if parent exists, otherwise world pos
+                // Snap destination to current position and clear velocity to avoid tiny SmoothDamp adjustments
                 if (transform.parent != null)
-                    localDestination = transform.parent.InverseTransformPoint(worldDestination);
+                    localDestination = transform.localPosition;
                 else
-                    localDestination = worldDestination;
+                    localDestination = transform.position;
 
-                // keep z consistent
-                localDestination.z = transform.localPosition.z;
+                smoothVelocity = Vector3.zero;
+                this.isMoving = false;
+                return;
             }
+
+            // Otherwise set a destination in the direction of the pointer but limit step to avoid overshoot
+            Vector3 dir = delta.normalized;
+
+            // Use a reasonable step toward pointer: min(distance, maxMoveSpeed)
+            float stepDistance = Mathf.Min(distanceToPointer, maxMoveSpeed);
+
+            Vector3 worldDestination = charWorldPos + dir * stepDistance;
+
+            // store as local if parent exists, otherwise world pos
+            if (transform.parent != null)
+                localDestination = transform.parent.InverseTransformPoint(worldDestination);
+            else
+                localDestination = worldDestination;
+
+            this.isMoving = true;
+            // keep z consistent
+            localDestination.z = transform.localPosition.z;
         }
     }
 
@@ -297,43 +322,49 @@ public class CharacterController : UserData
         try
         {
             Vector3 movement = localDestination - transform.localPosition;
-            float distance = Vector3.Distance(transform.localPosition, localDestination);
+            float distance = movement.magnitude;
 
-            float speed = movement.magnitude;
+            // Minimum movement to consider (avoids jitter when clicking nearly on the character)
+            const float minMoveThreshold = 0.02f;
 
-            // add a horizontal deadzone to avoid rapid left/right flips
+            // Horizontal deadzone to avoid rapid left/right flips
             const float horizontalDeadzone = 0.15f;
 
-            if (speed > 0f)
+            var imageTransform = this.characterUIImage?.transform;
+
+            if (distance > minMoveThreshold)
             {
-                if (Mathf.Abs(movement.x) > horizontalDeadzone)
+                // Only change facing when horizontal movement is meaningful
+                float mx = movement.x;
+
+                if (Mathf.Abs(mx) > horizontalDeadzone)
                 {
-                    var imageTransform = this.characterUIImage?.transform;
-                    if (movement.x > 0)
+                    if (mx > 0f)
                     {
-                        this.direction = 2; // 向右
+                        this.direction = 2; // facing right
                         if (imageTransform != null)
-                        {
                             imageTransform.localScale = new Vector3(-1f, 1f, 1f);
-                        }
                     }
                     else
                     {
-                        this.direction = 1;// 向左
+                        this.direction = 1; // facing left
                         if (imageTransform != null)
-                        {
                             imageTransform.localScale = new Vector3(1f, 1f, 1f);
-                        }
                     }
                 }
+                // If horizontal movement is within deadzone, keep previous facing (do not flip)
             }
             else
             {
-                this.direction = 0;// 停止
+                // Considered stopped
+                this.direction = 0;
             }
 
-            if(this.characterAnimation == null) return;
-            if ((!IsLocalPlayer && distance > 0.01f) || (IsLocalPlayer && isMouseDown))
+            // Animation: only play walking when movement is meaningful or local player is dragging
+            if (this.characterAnimation == null) return;
+
+            bool shouldWalk = ((!IsLocalPlayer && distance > minMoveThreshold && this.isMoving) || (IsLocalPlayer && isMouseDown && this.isMoving));
+            if (shouldWalk)
             {
                 this.characterAnimation.PlayWalking(1);
             }

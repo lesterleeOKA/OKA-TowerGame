@@ -69,7 +69,7 @@ public class EndGamePage
     {
         if (this.scoreEndings != null && this.scoreEndings[_playerId] != null)
         {
-            this.scoreEndings[_playerId].updateFinalScore(_score, -1, starsImageSprites, onCompleted);
+            this.scoreEndings[_playerId].updateFinalScore(_score, onCompleted);
         }
     }
 
@@ -77,7 +77,7 @@ public class EndGamePage
     {
         if (this.scoreEndings != null && this.scoreEndings[_playerId] != null)
         {
-            this.scoreEndings[_playerId].updateFinalScore(_score, _star, starsImageSprites, onCompleted);
+            this.scoreEndings[_playerId].updateFinalScore(_score, onCompleted);
         }
     }
 
@@ -103,18 +103,16 @@ public class ScoreEnding
             }
         }
     }
-    public void updateFinalScore(int score, int star, Sprite[] starsImageSprites, Action onCompleted = null)
+    public void updateFinalScore(int score, Action onCompleted = null)
     {
-        if (starsImageSprites == null) return;
-
         if (this.scoreText != null)
         {
             this.scoreText.Value = score;
-        }     
+        }      
         onCompleted?.Invoke();
     }
 
-   /* void calculateByGameRate(int score)
+    /*void calculateByGameRate(int score)
     {
         int totalQuestions = 0;
         int eachQuestionScore = 10;

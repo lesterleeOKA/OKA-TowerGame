@@ -28,8 +28,8 @@ public class TowerGameController : GameBaseController
     public CanvasGroup readyUI;
     public CanvasGroup readyTeamsUI;
     public GameObject readyBtn, cancelBtn;
-    public GameObject blueTeamScore;
-    public GameObject orangeTeamScore;
+    public NumberCounter blueTeamScore;
+    public NumberCounter redTeamScore;
     public GameObject disconnectedUI;
 
     public List<CharacterController> characterControllers = new List<CharacterController>();
@@ -103,7 +103,7 @@ public class TowerGameController : GameBaseController
     protected override void Start()
     {
         base.Start();
-
+        this.GetComponent<AudioControl>().setAudioStatusDirectly();
         // Subscribe to the order changed event
         if (WS_Client.Instance != null)
         {
@@ -357,6 +357,7 @@ public class TowerGameController : GameBaseController
             case "removePlayer":
             break;
             case "reconnectPlayer":
+                StartCoroutine(updateScoreUI());
                 showReadyUI(false);
                 checkAnswerVisibility();
                 StartCoroutine(updateQuestionUI(true));
@@ -369,10 +370,7 @@ public class TowerGameController : GameBaseController
                 resetStartingPos();
                 break;
             case "endGame":
-                StartCoroutine(updateScoreUI());
-                //showReadyUI(false);
-                onTopUI.GetComponent<CanvasGroup>().alpha = 0;
-                base.endGame();
+                this.EndGame();
                 break;
             case "resetGame":
                 showReadyUI(true);
@@ -381,11 +379,9 @@ public class TowerGameController : GameBaseController
                 // Add your logic here
                 break;
             case "nextRound":
-                StartCoroutine(updateScoreUI());
                 StartCoroutine(updateQuestionUI(true));
                 SetUI.Set(this.TopUILayer, true, 0f);
                 resetStartingPos();
-                // Add your logic here
                 break;
             case "getAnswer":
                 checkAnswerVisibility();
@@ -416,16 +412,59 @@ public class TowerGameController : GameBaseController
         disconnectedUI.SetActive(false);
     }
 
-    private IEnumerator updateScoreUI()
+    public void EndGame()
     {
-        while (WS_Client.Instance.GameData == null) {
+        LogController.Instance.debug("Game is ended");
+        StartCoroutine(updateScoreUI(()=>
+        {
+            var client = WS_Client.Instance;
+            if (client == null || client.GameData == null || client.GameData.players == null)
+            {
+                Debug.LogError("GameData or players is null in endGame");
+                return;
+            }
+
+            int[] teamScores = new int[2] { 0, 0 };
+            if (client.GameData.teamScore != null && client.GameData.teamScore.Count >= 2)
+            {
+                // Defensive copy / bounds check
+                teamScores[0] = client.GameData.teamScore.Count > 0 ? client.GameData.teamScore[0] : 0;
+                teamScores[1] = client.GameData.teamScore.Count > 1 ? client.GameData.teamScore[1] : 0;
+            }
+            else
+            {
+                // Fallback: sum player scores by team using player list order (legacy)
+                var players = client.GameData.players;
+                if (players != null)
+                {
+                    for (int i = 0; i < players.Count; i++)
+                    {
+                        var p = players[i];
+                        if (p == null) continue;
+                        // ensure we don't throw on uninitialized score
+                        int s = p.score;
+                        teamScores[i % 2] += s;
+                    }
+                }
+            }
+            this.endGamePage.updateFinalScore(0, teamScores[0]);
+            this.endGamePage.updateFinalScore(1, teamScores[1]);
+            onTopUI.GetComponent<CanvasGroup>().alpha = 0;
+            base.endGame();
+        }));
+        //showReadyUI(false);
+    }
+
+    private IEnumerator updateScoreUI(Action completed=null)
+    {
+        var client = WS_Client.Instance;
+        while (client.GameData == null) {
             yield return new WaitForSeconds(0.1f);
         }
-        blueTeamScore.GetComponent<TextMeshProUGUI>().text = WS_Client.Instance.GameData.teamScore[0].ToString();
-        orangeTeamScore.GetComponent<TextMeshProUGUI>().text = WS_Client.Instance.GameData.teamScore[1].ToString();
+        if(this.blueTeamScore != null) this.blueTeamScore.Value = client.GameData.teamScore[0];
+        if(this.redTeamScore != null) this.redTeamScore.Value = client.GameData.teamScore[1];
 
-        this.endGamePage.updateFinalScore(0, int.Parse(blueTeamScore.GetComponent<TextMeshProUGUI>().text));
-        this.endGamePage.updateFinalScore(1, int.Parse(orangeTeamScore.GetComponent<TextMeshProUGUI>().text));
+        completed?.Invoke();
     }
 
     private IEnumerator updateQuestionUI(bool _autoPlayAudio = false)
@@ -1189,21 +1228,68 @@ public class TowerGameController : GameBaseController
     private void submitCorrectAnswerHandler()
     {
         this.setGetScorePopup(true);
+        StartCoroutine(updateScoreUI());
         StartCoroutine(HideYouWinAfterDelay(3f));
     }
 
     private void submitWrongAnswerHandler()
     {
-        this.setWrongPopup(true);
-        StartCoroutine(HideYouLoseAfterDelay(3f));
+        try
+        {
+            var client = WS_Client.Instance;
+            if (client == null || client.GameData == null || client.GameData.players == null)
+            {
+                LogController.Instance.debug("submitWrongAnswerHandler: missing GameData");
+                return;
+            }
 
-        foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players) {
-            if (player.isAnswerVisible == 0) {
-                CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
-                if (characterController != null) {
-                    characterController.showAnswerBubble(0, "");
+            // Determine local UID safely
+            int localUid = client.public_UserInfo != null ? client.public_UserInfo.uid : -1;
+
+            // Determine whether the local player submitted a wrong answer.
+            bool localSubmittedWrong = false;
+            if (localUid != -1)
+            {
+                var localPlayer = client.GameData.players.Find(p => p.uid == localUid);
+                if (localPlayer != null && localPlayer.answer_id != 0 && client.GameData.answers != null)
+                {
+                    var answer = client.GameData.answers.Find(a => a.id == localPlayer.answer_id);
+                    if (answer != null)
+                    {
+                        // server's AnswerData.isCorrect == 0 -> wrong
+                        localSubmittedWrong = (answer.isCorrect == 0);
+                    }
                 }
             }
+
+            // Hide answer bubbles for players who shouldn't show them (same as before)
+            foreach (WS_Client.PlayerData player in client.GameData.players)
+            {
+                if (player.isAnswerVisible == 0)
+                {
+                    CharacterController characterController = characterControllers.Find(c => c.UserId == player.uid);
+                    if (characterController != null)
+                    {
+                        characterController.showAnswerBubble(0, "");
+                    }
+                }
+            }
+
+            // Show wrong popup only to the submitting (local) player
+            if (localSubmittedWrong)
+            {
+                this.setWrongPopup(true);
+                StartCoroutine(HideYouLoseAfterDelay(3f));
+            }
+            else
+            {
+                // ensure popup hidden for others
+                this.setWrongPopup(false);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogController.Instance.debugError($"Error in submitWrongAnswerHandler: {ex.Message}\n{ex.StackTrace}");
         }
     }
 
