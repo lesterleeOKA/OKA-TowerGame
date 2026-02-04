@@ -58,26 +58,27 @@ public class QuestionTrigger : MonoBehaviour
     {
         
         // Get CharacterController component
+        var client = WS_Client.Instance;
+        var gameController = TowerGameController.Instance;
         CharacterController characterController = player.GetComponent<CharacterController>();
         if (characterController != null)
         {
             // Check if player has an answer
-            if (characterController.answerObject != null && TowerGameController.Instance != null)
+            if (characterController.answerObject != null && gameController != null)
             {
                 // Get the AnswerTrigger component from the answer GameObject
                 AnswerTrigger answerTrigger = characterController.answerObject.GetComponent<AnswerTrigger>();
                 if (answerTrigger != null)
                 {
-
-                    if (WS_Client.Instance.GameData.players != null) {
-                        WS_Client.PlayerData clientPlayer = WS_Client.Instance.GameData.players.Find(p => p.uid == WS_Client.Instance.public_UserInfo.uid);
+                    if (client.GameData.players != null) {
+                        WS_Client.PlayerData clientPlayer = client.GameData.players.Find(p => p.uid == client.public_UserInfo.uid);
                         if (clientPlayer != null) {
 
                             // Find the index of the scoreboard matching the client player's key
                             int clientPlayerIndex = -1;
-                            for (int i = 0; i < TowerGameController.Instance.scoreboardControllers.Length; i++)
+                            for (int i = 0; i < gameController.scoreboardControllers.Length; i++)
                             {
-                                scoreboardController sb = TowerGameController.Instance.scoreboardControllers[i].GetComponent<scoreboardController>();
+                                scoreboardController sb = gameController.scoreboardControllers[i].GetComponent<scoreboardController>();
                                 if (sb != null && sb.key == clientPlayer.player_id)
                                 {
                                     clientPlayerIndex = i;
@@ -86,13 +87,11 @@ public class QuestionTrigger : MonoBehaviour
                             }
 
                             if (clientPlayerIndex != -1 && clientPlayerIndex % 2 == (int)this.team) {
-                                // TowerGameController.Instance.teamScore[(int)this.team] += answerTrigger.answerData.score;
-                            
                                 clientPlayer.answer_id = 0;
                                 clientPlayer.answerContent = "";
                                 clientPlayer.isAnswerVisible = 0;
 
-                                WS_Client.Instance.submitAnswer(answerTrigger.answerId);
+                                _= client.submitAnswer(answerTrigger.answerId);
                             
                                 characterController.showAnswerBubble(0, "");
                                 characterController.answerObject = null;

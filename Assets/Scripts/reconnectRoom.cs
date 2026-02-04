@@ -38,7 +38,7 @@ public class reconnectRoom : MonoBehaviour
         WS_Client.Instance.JoinGameRoom(reconnectRoomId);
         SetUI.Set(this.reconnectRoomUI, false);
         reconnectRoomId = 0;
-        LoaderConfig.Instance?.changeScene(2);
+        MainMenu.Instance?.gameStart();
         WS_Client.Instance.pendingReconnectRoomId = "";
     }
 }

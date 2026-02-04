@@ -19,6 +19,15 @@ public class AudioControl : MonoBehaviour
         }
     }
 
+    public void starBGMStatusAutoTrue()
+    {
+        AudioController.Instance.audioStatus = !AudioController.Instance.audioStatus;
+        if (this.muteBtn != null && this.audioSprites[AudioController.Instance.audioStatus ? 0 : 1] != null)
+            this.muteBtn.sprite = this.audioSprites[AudioController.Instance.audioStatus ? 0 : 1];
+
+        AudioController.Instance?.changeBGMStatus(AudioController.Instance.audioStatus);
+    }
+
     public void setAudioStatusDirectly()
     {
         AudioController.Instance.audioStatus = !AudioController.Instance.audioStatus;

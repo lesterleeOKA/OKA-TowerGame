@@ -8,8 +8,9 @@ public class roomListController : MonoBehaviour
 {
     public TextMeshProUGUI roomNoText;
     public TextMeshProUGUI playerNoText;
-    public GameObject indicator;
+    public GameObject indicator, buttonIndicator;
     public Button joinButton;
+    public Sprite[] jointButtonState;
     public int roomId;
 
     private WS_Client.RoomInfo room;
@@ -19,16 +20,18 @@ public class roomListController : MonoBehaviour
         joinButton.onClick.AddListener(JoinRoom);
         roomNoText.text = "Room " + roomId.ToString();
         if (this.indicator == null) this.indicator.SetActive(true);
+        if (this.buttonIndicator == null) this.buttonIndicator.SetActive(true);
         roomListRefresh();
     }
 
     void Update()
     {
         roomListRefresh();
-        if (this.indicator == null) return;
+        if (this.indicator == null || this.buttonIndicator == null) return;
         if (WS_Client.Instance.websocket == null || WS_Client.Instance.websocket.State != WebSocketState.Open) {
             playerNoText.text = "<color=#FF000000>0</color>/6";
             joinButton.interactable = false;
+            joinButton.GetComponent<Image>().sprite = jointButtonState[1];
             return;
         }
         else
@@ -39,6 +42,7 @@ public class roomListController : MonoBehaviour
                 {
                     playerNoText.text = "<color=#FF000000>0</color>/6";
                     joinButton.interactable = false;
+                    joinButton.GetComponent<Image>().sprite = jointButtonState[1];
                 }
                 else
                 {
@@ -51,7 +55,9 @@ public class roomListController : MonoBehaviour
                     {
                         joinButton.interactable = true;
                     }
+                    joinButton.GetComponent<Image>().sprite = jointButtonState[0];
                     this.indicator.SetActive(false);
+                    this.buttonIndicator.SetActive(false);
                 }
             }
         }
@@ -83,7 +89,7 @@ public class roomListController : MonoBehaviour
         if (room != null)
         {
             WS_Client.Instance.JoinGameRoom(roomId);
-            LoaderConfig.Instance?.changeScene(2);
+            MainMenu.Instance?.gameStart();
         }
     }
 }

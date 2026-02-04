@@ -103,7 +103,7 @@ public class TowerGameController : GameBaseController
     protected override void Start()
     {
         base.Start();
-        this.GetComponent<AudioControl>().setAudioStatusDirectly();
+        this.GetComponent<AudioControl>().starBGMStatusAutoTrue();
         // Subscribe to the order changed event
         if (WS_Client.Instance != null)
         {
@@ -474,7 +474,8 @@ public class TowerGameController : GameBaseController
         }
 
         int round = WS_Client.Instance.GameData.round;
-        WS_Client.QuestionData question = WS_Client.Instance.GameData.questions[round-1];      
+        WS_Client.QuestionData question = WS_Client.Instance.GameData.questions[round-1];
+        RoundTitle.Instance?.ShowRoundTitle(round - 1);
         QuestionController.Instance.nextQuestion(_autoPlayAudio);
         while (round == currentQuestionId) {
             round = WS_Client.Instance.GameData.round;

@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 
 public class AnswerTrigger : MonoBehaviour
 {
@@ -13,11 +10,6 @@ public class AnswerTrigger : MonoBehaviour
         canvas = GetComponent<CanvasGroup>();
     }
 
-    void Update()
-    {
-        
-    }
-
     public void checkAnswerVisibility() {
         WS_Client.AnswerData currentAnswerData = WS_Client.Instance.GameData?.answers?.Find(a => a.id == answerId);
         
@@ -26,10 +18,7 @@ public class AnswerTrigger : MonoBehaviour
             // Set canvas alpha to 0 and disable trigger when isOnPlayer == 0
             if (currentAnswerData.isOnPlayer == 1)
             {
-                if (canvas != null)
-                {
-                    canvas.alpha = 0;
-                }
+                SetUI.Set(this.canvas, false);
                 Collider2D trigger = GetComponent<Collider2D>();
                 if (trigger != null)
                 {
@@ -38,10 +27,7 @@ public class AnswerTrigger : MonoBehaviour
             }
             else
             {
-                if (canvas != null)
-                {
-                    canvas.alpha = 1;
-                }
+                SetUI.Set(this.canvas, true);
                 Collider2D trigger = GetComponent<Collider2D>();
                 if (trigger != null)
                 {
@@ -98,12 +84,6 @@ public class AnswerTrigger : MonoBehaviour
             Debug.LogWarning($"Player {player.name} does not have a CharacterController component!");
         }
         
-        // Call TowerGameController to handle answer trigger
-        
-        
-        // You can add more logic here:
-        // - Update server that player is on this answer
-        // - Allow player to pick up/select the answer with a key press
     }
 }
 
