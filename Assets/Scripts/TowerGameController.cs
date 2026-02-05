@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Playables;
 using UnityEngine.UI;
 
 // Class to hold all costume textures for a single costume
@@ -1211,13 +1210,19 @@ public class TowerGameController : GameBaseController
             return;
         }
 
-        int uid = player.uid;
-        characterController.detectCamera = this.trackingCamera;
-        characterController.gameObject.name = "Player_" + uid;
-        characterController.UserName = "Player_" + uid;
-        characterController.UserId = uid;
+            int uid = player.uid;
+            characterController.detectCamera = this.trackingCamera;
+            characterController.gameObject.name = "Player_" + uid;
+            characterController.UserName = "Player_" + uid;
+            characterController.UserId = uid;
 
-        if (isLocal) characterController.gameObject.tag = "MainPlayer";
+            if (!string.IsNullOrEmpty(player.answerContent))
+            {
+                characterController.answerId = player.answer_id;
+                characterController.showAnswerBubble(1, player.answerContent ?? "");
+            }
+
+            if (isLocal) characterController.gameObject.tag = "MainPlayer";
         this.characterControllers.Add(characterController);
 
         // set world-space start position
@@ -1348,6 +1353,7 @@ public class TowerGameController : GameBaseController
             answerTrigger = answerObj.AddComponent<AnswerTrigger>();
         }
         answerTrigger.answerId = answer.id;
+        answerTrigger.content = answer.content;
 
         answerObj.gameObject.SetActive(true);
 
@@ -1381,7 +1387,7 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    public void OnAnswerObjectTrigger(GameObject answerObject, int answerId, WS_Client.AnswerData answerData)
+    public void OnAnswerObjectTrigger(int answerId)
     {
         // Find and update the answer in GameData
         var client = WS_Client.Instance;

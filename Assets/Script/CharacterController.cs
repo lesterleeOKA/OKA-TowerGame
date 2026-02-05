@@ -8,7 +8,7 @@ public class CharacterController : UserData
     public Camera detectCamera;
     public float followSpeed = 1600f;
     public float acc = 640f;
-    public GameObject answerObject;
+    public int answerId = -1;
     private float currectSpeed = 640f;
     public CanvasGroup answerBubble;
     public TMPro.TextMeshProUGUI answerText, playerNameText;
@@ -364,7 +364,10 @@ public class CharacterController : UserData
             // Animation: only play walking when movement is meaningful or local player is dragging
             if (this.characterAnimation == null) return;
 
-            bool shouldWalk = ((!IsLocalPlayer && distance > minMoveThreshold && this.isMoving) || (IsLocalPlayer && isMouseDown && this.isMoving));
+            bool remoteShouldWalk = (!IsLocalPlayer && distance > minMoveThreshold);
+            bool localShouldWalk = (IsLocalPlayer && isMouseDown && this.isMoving);
+            bool shouldWalk = remoteShouldWalk || localShouldWalk;
+
             if (shouldWalk)
             {
                 this.characterAnimation.PlayWalking(1);

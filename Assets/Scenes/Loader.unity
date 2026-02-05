@@ -698,6 +698,7 @@ MonoBehaviour:
   jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxNy03ZmI1MDI3NmRkMmNiZTA4OGZiM2Q2Y2RlYmJiOGRiYWZlZDJmY2Y2MzVkNzZiMmI2ODE1OWE2OWUyYTkwNWZiIiwiZXhwaXJlcyI6MTc2ODQ3MDYxMywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDEtMDggMDk6NTA6MTMgR01UIiwidWlkIjoiNTE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMzEuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.K2D-yniyoC3-DX9-r_1CS9qhC8W9bCm-WeIXyWzBits
   pendingReconnectRoomId: 
   pendingOrder: 
+  lastOrderTargetUid: 
   localhostUrl: wss://ws.openknowledge.hk:8084
   localhostUrl_copy: ws://localhost:8000/
   developmentUrl: wss://ws.openknowledge.hk:8084
@@ -825,7 +826,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_Text
-      value: v1.11
+      value: v1.12
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_FontData.m_Font

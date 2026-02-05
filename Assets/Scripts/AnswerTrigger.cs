@@ -3,6 +3,7 @@ using UnityEngine;
 public class AnswerTrigger : MonoBehaviour
 {
     public int answerId;
+    public string content;
     private CanvasGroup canvas;
 
     void Start()
@@ -62,21 +63,17 @@ public class AnswerTrigger : MonoBehaviour
 
     private void OnPlayerEnterAnswer(GameObject player)
     {
-        // Custom logic when player enters the answer area
-        
-        // Show answer bubble on the player
         CharacterController characterController = player.GetComponent<CharacterController>();
-
         if (characterController.UserId != WS_Client.Instance.public_UserInfo.uid) return;
 
         if (characterController != null)
         {
-            WS_Client.AnswerData currentAnswerData = WS_Client.Instance.GameData?.answers?.Find(a => a.id == answerId);
-            characterController.answerObject = this.gameObject;
-            characterController.showAnswerBubble(1, currentAnswerData?.content ?? "");
-            if (TowerGameController.Instance != null && currentAnswerData != null)
+            int _answerId = this.answerId;
+            characterController.answerId = _answerId;
+            characterController.showAnswerBubble(1, this.content ?? "");
+            if (TowerGameController.Instance != null)
             {
-                TowerGameController.Instance.OnAnswerObjectTrigger(this.gameObject, answerId, currentAnswerData);
+                TowerGameController.Instance.OnAnswerObjectTrigger(answerId);
             }
         }
         else

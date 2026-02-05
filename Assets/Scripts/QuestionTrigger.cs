@@ -64,40 +64,39 @@ public class QuestionTrigger : MonoBehaviour
         if (characterController != null)
         {
             // Check if player has an answer
-            if (characterController.answerObject != null && gameController != null)
+            if (characterController != null && gameController != null)
             {
                 // Get the AnswerTrigger component from the answer GameObject
-                AnswerTrigger answerTrigger = characterController.answerObject.GetComponent<AnswerTrigger>();
-                if (answerTrigger != null)
+                int answerId = characterController.answerId;
+                if (client.GameData.players != null)
                 {
-                    if (client.GameData.players != null) {
-                        WS_Client.PlayerData clientPlayer = client.GameData.players.Find(p => p.uid == client.public_UserInfo.uid);
-                        if (clientPlayer != null) {
+                    WS_Client.PlayerData clientPlayer = client.GameData.players.Find(p => p.uid == client.public_UserInfo.uid);
+                    if (clientPlayer != null)
+                    {
 
-                            // Find the index of the scoreboard matching the client player's key
-                            int clientPlayerIndex = -1;
-                            for (int i = 0; i < gameController.scoreboardControllers.Length; i++)
+                        // Find the index of the scoreboard matching the client player's key
+                        int clientPlayerIndex = -1;
+                        for (int i = 0; i < gameController.scoreboardControllers.Length; i++)
+                        {
+                            scoreboardController sb = gameController.scoreboardControllers[i].GetComponent<scoreboardController>();
+                            if (sb != null && sb.key == clientPlayer.player_id)
                             {
-                                scoreboardController sb = gameController.scoreboardControllers[i].GetComponent<scoreboardController>();
-                                if (sb != null && sb.key == clientPlayer.player_id)
-                                {
-                                    clientPlayerIndex = i;
-                                    break;
-                                }
+                                clientPlayerIndex = i;
+                                break;
                             }
-
-                            if (clientPlayerIndex != -1 && clientPlayerIndex % 2 == (int)this.team) {
-                                clientPlayer.answer_id = 0;
-                                clientPlayer.answerContent = "";
-                                clientPlayer.isAnswerVisible = 0;
-
-                                _= client.submitAnswer(answerTrigger.answerId);
-                            
-                                characterController.showAnswerBubble(0, "");
-                                characterController.answerObject = null;
-                            }
-                            
                         }
+
+                        if (clientPlayerIndex != -1 && clientPlayerIndex % 2 == (int)this.team)
+                        {
+                            clientPlayer.answer_id = 0;
+                            clientPlayer.answerContent = "";
+                            clientPlayer.isAnswerVisible = 0;
+
+                            _ = client.submitAnswer(answerId);
+
+                            characterController.showAnswerBubble(0, "");
+                        }
+
                     }
                 }
             }
