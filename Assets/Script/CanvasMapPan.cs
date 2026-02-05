@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class CanvasMapPan : MonoBehaviour
 {
+    public static CanvasMapPan Instance = null;
     [Tooltip("RectTransform of the whole map (must be child of the Canvas).")]
     public RectTransform mapRect;
 
@@ -23,6 +24,10 @@ public class CanvasMapPan : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance == null)
+        {
+            Instance = this;
+        }
         SetUI.SetDelayFade(this.fadingLayer, true);
     }
 

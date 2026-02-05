@@ -11,7 +11,8 @@ public class CharacterController : UserData
     public GameObject answerObject;
     private float currectSpeed = 640f;
     public CanvasGroup answerBubble;
-    public TMPro.TextMeshProUGUI answerText;
+    public TMPro.TextMeshProUGUI answerText, playerNameText;
+    public Image playerTag;
     public int direction = 0;
     public string key = "";
     public bool IsLocalPlayer = false; 
@@ -43,16 +44,15 @@ public class CharacterController : UserData
         this.IsLocalPlayer = _isLocalPlayer;
         SetUI.Set(this.localPlayer, _isLocalPlayer);
     }
-    public void setPlayerTag(Sprite tag)
+    public void setPlayerTag(Sprite tag, string playerName)
     {
-        Transform playerTagTransform = transform.Find("playerTag");
-        if (playerTagTransform != null)
+        if (this.playerTag != null)
         {
-            Image playerTagImage = playerTagTransform.GetComponent<Image>();
-            if (playerTagImage != null)
-            {
-                playerTagImage.sprite = tag;
-            }
+            this.playerTag.sprite = tag;
+        }
+        if (this.playerNameText != null)
+        {
+            this.playerNameText.text = playerName;
         }
     }
     public void SetCostumeTextures(CharacterSet characterSet)
@@ -92,12 +92,12 @@ public class CharacterController : UserData
                 if (go == null) continue;
 
                 // treat as UI only if it, or a parent, has a Button component
-                if (go.GetComponent<Button>() != null) return true;
+                if (go.GetComponent<Button>() != null && !go.CompareTag("Ignore")) return true;
                 Transform tt = go.transform;
                 while (tt.parent != null)
                 {
                     tt = tt.parent;
-                    if (tt.GetComponent<Button>() != null) return true;
+                    if (tt.GetComponent<Button>() != null && !go.CompareTag("Ignore")) return true;
                 }
             }
         }
@@ -115,12 +115,12 @@ public class CharacterController : UserData
             var go = s_raycastResults[r].gameObject;
             if (go == null) continue;
 
-            if (go.GetComponent<Button>() != null) return true;
+            if (go.GetComponent<Button>() != null && !go.CompareTag("Ignore")) return true;
             Transform tt = go.transform;
             while (tt.parent != null)
             {
                 tt = tt.parent;
-                if (tt.GetComponent<Button>() != null) return true;
+                if (tt.GetComponent<Button>() != null && !go.CompareTag("Ignore")) return true;
             }
         }
 
@@ -132,6 +132,7 @@ public class CharacterController : UserData
     {
         try
         {
+            if(CanvasMapPan.Instance.playerRect == null) return;
             if(this.IsLocalPlayer)
             {
                 if (this.IsPointerOverUIButton())
@@ -386,7 +387,6 @@ public class CharacterController : UserData
         {
             this.answerText.text = _answer;
         }   
-
         if(show==1) AudioController.Instance?.PlayAudio(9);
     }
 }

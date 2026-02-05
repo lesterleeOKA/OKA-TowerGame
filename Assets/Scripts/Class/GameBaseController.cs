@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -32,6 +33,7 @@ public class GameBaseController : MonoBehaviour
         SetUI.Set(this.TopUILayer, true, 0.5f);
         SetUI.Set(this.GameUILayer, true, 0.5f);
         this.playing = true;
+        RoundTitle.Instance?.ShowRoundTitle(0);
     }
 
     public virtual void endGame()

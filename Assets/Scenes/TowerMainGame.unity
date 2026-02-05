@@ -282,8 +282,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4279123287
+  m_fontColor: {r: 0.34117648, g: 0.23921569, b: 0.05490196, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1323,7 +1323,7 @@ GameObject:
   - component: {fileID: 120161610}
   m_Layer: 5
   m_Name: QuitBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -7728,8 +7728,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4279986325
-  m_fontColor: {r: 0.58431375, g: 0.40784314, b: 0.105882354, a: 1}
+    rgba: 4279123287
+  m_fontColor: {r: 0.34117648, g: 0.23921569, b: 0.05490196, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -9014,7 +9014,7 @@ GameObject:
   - component: {fileID: 1012758164}
   m_Layer: 5
   m_Name: MuteBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -13500,6 +13500,7 @@ GameObject:
   - component: {fileID: 1648670700}
   - component: {fileID: 1648670702}
   - component: {fileID: 1648670701}
+  - component: {fileID: 1648670703}
   m_Layer: 5
   m_Name: Title
   m_TagString: Untagged
@@ -13561,6 +13562,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1648670699}
   m_CullTransparentMesh: 1
+--- !u!225 &1648670703
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1648670699}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &1650648511
 GameObject:
   m_ObjectHideFlags: 0
@@ -14051,7 +14064,7 @@ GameObject:
   - component: {fileID: 1744329422}
   m_Layer: 0
   m_Name: ReadyButton
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -15845,7 +15858,7 @@ GameObject:
   - component: {fileID: 1914952087}
   m_Layer: 0
   m_Name: CancelButton
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -17326,7 +17339,7 @@ MonoBehaviour:
   obstaclePrefab: {fileID: 3668556306711772515, guid: e6d133f5d65f37141ad7cb7804c5c253, type: 3}
   globalParent: {fileID: 1988803150}
   readyUI: {fileID: 1220003941}
-  readyTeamsUI: {fileID: 1744716751}
+  readyTeamsUI: {fileID: 1648670703}
   readyBtn: {fileID: 1744329420}
   cancelBtn: {fileID: 1914952085}
   blueTeamScore: {fileID: 8103829577317876316}
@@ -18415,7 +18428,7 @@ GameObject:
   - component: {fileID: 8927458984737989349}
   m_Layer: 5
   m_Name: RuleBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -18757,7 +18770,7 @@ GameObject:
   - component: {fileID: 8694922374828019533}
   m_Layer: 5
   m_Name: ToolTip
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -27017,7 +27030,7 @@ GameObject:
   - component: {fileID: 5427188338574541267}
   m_Layer: 5
   m_Name: QuitBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -28049,10 +28062,10 @@ RectTransform:
   - {fileID: 4699364457401337557}
   m_Father: {fileID: 1998527767390264370}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 400, y: 266.3883}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 1300, y: 0}
+  m_SizeDelta: {x: 400, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &6261288151385496752
 GameObject:
@@ -28226,7 +28239,7 @@ GameObject:
   - component: {fileID: 8747102676037074998}
   m_Layer: 5
   m_Name: LeaveBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -29676,7 +29689,7 @@ GameObject:
   - component: {fileID: 6519303596310118354}
   m_Layer: 5
   m_Name: AudioPlayBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -32221,10 +32234,10 @@ RectTransform:
   - {fileID: 2817066278173172057}
   m_Father: {fileID: 1998527767390264370}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 400, y: 266.3883}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 200, y: 0}
+  m_SizeDelta: {x: 400, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &8902187291912405004
 GameObject:

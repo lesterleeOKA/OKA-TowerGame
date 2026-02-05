@@ -17,6 +17,9 @@ TagManager:
   - Obstacle
   - Submit
   - MainPlayer
+  - GamePreview
+  - Instruction
+  - Ignore
   layers:
   - Default
   - TransparentFX

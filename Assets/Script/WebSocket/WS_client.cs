@@ -37,6 +37,7 @@ public class WS_Client : MonoBehaviour
     private string player_id = "";
     public string pendingReconnectRoomId = "";
     public string pendingOrder = "";
+    public string lastOrderTargetUid = "";
 
     // const string WEBSHOCKET_URL = "wss://ws.openknowledge.hk:8084";//dev : "wss://ws.openknowledge.hk:8084";  // prod : "wss://ws.openknowledge.hk";
     public string localhostUrl = "ws://localhost:8000/";
@@ -428,34 +429,34 @@ public class WS_Client : MonoBehaviour
                         break;
                     case "SyncRoomData":
                         debugLogPerSecond("OnMessage! " + jsonString);
+                        //Debug.Log(jsonString);
                         GameData = message.content.roomGameData;
+
                         if (!string.IsNullOrEmpty(message.content.order))
                         {
-                            // Debug.LogWarning("Order received: " + message.content.order);
-                            // Debug.LogWarning("OnMessage! " + jsonString);
+                            //Debug.LogWarning("Order received: " + message.content.order);
+                            Debug.LogWarning("OnMessage! " + jsonString);
                             
                             // Store order for scenes that haven't loaded yet
                             pendingOrder = message.content.order;
                             
                             // Fire the event to notify subscribers
-                            Debug.Log("Order received WS_Client: " + message.content.order);
+                            //Debug.Log("Order received WS_Client: " + message.content.order);
                             OnOrderChanged?.Invoke(message.content.order);
                         }
 
                         if (GameData.players != null)
                         {
                             // foreach (var player in GameData.players)
-                            // {
-                            //     // 获取当前遍历玩家的位置坐标 [x, y]
+                           //  {
+                                 // 获取当前遍历玩家的位置坐标 [x, y]
                             //     int index = GameData.players.IndexOf(player);
-                            //     float posX = player.position[0];
-                            //     float posY = player.position[1];
-                            //     float destX = player.destination[0];
-                            //     float destY = player.destination[1];
-                            //     if (player.uid == this.userInfo.uid)
-                            //     {
-                            //         this.player_id = player_id.ToString();
-                            //     }
+                              //   float posX = player.position[0];
+                               //  float posY = player.position[1];
+                               //  if (player.uid == this.userInfo.uid)
+                               //  {
+                                 //    this.player_id = player_id.ToString();
+                              //  }
                             // }
 
                             // foreach (var question in GameData.questions) {
@@ -477,7 +478,7 @@ public class WS_Client : MonoBehaviour
                         pendingReconnectRoomId = message.content.roomId;
                         break;
                     case "test":
-                        testReceived = true;
+                        testReceived = true;                        
                         break;
                     default:
                         Debug.Log("Unhandled messageType: " + message.messageType);
@@ -510,6 +511,8 @@ public class WS_Client : MonoBehaviour
 
         onConnectCompleted?.Invoke();
     }
+
+
 
     void Update()
     {

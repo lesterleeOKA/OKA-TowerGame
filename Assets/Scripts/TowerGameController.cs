@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Playables;
 using UnityEngine.UI;
 
 // Class to hold all costume textures for a single costume
@@ -360,11 +361,28 @@ public class TowerGameController : GameBaseController
                 StartCoroutine(updateScoreUI());
                 showReadyUI(false);
                 checkAnswerVisibility();
-                StartCoroutine(updateQuestionUI(true));
+
+                var client = WS_Client.Instance;
+                int localUid = -1;
+                if (client.public_UserInfo != null)
+                {
+                    localUid = client.public_UserInfo.uid;
+                }
+                foreach (var player in client.GameData.players)
+                {
+                    string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
+                    bool isLocal = (player.uid == localUid);
+                    if (isLocal)
+                    {
+                        StartCoroutine(updateQuestionUI(true));
+                    }
+                }
+
                 SetUI.Set(this.TopUILayer, true, 0f);
                 break;
             case "startGame":
                 showReadyUI(false);
+                //ReassignPlayersForStart();
                 StartGame.Instance.startGameSequence();
                 StartCoroutine(updateQuestionUI(false));
                 resetStartingPos();
@@ -475,7 +493,7 @@ public class TowerGameController : GameBaseController
 
         int round = WS_Client.Instance.GameData.round;
         WS_Client.QuestionData question = WS_Client.Instance.GameData.questions[round-1];
-        RoundTitle.Instance?.ShowRoundTitle(round - 1);
+        if(_autoPlayAudio) RoundTitle.Instance?.ShowRoundTitle(round - 1);
         QuestionController.Instance.nextQuestion(_autoPlayAudio);
         while (round == currentQuestionId) {
             round = WS_Client.Instance.GameData.round;
@@ -486,6 +504,204 @@ public class TowerGameController : GameBaseController
         }
     }
 
+    private void ReassignPlayersForStart()
+    {
+        var client = WS_Client.Instance;
+        if (client == null || client.GameData == null || client.GameData.players == null) return;
+
+        var players = client.GameData.players;
+        int playerCount = players.Count;
+
+        // Ensure startingPos can hold all player slots
+        if (startingPos == null || startingPos.Length < playerCount)
+        {
+            var newStart = new Vector3[playerCount];
+            if (startingPos != null)
+            {
+                for (int i = 0; i < startingPos.Length && i < newStart.Length; i++)
+                    newStart[i] = startingPos[i];
+            }
+            for (int i = (startingPos != null ? startingPos.Length : 0); i < newStart.Length; i++)
+                newStart[i] = Vector3.zero;
+            startingPos = newStart;
+        }
+
+        // Build ordered key list from server array
+        var orderedKeys = new List<string>(playerCount);
+        foreach (var p in players)
+        {
+            if (p == null) continue;
+            orderedKeys.Add(!string.IsNullOrEmpty(p.player_id) ? p.player_id : p.uid.ToString());
+        }
+
+        int localUid = client.public_UserInfo != null ? client.public_UserInfo.uid : -1;
+
+        // New ordered controllers list
+        var newCharacterControllers = new List<CharacterController>(playerCount);
+
+        for (int i = 0; i < players.Count; i++)
+        {
+            var p = players[i];
+            if (p == null) continue;
+
+            string key = orderedKeys[i];
+            bool isLocal = (p.uid == localUid);
+
+            // determine target start position: prefer startingPos slot, fallback to server position
+            Vector3 targetPos = Vector3.zero;
+            if (startingPos != null && i < startingPos.Length && startingPos[i] != Vector3.zero)
+            {
+                targetPos = startingPos[i];
+            }
+            else if (p.position != null && p.position.Length >= 2)
+            {
+                targetPos = new Vector3(p.position[0], p.position[1], 0f);
+            }
+
+            CharacterController controller = null;
+
+            // 1) Try find controller by the new key
+            if (playerControllersByKey.TryGetValue(key, out var ctrlByKey) && ctrlByKey != null)
+            {
+                controller = ctrlByKey;
+            }
+            else
+            {
+                // 2) Fallback: try find controller by uid (player re-assigned slot but same uid exists)
+                foreach (var kv in playerControllersByKey)
+                {
+                    var c = kv.Value;
+                    if (c == null) continue;
+                    if (c.UserId == p.uid)
+                    {
+                        // remap dictionary key to the server-provided key
+                        string oldKey = kv.Key;
+                        controller = c;
+                        if (oldKey != key)
+                        {
+                            playerControllersByKey.Remove(oldKey);
+                            playerControllersByKey[key] = controller;
+                            controller.key = key;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (controller != null)
+            {
+                // Update controller identity and visuals to match server player
+                controller.UserId = p.uid;
+                controller.UserName = p.ename ?? ("Player_" + p.uid);
+                controller.detectCamera = this.trackingCamera;
+
+                // set local-player tag correctly so camera/tracking logic finds the correct object
+                controller.gameObject.tag = isLocal ? "MainPlayer" : "Untagged";
+
+                controller.setLocalPlayer(isLocal);
+
+                // Place controller at start slot (full teleport at round start is expected)
+                controller.transform.localPosition = targetPos;
+                controller.transform.localScale = Vector3.one * (1f / this.clientMapScale);
+
+                // Update player tag/icon and costume
+                int playerIndex = 0;
+                if (!string.IsNullOrEmpty(p.player_id))
+                {
+                    var digits = p.player_id.StartsWith("player", StringComparison.OrdinalIgnoreCase) ? p.player_id.Substring(6) : p.player_id;
+                    int.TryParse(digits, out playerIndex);
+                    playerIndex = Mathf.Max(0, playerIndex - 1);
+                }
+                if (playerIndex >= 0 && playerIndex < playerTags.Length)
+                {
+                    controller.setPlayerTag(playerTags[playerIndex], p.ename);
+                }
+
+                if (!string.IsNullOrEmpty(p.costume_id) && int.TryParse(p.costume_id, out int costumeId))
+                {
+                    int csIndex = costumeId - 1;
+                    if (characterSets != null && csIndex >= 0 && csIndex < characterSets.Length && characterSets[csIndex] != null)
+                    {
+                        controller.SetCostumeTextures(characterSets[csIndex]);
+                    }
+                }
+
+                newCharacterControllers.Add(controller);
+            }
+            else
+            {
+                // Create missing controller at targetPos
+                CreatePlayerFromData(p, targetPos, key, isLocal);
+
+                // after creation it should be present in playerControllersByKey
+                if (playerControllersByKey.TryGetValue(key, out var created) && created != null)
+                {
+                    // ensure correct identity assigned by CreatePlayerFromData
+                    created.UserId = p.uid;
+                    created.UserName = p.ename ?? ("Player_" + p.uid);
+                    created.detectCamera = this.trackingCamera;
+                    created.gameObject.tag = isLocal ? "MainPlayer" : "Untagged";
+                    created.setLocalPlayer(isLocal);
+
+                    newCharacterControllers.Add(created);
+                }
+            }
+
+            // Reassign scoreboard slot i to this player
+            if (scoreboardControllers != null && i >= 0 && i < scoreboardControllers.Length)
+            {
+                var sbObj = scoreboardControllers[i];
+                if (sbObj != null)
+                {
+                    var sb = sbObj.GetComponent<scoreboardController>();
+                    if (sb != null)
+                    {
+                        sb.key = key;
+
+                        Texture2D iconTex = null;
+                        if (!string.IsNullOrEmpty(p.costume_id) && int.TryParse(p.costume_id, out int costumeId2))
+                        {
+                            int csIndex = costumeId2 - 1;
+                            if (characterSets != null && csIndex >= 0 && csIndex < characterSets.Length && characterSets[csIndex] != null)
+                            {
+                                iconTex = characterSets[csIndex].defaultIcon as Texture2D;
+                            }
+                        }
+                        sb.setScoreboard(key, iconTex, p.ename);
+                    }
+                }
+            }
+
+            // Update minimap marker sprite if exists (team depends on server order index)
+            if (minimapMarkersByKey.TryGetValue(key, out var marker) && marker != null)
+            {
+                var img = marker.GetComponent<Image>();
+                if (img != null)
+                {
+                    int team = (i % 2 == 0) ? 0 : 1; // 0: team A (1,3,5) as indices 0,2,4
+                    bool isLocalPlayer = playerControllersByKey.TryGetValue(key, out var ctrlCheck) && ctrlCheck != null && ctrlCheck.IsLocalPlayer;
+                    img.sprite = (team == 0) ? (isLocalPlayer ? minimapBluePlayerMarker : minimapBlueOtherMarker)
+                                             : (isLocalPlayer ? minimapOrangePlayerMarker : minimapOrangeOtherMarker);
+                }
+            }
+        }
+
+        // Replace characterControllers with ordered list
+        characterControllers = newCharacterControllers;
+
+        // Clean up any controllers no longer in server list
+        var toRemove = new List<string>();
+        foreach (var kv in playerControllersByKey)
+        {
+            if (!orderedKeys.Contains(kv.Key))
+                toRemove.Add(kv.Key);
+        }
+        foreach (var k in toRemove)
+            RemovePlayer(k);
+
+        LogController.Instance?.debug($"ReassignPlayersForStart: assigned {characterControllers.Count} controllers for start slots.");
+    }
+
     private void SyncPlayers()
     {
         try
@@ -494,7 +710,7 @@ public class TowerGameController : GameBaseController
             if (WS_Client.Instance == null || WS_Client.Instance.GameData == null) return;
             var players = WS_Client.Instance.GameData.players;
             if (players == null) return;
-
+            
             // Clear currentKeys so we rebuild it from the authoritative GameData
             currentKeys.Clear();
 
@@ -774,165 +990,183 @@ public class TowerGameController : GameBaseController
         Debug.Log("=== End Costume Data ===");
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
+{
+    try
     {
-        try
+        // If no data, nothing to do
+        if (WS_Client.Instance == null || WS_Client.Instance.GameData == null) return;
+        var players = WS_Client.Instance.GameData.players;
+        if (players == null || WS_Client.Instance.public_UserInfo == null) return;
+
+        foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players)
         {
-            // If no data, nothing to do
-            if (WS_Client.Instance == null || WS_Client.Instance.GameData == null) return;
-            var players = WS_Client.Instance.GameData.players;
-            if (players == null || WS_Client.Instance.public_UserInfo == null) return;
-
-            foreach (WS_Client.PlayerData player in WS_Client.Instance.GameData.players)
+            if (player == null || player.uid == WS_Client.Instance.public_UserInfo.uid)
             {
-                if (player == null || player.uid == WS_Client.Instance.public_UserInfo.uid)
+                continue;
+            }
+            CharacterController characterController = characterControllers != null ? characterControllers.Find(c => c.UserId == player.uid) : null;
+            if (characterController != null)
+            {
+                if (characterController.answerBubble != null)
                 {
-                    continue;
+                    SetUI.Set(characterController.answerBubble, player.isAnswerVisible != 0);
                 }
-                CharacterController characterController = characterControllers != null ? characterControllers.Find(c => c.UserId == player.uid) : null;
-                if (characterController != null)
+
+                string answerContent = "";
+                if (player.answer_id != 0 && WS_Client.Instance.GameData.answers != null)
                 {
-                    if (characterController.answerBubble != null)
+                    var answer = WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id);
+                    if (answer != null)
                     {
-                        SetUI.Set(characterController.answerBubble, player.isAnswerVisible != 0);
+                        answerContent = answer.content;
                     }
+                    else
+                    {
+                        LogController.Instance.debug($"Answer with id {player.answer_id} not found for player {player.uid}");
+                    }
+                }
 
-                    string answerContent = "";
-                    if (player.answer_id != 0 && WS_Client.Instance.GameData.answers != null)
-                    {
-                        var answer = WS_Client.Instance.GameData.answers.Find(a => a.id == player.answer_id);
-                        if (answer != null)
-                        {
-                            answerContent = answer.content;
-                        }
-                        else
-                        {
-                            LogController.Instance.debug($"Answer with id {player.answer_id} not found for player {player.uid}");
-                        }
-                    }
-
-                    if (characterController.answerText != null)
-                    {
-                        characterController.answerText.text = answerContent;
-                    }
+                if (characterController.answerText != null)
+                {
+                    characterController.answerText.text = answerContent;
                 }
             }
         }
-        catch (Exception ex)
-        {
-            LogController.Instance.debugError($"Error in FixedUpdate: {ex.Message}\n{ex.StackTrace}");
-        }
-
-        // Process answers
-        if (WS_Client.Instance.GameData.answers != null)
-        {
-            var currentAnswerIds = new HashSet<int>();
-
-            foreach (var answer in WS_Client.Instance.GameData.answers)
-            {
-                currentAnswerIds.Add(answer.id);
-
-                if (!answerObjectsById.ContainsKey(answer.id))
-                {
-                    // Debug.Log($"answer: {answer.id} - {answer.content} - {answer.position[0]} - {answer.position[1]}");
-                    // Create answer at position from data
-                    Vector3 answerPos = Vector3.zero;
-                    if (answer.position != null && answer.position.Length >= 2)
-                    {
-                        answerPos = new Vector3(answer.position[0], answer.position[1], 0f);
-                    }
-                    CreateAnswerObject(answer, answerPos);
-                }
-                else
-                {
-                    // Update answer position if it exists
-                    var answerObj = answerObjectsById[answer.id];
-                    if (answerObj != null && answer.position != null && answer.position.Length >= 2)
-                    {
-                        Vector2 uiPosition = new Vector2(answer.position[0], answer.position[1]);
-                        RectTransform rectTransform = answerObj.GetComponent<RectTransform>();
-                        if (rectTransform != null)
-                        {
-                            rectTransform.anchoredPosition = uiPosition;
-                        }
-                        else
-                        {
-                            answerObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, 0f);
-                        }
-                    }
-                }
-
-                // --- Minimap marker for answers ---
-                if (minimapRawImage != null && minimapAnswerMarker != null && answer.position != null && answer.position.Length >= 2)
-                {
-                    Vector2 worldPos = new Vector2(answer.position[0], answer.position[1]);
-                    Vector2 anchoredPos = WorldToMinimapAnchoredPosition(worldPos);
-
-                    if (!minimapAnswerMarkersByKey.TryGetValue(answer.id, out var answerMarker) || answerMarker == null)
-                    {
-                        // Create new answer marker
-                        RectTransform parentRT = minimapRawImage.rectTransform;
-                        GameObject markerObj = new GameObject($"MinimapAnswerMarker_{answer.id}");
-                        markerObj.transform.SetParent(parentRT, false);
-
-                        RectTransform instance = markerObj.AddComponent<RectTransform>();
-                        Image markerImage = markerObj.AddComponent<Image>();
-                        markerImage.sprite = minimapAnswerMarker;
-                        markerImage.raycastTarget = false;
-
-                        // Centered anchors/pivot
-                        instance.anchorMin = new Vector2(0.5f, 0.5f);
-                        instance.anchorMax = new Vector2(0.5f, 0.5f);
-                        instance.pivot = new Vector2(0.5f, 0.5f);
-                        instance.localScale = Vector3.one;
-                        instance.sizeDelta = new Vector2(15f, 15f); // Slightly smaller than player markers
-
-                        minimapAnswerMarkersByKey[answer.id] = instance;
-                        answerMarker = instance;
-                    }
-
-                    // Update marker position
-                    if (answerMarker != null)
-                    {
-                        answerMarker.anchoredPosition = anchoredPos;
-                    }
-                }
-            }
-
-            // Remove answers that no longer exist
-            // Create a list to avoid modifying dictionary during iteration
-            var answersToRemove = new List<int>();
-            foreach (var kv in answerObjectsById)
-            {
-                if (!currentAnswerIds.Contains(kv.Key))
-                {
-                    answersToRemove.Add(kv.Key);
-                }
-            }
-            
-            // Now remove them safely
-            foreach (var answerId in answersToRemove)
-            {
-                RemoveAnswerObject(answerId);
-                
-                // Also remove minimap marker for this answer
-                if (minimapAnswerMarkersByKey.TryGetValue(answerId, out var answerMarker))
-                {
-                    if (answerMarker != null)
-                    {
-                        Destroy(answerMarker.gameObject);
-                    }
-                    minimapAnswerMarkersByKey.Remove(answerId);
-                }
-            }
-        }        
     }
+    catch (Exception ex)
+    {
+        LogController.Instance.debugError($"Error in FixedUpdate: {ex.Message}\n{ex.StackTrace}");
+    }
+
+    // Process answers
+    if (WS_Client.Instance.GameData.answers != null)
+    {
+        var currentAnswerIds = new HashSet<int>();
+
+        // Collect answers that need to be removed locally because server says they're on a player
+        var toRemoveLocal = new List<int>();
+
+        foreach (var answer in WS_Client.Instance.GameData.answers)
+        {
+            if (answer == null) continue;
+            currentAnswerIds.Add(answer.id);
+
+            // If server marks answer as on a player, ensure no world object exists
+            if (answer.isOnPlayer == 1)
+            {
+                // If we have a local GameObject for this answer, remove it
+                if (answerObjectsById.ContainsKey(answer.id))
+                {
+                    toRemoveLocal.Add(answer.id);
+                }
+
+                // Also ensure minimap marker is removed (RemoveAnswerObject handles both)
+                continue;
+            }
+
+            // answer.isOnPlayer == 0 => create or update world object
+            if (!answerObjectsById.ContainsKey(answer.id))
+            {
+                // Create answer at position from data
+                Vector3 answerPos = Vector3.zero;
+                if (answer.position != null && answer.position.Length >= 2)
+                {
+                    answerPos = new Vector3(answer.position[0], answer.position[1], 0f);
+                }
+                CreateAnswerObject(answer, answerPos);
+            }
+            else
+            {
+                // Update answer position if it exists and still free
+                var answerObj = answerObjectsById[answer.id];
+                if (answerObj != null && answer.position != null && answer.position.Length >= 2)
+                {
+                    Vector2 uiPosition = new Vector2(answer.position[0], answer.position[1]);
+                    RectTransform rectTransform = answerObj.GetComponent<RectTransform>();
+                    if (rectTransform != null)
+                    {
+                        rectTransform.anchoredPosition = uiPosition;
+                    }
+                    else
+                    {
+                        answerObj.transform.position = new Vector3(uiPosition.x, uiPosition.y, 0f);
+                    }
+                }
+            }
+
+            // --- Minimap marker for answers ---
+            if (minimapRawImage != null && minimapAnswerMarker != null && answer.position != null && answer.position.Length >= 2)
+            {
+                Vector2 worldPos = new Vector2(answer.position[0], answer.position[1]);
+                Vector2 anchoredPos = WorldToMinimapAnchoredPosition(worldPos);
+
+                if (!minimapAnswerMarkersByKey.TryGetValue(answer.id, out var answerMarker) || answerMarker == null)
+                {
+                    // Create new answer marker
+                    RectTransform parentRT = minimapRawImage.rectTransform;
+                    GameObject markerObj = new GameObject($"MinimapAnswerMarker_{answer.id}");
+                    markerObj.transform.SetParent(parentRT, false);
+
+                    RectTransform instance = markerObj.AddComponent<RectTransform>();
+                    Image markerImage = markerObj.AddComponent<Image>();
+                    markerImage.sprite = minimapAnswerMarker;
+                    markerImage.raycastTarget = false;
+
+                    // Centered anchors/pivot
+                    instance.anchorMin = new Vector2(0.5f, 0.5f);
+                    instance.anchorMax = new Vector2(0.5f, 0.5f);
+                    instance.pivot = new Vector2(0.5f, 0.5f);
+                    instance.localScale = Vector3.one;
+                    instance.sizeDelta = new Vector2(15f, 15f); // Slightly smaller than player markers
+
+                    minimapAnswerMarkersByKey[answer.id] = instance;
+                    answerMarker = instance;
+                }
+
+                // Update marker position
+                if (answerMarker != null)
+                {
+                    answerMarker.anchoredPosition = anchoredPos;
+                }
+            }
+        }
+
+        // Remove local world objects for answers server says are taken
+        foreach (var id in toRemoveLocal)
+        {
+            RemoveAnswerObject(id);
+        }
+
+        // Remove answers that no longer exist on server (cleanup local objects)
+        var answersToRemove = new List<int>();
+        foreach (var kv in answerObjectsById)
+        {
+            if (!currentAnswerIds.Contains(kv.Key))
+            {
+                answersToRemove.Add(kv.Key);
+            }
+        }
+
+        // Now remove them safely
+        foreach (var answerId in answersToRemove)
+        {
+            RemoveAnswerObject(answerId);
+            // Also remove minimap marker for this answer (RemoveAnswerObject handles marker)
+        }
+    }
+}
 
     private void resetStartingPos()
     {
+        var client = WS_Client.Instance;
+        if (client.GameData.players == null) return;
         for (int i = 0; i < characterControllers.Count; i++)
         {
-            characterControllers[i].transform.localPosition = startingPos[i];
+            var restartPosition = new Vector3(client.GameData.players[i].position[0], 
+                                              client.GameData.players[i].position[1], 
+                                              0f);
+            characterControllers[i].transform.localPosition = restartPosition;
         }
     }
 
@@ -990,9 +1224,9 @@ public class TowerGameController : GameBaseController
         characterController.transform.localPosition = startPos;
         characterController.transform.localScale = Vector3.one * (1f /this.clientMapScale);
 
-            // mark local player for client-side control
-            characterController.setLocalPlayer(isLocal);
-        characterController.setPlayerTag(playerTags[playerIndex]);
+        // mark local player for client-side control
+        characterController.setLocalPlayer(isLocal);
+        characterController.setPlayerTag(playerTags[playerIndex], player.ename);
         if (isLocal)
         {
             LogController.Instance.debug($"Local player created for uid={uid}");
@@ -1122,7 +1356,7 @@ public class TowerGameController : GameBaseController
         answers.Add(answer);
     }
 
-    private void RemoveAnswerObject(int id)
+    public void RemoveAnswerObject(int id)
     {
         if (answerObjectsById.TryGetValue(id, out var answerObj))
         {
@@ -1134,6 +1368,16 @@ public class TowerGameController : GameBaseController
 
             // Remove from list
             answers.RemoveAll(a => a.id == id);
+        }
+
+        // Also remove minimap marker if present
+        if (minimapAnswerMarkersByKey.TryGetValue(id, out var answerMarker))
+        {
+            if (answerMarker != null)
+            {
+                Destroy(answerMarker.gameObject);
+            }
+            minimapAnswerMarkersByKey.Remove(id);
         }
     }
 
