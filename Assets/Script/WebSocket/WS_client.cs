@@ -4,6 +4,7 @@ using UnityEngine;
 using NativeWebSocket;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 public class WS_Client : MonoBehaviour
 {
@@ -37,7 +38,7 @@ public class WS_Client : MonoBehaviour
     private string player_id = "";
     public string pendingReconnectRoomId = "";
     public string pendingOrder = "";
-    public string lastOrderTargetUid = "";
+    public int pendingReconnectUid = -1;
 
     // const string WEBSHOCKET_URL = "wss://ws.openknowledge.hk:8084";//dev : "wss://ws.openknowledge.hk:8084";  // prod : "wss://ws.openknowledge.hk";
     public string localhostUrl = "ws://localhost:8000/";
@@ -153,6 +154,7 @@ public class WS_Client : MonoBehaviour
         // public List<RoomMember> members;
         public string roomId;
         public UserInfo userInfo;
+        public UserInfo added;
         public string message;
         public List<RoomInfo> roomList;
 
@@ -435,38 +437,88 @@ public class WS_Client : MonoBehaviour
                         if (!string.IsNullOrEmpty(message.content.order))
                         {
                             //Debug.LogWarning("Order received: " + message.content.order);
-                            Debug.LogWarning("OnMessage! " + jsonString);
-                            
+                            Debug.LogWarning("OnMessage! " + jsonString);                  
                             // Store order for scenes that haven't loaded yet
                             pendingOrder = message.content.order;
-                            
+
+                            if (message.content.order == "reconnectPlayer")
+                            {
+                                int parsedUid = -1;
+
+                                // 1) Prefer the explicit 'added' object (server sample shows content.added.uid)
+                                if (message.content.added != null && message.content.added.uid > 0)
+                                {
+                                    parsedUid = message.content.added.uid;
+                                    Debug.Log($"SyncRoomData: parsed reconnect uid from content.added: {parsedUid}");
+                                }
+                                // 2) Fallback to content.userInfo (older messages)
+                                else if (message.content.userInfo != null && message.content.userInfo.uid > 0)
+                                {
+                                    parsedUid = message.content.userInfo.uid;
+                                    Debug.Log($"SyncRoomData: parsed reconnect uid from content.userInfo: {parsedUid}");
+                                }
+                                else
+                                {
+                                    // 3) Last resort: extract from raw JSON (handles "uid":123 or "uid":"123")
+                                    try
+                                    {
+                                        var m = Regex.Match(jsonString, "\"added\"\\s*:\\s*\\{[^}]*\"uid\"\\s*:\\s*\"?(\\d+)\"?", RegexOptions.Singleline);
+                                        if (m.Success && int.TryParse(m.Groups[1].Value, out int uidFromJson))
+                                        {
+                                            parsedUid = uidFromJson;
+                                            Debug.Log($"SyncRoomData: extracted reconnect uid from raw JSON: {parsedUid}");
+                                        }
+                                        else
+                                        {
+                                            Debug.LogWarning("SyncRoomData: could not extract reconnect uid from raw JSON.");
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Debug.LogWarning($"SyncRoomData: regex extraction failed: {ex.Message}");
+                                    }
+                                }
+
+                                // Assign only when parsedUid is valid
+                                if (parsedUid > 0)
+                                {
+                                    pendingReconnectUid = parsedUid;
+                                    //Debug.LogError($"Received reconnectPlayer order for UID {pendingReconnectUid}");
+                                }
+                                else
+                                {
+                                    pendingReconnectUid = -1;
+                                   // Debug.LogWarning("Received reconnectPlayer order but UID is invalid (set to -1).");
+                                }
+                            }
+
                             // Fire the event to notify subscribers
                             //Debug.Log("Order received WS_Client: " + message.content.order);
                             OnOrderChanged?.Invoke(message.content.order);
                         }
 
-                        if (GameData.players != null)
-                        {
-                            // foreach (var player in GameData.players)
-                           //  {
-                                 // 获取当前遍历玩家的位置坐标 [x, y]
-                            //     int index = GameData.players.IndexOf(player);
-                              //   float posX = player.position[0];
-                               //  float posY = player.position[1];
-                               //  if (player.uid == this.userInfo.uid)
-                               //  {
-                                 //    this.player_id = player_id.ToString();
-                              //  }
-                            // }
+                        //if (GameData.players != null)
+                        //{
+                        // foreach (var player in GameData.players)
+                        //  {
+                        // 获取当前遍历玩家的位置坐标 [x, y]
+                        //     int index = GameData.players.IndexOf(player);
+                        //   float posX = player.position[0];
+                        //  float posY = player.position[1];
+                        //  if (player.uid == this.userInfo.uid)
+                        //  {
+                        //    this.player_id = player_id.ToString();
+                        //  }
+                        // }
 
-                            // foreach (var question in GameData.questions) {
-                            //     Debug.Log($"Question - ID: {question.id}, Content: {question.content}");
-                            // }
+                        // foreach (var question in GameData.questions) {
+                        //     Debug.Log($"Question - ID: {question.id}, Content: {question.content}");
+                        // }
 
-                            // foreach (var answer in GameData.answers) {
-                            //     Debug.Log($"Answer - ID: {answer.id}, Content: {answer.content}, Question ID: {answer.question_id}, Position: [{answer.position[0]}, {answer.position[1]}], OnPlayer: {answer.isOnPlayer}, Submitted: {answer.isSubmitted}");
-                            // }
-                        }
+                        // foreach (var answer in GameData.answers) {
+                        //     Debug.Log($"Answer - ID: {answer.id}, Content: {answer.content}, Question ID: {answer.question_id}, Position: [{answer.position[0]}, {answer.position[1]}], OnPlayer: {answer.isOnPlayer}, Submitted: {answer.isSubmitted}");
+                        // }
+                        //}
 
                         gameDataReceived = true;
                         break;

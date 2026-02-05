@@ -13,7 +13,7 @@ public class reconnectRoom : MonoBehaviour
         string _pendingReconnectRoomId = WS_Client.Instance?.pendingReconnectRoomId;
         if (WS_Client.Instance != null && !string.IsNullOrEmpty(_pendingReconnectRoomId))
         {
-            Debug.Log("Pending Reconnect Room ID: " + _pendingReconnectRoomId);
+            //Debug.Log("Pending Reconnect Room ID: " + _pendingReconnectRoomId);
             reconnectRoomId = int.Parse(_pendingReconnectRoomId.Replace("room", ""));
             this.showReconnectRoomUI(WS_Client.Instance.pendingReconnectRoomId);
         }

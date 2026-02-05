@@ -362,19 +362,17 @@ public class TowerGameController : GameBaseController
                 checkAnswerVisibility();
 
                 var client = WS_Client.Instance;
-                int localUid = -1;
-                if (client.public_UserInfo != null)
+                if (client == null || client.GameData == null) break;
+
+                int localUid = client.public_UserInfo != null ? client.public_UserInfo.uid : -1;
+
+                if (client.pendingReconnectUid != -1)
                 {
-                    localUid = client.public_UserInfo.uid;
-                }
-                foreach (var player in client.GameData.players)
-                {
-                    string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
-                    bool isLocal = (player.uid == localUid);
-                    if (isLocal)
+                    if (client.pendingReconnectUid == localUid)
                     {
                         StartCoroutine(updateQuestionUI(true));
                     }
+                    client.pendingReconnectUid = -1;
                 }
 
                 SetUI.Set(this.TopUILayer, true, 0f);
@@ -1284,7 +1282,7 @@ public class TowerGameController : GameBaseController
             if (cc != null)
             {
                 // Find matching scoreboard
-                GameObject scoreboardObj = System.Array.Find(this.scoreboardControllers, obj => obj.GetComponent<scoreboardController>().key == cc.key);
+                GameObject scoreboardObj = Array.Find(this.scoreboardControllers, obj => obj.GetComponent<scoreboardController>().key == cc.key);
                 if (scoreboardObj != null) {
                     LogController.Instance.debug("RemovePlayer: scoreboardObj=" + scoreboardObj.name + cc.key);
                     scoreboardController matchingScoreboard = scoreboardObj.GetComponent<scoreboardController>();

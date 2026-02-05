@@ -30,7 +30,8 @@ public class CharacterController : UserData
     private float maxMoveSpeed => followSpeed * (1 / TowerGameController.Instance.clientMapScale); // maximum units per second
     private static PointerEventData s_pointerEventData;
     private static List<RaycastResult> s_raycastResults = new List<RaycastResult>(8);
-
+    public bool isMoving = false;
+    public float distance;
 
     void Start()
     {
@@ -199,6 +200,18 @@ public class CharacterController : UserData
 
     void LateUpdate()
     {
+        if (!this.IsLocalPlayer)
+        {
+            this.FollowLocalDestination();
+            return;
+        }
+        else
+        {
+           this.smoothMoveToLocalPosition();
+        }
+    }
+    public void smoothMoveToLocalPosition()
+    {
         Vector3 current = (transform.parent != null) ? transform.localPosition : transform.position;
         Vector3 target = localDestination;
 
@@ -233,8 +246,6 @@ public class CharacterController : UserData
             transform.position = new Vector3(next.x, next.y, transform.position.z);
         }
     }
-
-    public bool isMoving = false;
 
     private void calLocalDestination()
     {
@@ -303,7 +314,7 @@ public class CharacterController : UserData
 
     private void FollowLocalDestination()
     {
-        float distance = Vector3.Distance(transform.localPosition, localDestination);
+        float distance = Vector3.Distance(transform.localPosition, this.localDestination);
 
         if (!this.IsLocalPlayer && distance > 500f)
         {
@@ -323,17 +334,16 @@ public class CharacterController : UserData
         try
         {
             Vector3 movement = localDestination - transform.localPosition;
-            float distance = movement.magnitude;
-
+            this.distance = movement.magnitude;
             // Minimum movement to consider (avoids jitter when clicking nearly on the character)
-            const float minMoveThreshold = 0.02f;
+            const float minMoveThreshold = 5f;
 
             // Horizontal deadzone to avoid rapid left/right flips
             const float horizontalDeadzone = 0.15f;
 
             var imageTransform = this.characterUIImage?.transform;
 
-            if (distance > minMoveThreshold)
+            if (this.distance > minMoveThreshold)
             {
                 // Only change facing when horizontal movement is meaningful
                 float mx = movement.x;
@@ -364,7 +374,7 @@ public class CharacterController : UserData
             // Animation: only play walking when movement is meaningful or local player is dragging
             if (this.characterAnimation == null) return;
 
-            bool remoteShouldWalk = (!IsLocalPlayer && distance > minMoveThreshold);
+            bool remoteShouldWalk = (!IsLocalPlayer && this.distance > minMoveThreshold);
             bool localShouldWalk = (IsLocalPlayer && isMouseDown && this.isMoving);
             bool shouldWalk = remoteShouldWalk || localShouldWalk;
 
