@@ -26,6 +26,8 @@ public class TowerGameController : GameBaseController
     public GameObject obstaclePrefab;
     public Transform globalParent;
     public CanvasGroup readyUI;
+    public CanvasGroup startCountDownClock;
+    public TextMeshProUGUI startCountDownText;
     public CanvasGroup readyTeamsUI;
     public GameObject readyBtn, cancelBtn;
     public NumberCounter blueTeamScore;
@@ -88,7 +90,8 @@ public class TowerGameController : GameBaseController
     public float syncPlayersInterval = 0.1f;
     private float lastSyncPlayersTime = 0f;
 
-    public float clientMapScale = 1.0f; 
+    public float clientMapScale = 1.0f;
+    private bool suppressSyncPlayers = false;
 
     protected override void Awake()
     {
@@ -348,6 +351,8 @@ public class TowerGameController : GameBaseController
     private void HandleOrderChanged(string newOrder)
     {
         LogController.Instance.debug($"Order changed to: {newOrder}");
+
+        //this.controlReadyCountDown();
         
         // Handle different order types
         switch (newOrder)
@@ -371,11 +376,10 @@ public class TowerGameController : GameBaseController
                     if (client.pendingReconnectUid == localUid)
                     {
                         StartCoroutine(updateQuestionUI(true));
+                        SetUI.Set(this.TopUILayer, true, 0f);
                     }
                     client.pendingReconnectUid = -1;
                 }
-
-                SetUI.Set(this.TopUILayer, true, 0f);
                 break;
             case "startGame":
                 showReadyUI(false);
@@ -420,6 +424,27 @@ public class TowerGameController : GameBaseController
         SetUI.Set(this.readyTeamsUI, show);
         this.readyBtn?.SetActive(show);
         this.cancelBtn?.SetActive(!show);
+    }
+
+    void controlReadyCountDown()
+    {
+        if(this.readyUI.alpha == 0) {
+            SetUI.SetScale(this.startCountDownClock, false);
+            return;
+        }
+        int startCountDown = WS_Client.Instance.startCountDown;
+        Debug.Log("WS_Client.Instance.GameData.startCountDown: " + startCountDown);
+        if (startCountDown > -1)
+        {
+            if (this.startCountDownText != null)
+                this.startCountDownText.text = startCountDown.ToString();
+
+            SetUI.SetScale(this.startCountDownClock, true);
+        }
+        else
+        {
+            SetUI.SetScale(this.startCountDownClock, false);
+        }
     }
 
     public void hideDisconnectedUI()
@@ -501,208 +526,11 @@ public class TowerGameController : GameBaseController
         }
     }
 
-    private void ReassignPlayersForStart()
-    {
-        var client = WS_Client.Instance;
-        if (client == null || client.GameData == null || client.GameData.players == null) return;
-
-        var players = client.GameData.players;
-        int playerCount = players.Count;
-
-        // Ensure startingPos can hold all player slots
-        if (startingPos == null || startingPos.Length < playerCount)
-        {
-            var newStart = new Vector3[playerCount];
-            if (startingPos != null)
-            {
-                for (int i = 0; i < startingPos.Length && i < newStart.Length; i++)
-                    newStart[i] = startingPos[i];
-            }
-            for (int i = (startingPos != null ? startingPos.Length : 0); i < newStart.Length; i++)
-                newStart[i] = Vector3.zero;
-            startingPos = newStart;
-        }
-
-        // Build ordered key list from server array
-        var orderedKeys = new List<string>(playerCount);
-        foreach (var p in players)
-        {
-            if (p == null) continue;
-            orderedKeys.Add(!string.IsNullOrEmpty(p.player_id) ? p.player_id : p.uid.ToString());
-        }
-
-        int localUid = client.public_UserInfo != null ? client.public_UserInfo.uid : -1;
-
-        // New ordered controllers list
-        var newCharacterControllers = new List<CharacterController>(playerCount);
-
-        for (int i = 0; i < players.Count; i++)
-        {
-            var p = players[i];
-            if (p == null) continue;
-
-            string key = orderedKeys[i];
-            bool isLocal = (p.uid == localUid);
-
-            // determine target start position: prefer startingPos slot, fallback to server position
-            Vector3 targetPos = Vector3.zero;
-            if (startingPos != null && i < startingPos.Length && startingPos[i] != Vector3.zero)
-            {
-                targetPos = startingPos[i];
-            }
-            else if (p.position != null && p.position.Length >= 2)
-            {
-                targetPos = new Vector3(p.position[0], p.position[1], 0f);
-            }
-
-            CharacterController controller = null;
-
-            // 1) Try find controller by the new key
-            if (playerControllersByKey.TryGetValue(key, out var ctrlByKey) && ctrlByKey != null)
-            {
-                controller = ctrlByKey;
-            }
-            else
-            {
-                // 2) Fallback: try find controller by uid (player re-assigned slot but same uid exists)
-                foreach (var kv in playerControllersByKey)
-                {
-                    var c = kv.Value;
-                    if (c == null) continue;
-                    if (c.UserId == p.uid)
-                    {
-                        // remap dictionary key to the server-provided key
-                        string oldKey = kv.Key;
-                        controller = c;
-                        if (oldKey != key)
-                        {
-                            playerControllersByKey.Remove(oldKey);
-                            playerControllersByKey[key] = controller;
-                            controller.key = key;
-                        }
-                        break;
-                    }
-                }
-            }
-
-            if (controller != null)
-            {
-                // Update controller identity and visuals to match server player
-                controller.UserId = p.uid;
-                controller.UserName = p.ename ?? ("Player_" + p.uid);
-                controller.detectCamera = this.trackingCamera;
-
-                // set local-player tag correctly so camera/tracking logic finds the correct object
-                controller.gameObject.tag = isLocal ? "MainPlayer" : "Untagged";
-
-                controller.setLocalPlayer(isLocal);
-
-                // Place controller at start slot (full teleport at round start is expected)
-                controller.transform.localPosition = targetPos;
-                controller.transform.localScale = Vector3.one * (1f / this.clientMapScale);
-
-                // Update player tag/icon and costume
-                int playerIndex = 0;
-                if (!string.IsNullOrEmpty(p.player_id))
-                {
-                    var digits = p.player_id.StartsWith("player", StringComparison.OrdinalIgnoreCase) ? p.player_id.Substring(6) : p.player_id;
-                    int.TryParse(digits, out playerIndex);
-                    playerIndex = Mathf.Max(0, playerIndex - 1);
-                }
-                if (playerIndex >= 0 && playerIndex < playerTags.Length)
-                {
-                    controller.setPlayerTag(playerTags[playerIndex], p.ename);
-                }
-
-                if (!string.IsNullOrEmpty(p.costume_id) && int.TryParse(p.costume_id, out int costumeId))
-                {
-                    int csIndex = costumeId - 1;
-                    if (characterSets != null && csIndex >= 0 && csIndex < characterSets.Length && characterSets[csIndex] != null)
-                    {
-                        controller.SetCostumeTextures(characterSets[csIndex]);
-                    }
-                }
-
-                newCharacterControllers.Add(controller);
-            }
-            else
-            {
-                // Create missing controller at targetPos
-                CreatePlayerFromData(p, targetPos, key, isLocal);
-
-                // after creation it should be present in playerControllersByKey
-                if (playerControllersByKey.TryGetValue(key, out var created) && created != null)
-                {
-                    // ensure correct identity assigned by CreatePlayerFromData
-                    created.UserId = p.uid;
-                    created.UserName = p.ename ?? ("Player_" + p.uid);
-                    created.detectCamera = this.trackingCamera;
-                    created.gameObject.tag = isLocal ? "MainPlayer" : "Untagged";
-                    created.setLocalPlayer(isLocal);
-
-                    newCharacterControllers.Add(created);
-                }
-            }
-
-            // Reassign scoreboard slot i to this player
-            if (scoreboardControllers != null && i >= 0 && i < scoreboardControllers.Length)
-            {
-                var sbObj = scoreboardControllers[i];
-                if (sbObj != null)
-                {
-                    var sb = sbObj.GetComponent<scoreboardController>();
-                    if (sb != null)
-                    {
-                        sb.key = key;
-
-                        Texture2D iconTex = null;
-                        if (!string.IsNullOrEmpty(p.costume_id) && int.TryParse(p.costume_id, out int costumeId2))
-                        {
-                            int csIndex = costumeId2 - 1;
-                            if (characterSets != null && csIndex >= 0 && csIndex < characterSets.Length && characterSets[csIndex] != null)
-                            {
-                                iconTex = characterSets[csIndex].defaultIcon as Texture2D;
-                            }
-                        }
-                        sb.setScoreboard(key, iconTex, p.ename);
-                    }
-                }
-            }
-
-            // Update minimap marker sprite if exists (team depends on server order index)
-            if (minimapMarkersByKey.TryGetValue(key, out var marker) && marker != null)
-            {
-                var img = marker.GetComponent<Image>();
-                if (img != null)
-                {
-                    int team = (i % 2 == 0) ? 0 : 1; // 0: team A (1,3,5) as indices 0,2,4
-                    bool isLocalPlayer = playerControllersByKey.TryGetValue(key, out var ctrlCheck) && ctrlCheck != null && ctrlCheck.IsLocalPlayer;
-                    img.sprite = (team == 0) ? (isLocalPlayer ? minimapBluePlayerMarker : minimapBlueOtherMarker)
-                                             : (isLocalPlayer ? minimapOrangePlayerMarker : minimapOrangeOtherMarker);
-                }
-            }
-        }
-
-        // Replace characterControllers with ordered list
-        characterControllers = newCharacterControllers;
-
-        // Clean up any controllers no longer in server list
-        var toRemove = new List<string>();
-        foreach (var kv in playerControllersByKey)
-        {
-            if (!orderedKeys.Contains(kv.Key))
-                toRemove.Add(kv.Key);
-        }
-        foreach (var k in toRemove)
-            RemovePlayer(k);
-
-        LogController.Instance?.debug($"ReassignPlayersForStart: assigned {characterControllers.Count} controllers for start slots.");
-    }
-
     private void SyncPlayers()
     {
         try
         {
+            if (suppressSyncPlayers) return;
             // Defensive checks
             if (WS_Client.Instance == null || WS_Client.Instance.GameData == null) return;
             var players = WS_Client.Instance.GameData.players;
@@ -1156,14 +984,96 @@ public class TowerGameController : GameBaseController
 
     private void resetStartingPos()
     {
-        var client = WS_Client.Instance;
-        if (client.GameData.players == null) return;
-        for (int i = 0; i < characterControllers.Count; i++)
+        suppressSyncPlayers = true;
+        try
         {
-            var restartPosition = new Vector3(client.GameData.players[i].position[0], 
-                                              client.GameData.players[i].position[1], 
-                                              0f);
-            characterControllers[i].transform.localPosition = restartPosition;
+            // 1) Remove all player controllers (safe snapshot of keys)
+            var keys = new List<string>(playerControllersByKey.Keys);
+            foreach (var k in keys)
+            {
+                RemovePlayer(k);
+            }
+
+            // Ensure dictionaries/lists are empty
+            playerControllersByKey.Clear();
+
+            // 2) Destroy any leftover character GameObjects and clear list
+            for (int i = characterControllers.Count - 1; i >= 0; i--)
+            {
+                var cc = characterControllers[i];
+                if (cc != null && cc.gameObject != null)
+                {
+                    GameObject.Destroy(cc.gameObject);
+                }
+                characterControllers.RemoveAt(i);
+            }
+
+            // 3) Remove all minimap markers created for players
+            if (minimapMarkersByKey != null)
+            {
+                foreach (var kv in minimapMarkersByKey)
+                {
+                    if (kv.Value != null) GameObject.Destroy(kv.Value.gameObject);
+                }
+                minimapMarkersByKey.Clear();
+            }
+
+            // 4) Optionally keep answers/obstacles; do not change unless desired.
+            // (If you want to clear answers/obstacles too, do similar destroy+clear here.)
+
+            // 5) Recreate controllers from authoritative GameData.players (maintain server ordering)
+            var client = WS_Client.Instance;
+            if (client == null || client.GameData == null || client.GameData.players == null)
+                return;
+
+            var players = client.GameData.players;
+            int localUid = client.public_UserInfo != null ? client.public_UserInfo.uid : -1;
+
+            for (int i = 0; i < players.Count; i++)
+            {
+                var p = players[i];
+                if (p == null) continue;
+
+                string key = !string.IsNullOrEmpty(p.player_id) ? p.player_id : p.uid.ToString();
+                bool isLocal = (p.uid == localUid);
+
+                Vector3 startPos = Vector3.zero;
+                if (p.position != null && p.position.Length >= 2)
+                    startPos = new Vector3(p.position[0], p.position[1], 0f);
+
+                // Use existing factory to create controller and register into dictionaries
+                CreatePlayerFromData(p, startPos, key, isLocal);
+
+                // Ensure created controller correct identity (defensive)
+                if (playerControllersByKey.TryGetValue(key, out var created) && created != null)
+                {
+                    created.UserId = p.uid;
+                    created.UserName = p.ename ?? ("Player_" + p.uid);
+                    created.detectCamera = this.trackingCamera;
+                    created.gameObject.tag = isLocal ? "MainPlayer" : "Untagged";
+                    created.setLocalPlayer(isLocal);
+
+                    // For remote players set destination from server
+                    if (!isLocal && p.position != null && p.position.Length >= 2)
+                    {
+                        created.setLocalDestination(new Vector3(p.position[0], p.position[1], 0f));
+                    }
+                    else
+                    {
+                        // ensure local player's destination initialized
+                        created.setLocalDestination(created.transform.localPosition);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogController.Instance.debugError($"resetStartingPos error: {ex.Message}\n{ex.StackTrace}");
+        }
+        finally
+        {
+            // allow SyncPlayers to resume
+            suppressSyncPlayers = false;
         }
     }
 
@@ -1298,6 +1208,8 @@ public class TowerGameController : GameBaseController
         }
 
         this.RemovePlayerMarker(key);
+
+        GC.Collect();
     }
 
     private void RemovePlayerMarker(string key)

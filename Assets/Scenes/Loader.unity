@@ -413,7 +413,7 @@ MonoBehaviour:
     roAppDataKey: 
     gamePageName: 
     bgTexture: {fileID: 2800000, guid: a654835e990e98144aae5d5a84af992d, type: 3}
-    previewTexture: {fileID: 2800000, guid: 8e53b2996fac9c64f8ef224da31c4cf2, type: 3}
+    previewTexture: {fileID: 0}
     object_item_images: []
     gameBackground: {fileID: 0}
     gamePreview: {fileID: 0}
@@ -698,7 +698,8 @@ MonoBehaviour:
   jwt: eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxNy03ZmI1MDI3NmRkMmNiZTA4OGZiM2Q2Y2RlYmJiOGRiYWZlZDJmY2Y2MzVkNzZiMmI2ODE1OWE2OWUyYTkwNWZiIiwiZXhwaXJlcyI6MTc2ODQ3MDYxMywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDEtMDggMDk6NTA6MTMgR01UIiwidWlkIjoiNTE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMzEuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.K2D-yniyoC3-DX9-r_1CS9qhC8W9bCm-WeIXyWzBits
   pendingReconnectRoomId: 
   pendingOrder: 
-  lastOrderTargetUid: 
+  pendingReconnectUid: -1
+  startCountDown: 0
   localhostUrl: wss://ws.openknowledge.hk:8084
   localhostUrl_copy: ws://localhost:8000/
   developmentUrl: wss://ws.openknowledge.hk:8084

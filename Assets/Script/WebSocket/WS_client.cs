@@ -39,6 +39,7 @@ public class WS_Client : MonoBehaviour
     public string pendingReconnectRoomId = "";
     public string pendingOrder = "";
     public int pendingReconnectUid = -1;
+    public int startCountDown = 0;
 
     // const string WEBSHOCKET_URL = "wss://ws.openknowledge.hk:8084";//dev : "wss://ws.openknowledge.hk:8084";  // prod : "wss://ws.openknowledge.hk";
     public string localhostUrl = "ws://localhost:8000/";
@@ -181,7 +182,7 @@ public class WS_Client : MonoBehaviour
         public string status; // waiting / playing
         public int gameTimer; // 0 - 180
         public int round; // 1 - 10
-
+        public int startCountDown;
     }
 
     [System.Serializable]
@@ -433,6 +434,12 @@ public class WS_Client : MonoBehaviour
                         debugLogPerSecond("OnMessage! " + jsonString);
                         //Debug.Log(jsonString);
                         GameData = message.content.roomGameData;
+
+                        if(GameData != null)
+                        {
+                            this.startCountDown = GameData.startCountDown;
+                            //Debug.Log($"SyncRoomData: ready button startCountDown = {this.startCountDown}");
+                        }
 
                         if (!string.IsNullOrEmpty(message.content.order))
                         {
