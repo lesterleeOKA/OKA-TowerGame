@@ -53,7 +53,9 @@ public class LoadImage : Downloader
         if (this.useGCCollect)
         {
             yield return Resources.UnloadUnusedAssets();
-            System.GC.Collect();
+#if !UNITY_WEBGL && !UNITY_IOS
+    GC.Collect();
+#endif
         }
     }
 

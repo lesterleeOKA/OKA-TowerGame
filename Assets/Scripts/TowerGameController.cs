@@ -1209,7 +1209,9 @@ public class TowerGameController : GameBaseController
 
         this.RemovePlayerMarker(key);
 
-        GC.Collect();
+    #if !UNITY_WEBGL && !UNITY_IOS
+    GC.Collect();
+    #endif
     }
 
     private void RemovePlayerMarker(string key)

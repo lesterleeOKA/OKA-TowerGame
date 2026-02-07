@@ -19,6 +19,7 @@ public class GameSetting : MonoBehaviour
     public string unitKey = string.Empty;
     public string testURL = string.Empty;
     public bool skipAudioPanel = false;
+
     
     protected virtual void Awake()
     {
