@@ -443,6 +443,7 @@ MonoBehaviour:
     - dev.openknowledge.hk
     - uat.openknowledge.hk
     - www.rainbowone.app
+    - app.starwishparty.com
     jwt: 
     appId: 
     gameSettingJson: 
@@ -492,7 +493,7 @@ MonoBehaviour:
         score: 0
         percent: 0
   unitKey: 
-  testURL: https://dev.openknowledge.hk/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjUxNy03ZmI1MDI3NmRkMmNiZTA4OGZiM2Q2Y2RlYmJiOGRiYWZlZDJmY2Y2MzVkNzZiMmI2ODE1OWE2OWUyYTkwNWZiIiwiZXhwaXJlcyI6MTc2ODQ3MDYxMywicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDEtMDggMDk6NTA6MTMgR01UIiwidWlkIjoiNTE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMzEuMyIsInZlcnNpb24iOm51bGwsImRldmljZSI6IndpbmRvd3MifQ.K2D-yniyoC3-DX9-r_1CS9qhC8W9bCm-WeIXyWzBits
+  testURL: https://www.rainbowone.app/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjYxNDc5OC1hNTAwZTkwMzk4MGE0NDE4YmRhMzM3ZTQ2ODEzYzM1ZmViMGNjMWMwYWNmZjI2NGI1ODhhNDIyNGI4ZjcwNWJmIiwiZXhwaXJlcyI6MTc3MzczODEwNCwidGltZSI6IjIwMjYtMDItMTUgMTc6MDE6NDQiLCJ1aWQiOiI2MTQ3OTgiLCJ1c2VyX3JvbGUiOiIyIiwic2Nob29sX2lkIjoiMjcyIiwiaXAiOiIxNjkuMjU0LjEyOS44IiwidmVyc2lvbiI6IjIuOC4zNiIsImRldmljZSI6IndpbmRvd3MifQ.PCjSb8mvnkkvhO3h3B9k9XALgLP9cGaZidyys10cDOc
   skipAudioPanel: 0
 --- !u!4 &734659897
 Transform:

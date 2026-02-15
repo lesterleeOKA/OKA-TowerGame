@@ -52,11 +52,13 @@ public class GameSetting : MonoBehaviour
             case "dev.starwishparty.com":
                 this.currentHostName = HostName.dev;
                 LogController.Instance?.UpdateVersion("dev");
+                WS_Client.Instance.GetCurrentUrl = WS_Client.Instance.developmentUrl;
                 break;
             case "uat.openknowledge.hk":
             case "uat.starwishparty.com":
                 this.currentHostName = HostName.uat;
                 LogController.Instance?.UpdateVersion("uat");
+                WS_Client.Instance.GetCurrentUrl = WS_Client.Instance.uatUrl;
                 break;
             case "pre.openknowledge.hk":
             case "pre.starwishparty.com":
@@ -68,11 +70,14 @@ public class GameSetting : MonoBehaviour
             case "api.openknowledge.hk":
             case "www.starwishparty.com":
             case "starwishparty.com":
+            case "app.starwishparty.com":
                 this.currentHostName = HostName.prod;
                 LogController.Instance?.UpdateVersion("prod");
+                WS_Client.Instance.GetCurrentUrl = WS_Client.Instance.productionUrl;
                 break;
             default:
                 LogController.Instance?.UpdateVersion("dev");
+                WS_Client.Instance.GetCurrentUrl = WS_Client.Instance.developmentUrl;
                 break;
         }
         this.CurrentHostName = hostName;

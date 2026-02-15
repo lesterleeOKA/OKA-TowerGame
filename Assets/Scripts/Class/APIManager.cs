@@ -1094,7 +1094,9 @@ public static class APIConstant
             //test prod
             if (loader.CurrentHostName.Contains("www.starwishparty.com") ||
                 loader.CurrentHostName.Contains("pro.starwishparty.com") ||
-                loader.CurrentHostName.Contains("rainbowone.app"))
+                loader.CurrentHostName.Contains("rainbowone.app") ||
+                loader.CurrentHostName.Contains("www.rainbowone.app") ||
+                loader.CurrentHostName.Contains("app.starwishparty.com"))
                 domain = "pro.starwishparty.com";
             else
                 domain = loader.CurrentHostName;

@@ -70,6 +70,7 @@ public class WS_Client : MonoBehaviour
     // Event system for order changes
     public delegate void OrderChangedHandler(string newOrder);
     public event OrderChangedHandler OnOrderChanged;
+    private string overrideWebsocketBaseUrl = null;
 
     // 新增公共属性，作为访问私有字段的受控接口
     public UserInfo public_UserInfo
@@ -280,10 +281,19 @@ public class WS_Client : MonoBehaviour
         }
     }
 
-    public string GetCurrentUrl()
+    public string GetCurrentUrl
     {
+        set
+        {
+            overrideWebsocketBaseUrl = value;
+        }
+        get
+        {
+            if (!string.IsNullOrEmpty(overrideWebsocketBaseUrl))
+                return overrideWebsocketBaseUrl;
+
 #if UNITY_EDITOR
-        return localhostUrl;
+            return localhostUrl;
 #else
         string currentDomain = GetCurrentDomainName.ToLower();
 
@@ -307,6 +317,7 @@ public class WS_Client : MonoBehaviour
             return productionUrl;
         }
 #endif
+        }
     }
 
     void Start()
@@ -368,7 +379,7 @@ public class WS_Client : MonoBehaviour
             return;
         }
 
-        Debug.Log("Connect: " + GetCurrentUrl());
+        Debug.Log("Connect: " + GetCurrentUrl);
 
         // Cancel any existing repeating invokes to prevent duplicates
         try { CancelInvoke("SendTest"); } catch { }
@@ -386,7 +397,7 @@ public class WS_Client : MonoBehaviour
         // // *********************************************
         // var baseUrl = "ws://localhost:8000/"; // comment when build and deploy
         // *********************************************
-        var baseUrl = GetCurrentUrl();
+        var baseUrl = GetCurrentUrl;
 
         var query = "?channelId=" + Uri.EscapeDataString(channelId) + "&jwt=" + Uri.EscapeDataString(jwt);
 
