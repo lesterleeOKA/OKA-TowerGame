@@ -17,11 +17,12 @@ public class QuestionController : MonoBehaviour
     public string correctAnswer;
     public string[] answersChoics;
     public CanvasGroup[] questionBgs;
-    private RawImage questionImage;
+    public RawImage questionImage;
     public AudioClip audioClip = null;
     public CanvasGroup audioPlayBtn = null;
     private AspectRatioFitter aspecRatioFitter = null;
     public TextMeshProUGUI questionText;
+    public Texture qaTexture;
 
     private void Awake()
     {
@@ -90,32 +91,37 @@ public class QuestionController : MonoBehaviour
                     if (this.questionText != null) this.questionText.text = this.currentQuestion.content;
 
                     var imageUrl = this.currentQuestion.media[0];
+
+
                     mediaUrl = !string.IsNullOrEmpty(imageUrl) ?
                                       APIConstant.blobServerRelativePath + imageUrl : "";
 
-                    var loadImage = QuestionManager.Instance.loadImage;
-                    Texture qaImage = null;
-                    StartCoroutine(loadImage.Load("", mediaUrl, tex => {
-                        qaImage = tex;
-                    }));
-                    if (this.questionImage != null && qaImage != null)
-                    {
-                        this.questionImage.enabled = true;
-                        this.aspecRatioFitter = this.questionImage.GetComponent<AspectRatioFitter>();
-                        this.questionImage.texture = qaImage;
+                    Debug.Log("mediaUrl:" + mediaUrl);
 
-                        var parentRectTransform = this.questionImage.transform.parent.GetComponent<RectTransform>();
-                        var parentWidth = parentRectTransform.sizeDelta.x;
-                        if (qaImage.width > qaImage.height)
+                    var loadImage = QuestionManager.Instance.loadImage;
+                    this.qaTexture = null;
+                    StartCoroutine(loadImage.Load("", mediaUrl, tex => {
+                        this.qaTexture = tex;
+
+                        if (this.questionImage != null && this.qaTexture != null)
                         {
-                            this.questionImage.GetComponent<RectTransform>().sizeDelta = new Vector2(parentWidth, 300f);
+                            this.questionImage.enabled = true;
+                            this.aspecRatioFitter = this.questionImage.GetComponent<AspectRatioFitter>();
+                            this.questionImage.texture = this.qaTexture;
+
+                            var parentRectTransform = this.questionImage.transform.parent.GetComponent<RectTransform>();
+                            var parentWidth = parentRectTransform.sizeDelta.x;
+                            if (this.qaTexture.width > this.qaTexture.height)
+                            {
+                                this.questionImage.GetComponent<RectTransform>().sizeDelta = new Vector2(parentWidth, 300f);
+                            }
+                            else
+                            {
+                                this.questionImage.GetComponent<RectTransform>().sizeDelta = new Vector2(parentWidth, 430f);
+                            }
+                            this.aspecRatioFitter.aspectRatio = (float)this.qaTexture.width / (float)this.qaTexture.height;
                         }
-                        else
-                        {
-                            this.questionImage.GetComponent<RectTransform>().sizeDelta = new Vector2(parentWidth, 430f);
-                        }
-                        this.aspecRatioFitter.aspectRatio = (float)qaImage.width / (float)qaImage.height;
-                    }
+                    }));
                     break;
                 case "audio":
                 case "Audio":

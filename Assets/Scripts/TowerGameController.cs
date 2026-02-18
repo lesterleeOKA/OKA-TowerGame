@@ -943,7 +943,7 @@ public class TowerGameController : GameBaseController
                     instance.anchorMax = new Vector2(0.5f, 0.5f);
                     instance.pivot = new Vector2(0.5f, 0.5f);
                     instance.localScale = Vector3.one;
-                    instance.sizeDelta = new Vector2(15f, 15f); // Slightly smaller than player markers
+                    instance.sizeDelta = new Vector2(40f, 40f); // Slightly smaller than player markers
 
                     minimapAnswerMarkersByKey[answer.id] = instance;
                     answerMarker = instance;
