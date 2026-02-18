@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -32,6 +34,16 @@ public class CharacterController : UserData
     private static List<RaycastResult> s_raycastResults = new List<RaycastResult>(8);
     public bool isMoving = false;
     public float distance;
+
+    private Transform cachedTransform;
+    private WS_Client.PositionData posData = new WS_Client.PositionData();
+    private WS_Client.PositionData destData = new WS_Client.PositionData();
+
+    private void Awake()
+    {
+        this.cachedTransform = transform;
+    }
+
 
     void Start()
     {
@@ -131,71 +143,73 @@ public class CharacterController : UserData
 
     void Update()
     {
-        try
+        if (CanvasMapPan.Instance.playerRect == null) return;
+        if (!this.IsLocalPlayer)
         {
-            if(CanvasMapPan.Instance.playerRect == null) return;
-            if(this.IsLocalPlayer)
+            UpdateAnimation();
+            return;
+        }
+
+        // Skip input if pointer is over UI
+        if (this.IsPointerOverUIButton())
+        {
+            isMouseDown = false;
+            UpdateAnimation();
+            return;
+        }
+
+        // Cache touch count once per frame
+        int touchCount = Input.touchCount;
+        Touch? firstTouch = touchCount > 0 ? (Touch?)Input.GetTouch(0) : null;
+
+        // Handle input state
+        if (Input.GetMouseButtonDown(0) || (firstTouch.HasValue && firstTouch.Value.phase == TouchPhase.Began))
+            isMouseDown = true;
+
+        if (Input.GetMouseButtonUp(0) || (firstTouch.HasValue && firstTouch.Value.phase == TouchPhase.Ended))
+            isMouseDown = false;
+
+        if (touchCount == 0 && !Input.GetMouseButton(0))
+        {
+            localDestination = cachedTransform.parent != null ? cachedTransform.localPosition : cachedTransform.position;
+            smoothVelocity = Vector3.zero;
+            isMouseDown = false;
+        }
+
+        // Movement + network updates
+        if (isMouseDown)
+        {
+            calLocalDestination();
+
+            if (Time.time - lastNetworkUpdateTime >= networkUpdateInterval)
             {
-                if (this.IsPointerOverUIButton())
-                {
-                    isMouseDown = false;
-                    return;
-                }
-                // Handle both mouse and touch input
-                if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
-                {
-                    isMouseDown = true;
-                }
-                if (Input.GetMouseButtonUp(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended))
-                {
-                    isMouseDown = false;
-                }
-                // Also set isMouseDown to false if no touches are detected
-                if (Input.touchCount == 0 && !Input.GetMouseButton(0))
-                {
-                    if (transform.parent != null)
-                        localDestination = transform.localPosition;
-                    else
-                        localDestination = transform.position;
-                    smoothVelocity = Vector3.zero;
-                    isMouseDown = false;
-                }
+                lastNetworkUpdateTime = Time.time;
 
-                if (isMouseDown) 
+                if (WS_Client.Instance != null)
                 {
-                    calLocalDestination();
-                }
-                // Throttle network updates
-                if (Time.time - lastNetworkUpdateTime >= networkUpdateInterval)
-                {
-                    lastNetworkUpdateTime = Time.time;
-                    
-                    // Check WS_Client.Instance exists before using it
-                    if (WS_Client.Instance != null)
+                    try
                     {
-                        WS_Client.PositionData posData = new WS_Client.PositionData
-                        {
-                            x = this.transform.localPosition.x,
-                            y = this.transform.localPosition.y,
-                        };
+                        // Reuse objects to avoid GC allocations
+                        posData.x = cachedTransform.localPosition.x;
+                        posData.y = cachedTransform.localPosition.y;
 
-                        WS_Client.PositionData destData = new WS_Client.PositionData
-                        {
-                            x = localDestination.x,
-                            y = localDestination.y,
-                        };
+                        destData.x = localDestination.x;
+                        destData.y = localDestination.y;
 
-                        // Debug.Log("UpdateServerPosition: posData=" + posData.x + " - " + posData.y + " - destData=" + destData.x + " - " + destData.y);
                         _ = WS_Client.Instance.UpdateServerPosition(posData, destData);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        LogController.Instance.debugError(
+                            $"Network update failed for {gameObject.name}: {ex.Message}\n{ex.StackTrace}"
+                        );
                     }
                 }
             }
-            UpdateAnimation();
         }
-        catch (System.Exception ex)
-        {
-            LogController.Instance.debugError($"Error in CharacterController.FixedUpdate for {gameObject.name}: {ex.Message}\n{ex.StackTrace}");
-        }
+
+        UpdateAnimation();
+
     }
 
     void LateUpdate()
@@ -401,5 +415,34 @@ public class CharacterController : UserData
             this.answerText.text = _answer;
         }   
         if(show==1) AudioController.Instance?.PlayAudio(9);
+    }
+
+    // Add these methods near the bottom of the class (before showAnswerBubble)
+    private void StopMovementForCollision()
+    {
+        // Freeze destination at current position and clear velocity so physics won't push the character
+        if (transform.parent != null)
+            localDestination = transform.localPosition;
+        else
+            localDestination = transform.position;
+
+        smoothVelocity = Vector3.zero;
+        isMoving = false;
+
+        // ensure animation switches to idle immediately
+        if (this.characterAnimation != null)
+            this.characterAnimation.setIdling();
+    }
+
+    // Called when colliders (non-trigger) intersect - 2D physics
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision == null || collision.collider == null) return;
+
+        // If the other collider is a PolygonCollider2D, stop movement
+        if (collision.collider.CompareTag("Obstacle"))
+        {
+            StopMovementForCollision();
+        }
     }
 }

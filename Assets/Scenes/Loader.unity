@@ -493,7 +493,7 @@ MonoBehaviour:
         score: 0
         percent: 0
   unitKey: 
-  testURL: https://dev.starwishparty.com/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcxNy0zNWZjNTRjMDc1NTBhZjRkNzNkZmI5NWZhMjAxNWExMGRmZDE1MjU5Yzg1NDM3Njc5OTcwMTMwOTVmZWIwYjc2IiwiZXhwaXJlcyI6MTc3MTk3NjIyMSwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDItMTcgMjM6Mzc6MDEgR01UIiwidWlkIjoiNTQzNzE3IiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuMyIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.BPHL2vCGDNlH4ajmvNvuX6Ss7KI9eTHbYifZGHIHOrg
+  testURL: https://dev.starwishparty.com/RainbowOne/webapp/2.8/gameFile/OKAGames/towerGameBuild/?jwt=eyJ0eXAiOiJqd3QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dfZW5hYmxlZCI6IjEiLCJ0b2tlbiI6IjU0MzcyMS0xMGZmMzJmMGIyY2ZlYWQ1M2JhYmJmNmE2Njg5OTllOTgzYmE4OWZjNmY0NjQ3M2I1M2RmNDA1YjY1Y2QxZGUzIiwiZXhwaXJlcyI6MTc3MjAxMjA0NCwicmVuZXdfZW5hYmxlZCI6MSwidGltZSI6IjIwMjYtMDItMTggMDk6MzQ6MDQgR01UIiwidWlkIjoiNTQzNzIxIiwidXNlcl9yb2xlIjoiMiIsInNjaG9vbF9pZCI6IjI3MiIsImlwIjoiMTY5LjI1NC4xMjkuMyIsInZlcnNpb24iOiIyLjguMzYiLCJkZXZpY2UiOiJ3aW5kb3dzIn0.U-mwuh7S-5mmaU14U0JIaqbK8F3uYgvNhs78WSsvGF8
   skipAudioPanel: 0
 --- !u!4 &734659897
 Transform:
@@ -828,7 +828,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_Text
-      value: v1.13
+      value: v1.14
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_FontData.m_Font
