@@ -19,8 +19,6 @@ public class TowerGameController : GameBaseController
 {
     public static TowerGameController Instance = null;
     public GameObject playerPrefab;
-    public GameObject questionPrefab;
-    // public GameObject questionUIText;
     public GameObject onTopUI;
     public GameObject answerPrefab;
     public GameObject obstaclePrefab;
@@ -111,7 +109,9 @@ public class TowerGameController : GameBaseController
         if (WS_Client.Instance != null)
         {
             WS_Client.Instance.OnOrderChanged += HandleOrderChanged;
-            
+
+            WS_Client.Instance.OnStartCountDownChanged += HandleStartCountDownChanged;
+
             // Check if there's a pending order that arrived before we subscribed
             if (!string.IsNullOrEmpty(WS_Client.Instance.pendingOrder))
             {
@@ -338,11 +338,19 @@ public class TowerGameController : GameBaseController
         return inner;
     }
 
+    // Add this handler method inside TowerGameController
+    private void HandleStartCountDownChanged(int newCountDown)
+    {
+        // Use existing method to update UI; it reads WS_Client.Instance.startCountDown internally
+        controlReadyCountDown();
+    }
+
     private void OnDestroy()
     {
         // Unsubscribe to prevent memory leaks
         if (WS_Client.Instance != null)
         {
+            WS_Client.Instance.OnStartCountDownChanged -= HandleStartCountDownChanged;
             WS_Client.Instance.OnOrderChanged -= HandleOrderChanged;
         }
     }
@@ -352,8 +360,6 @@ public class TowerGameController : GameBaseController
     {
         LogController.Instance.debug($"Order changed to: {newOrder}");
 
-        //this.controlReadyCountDown();
-        
         // Handle different order types
         switch (newOrder)
         {
@@ -439,7 +445,7 @@ public class TowerGameController : GameBaseController
             if (this.startCountDownText != null)
                 this.startCountDownText.text = startCountDown.ToString();
 
-            SetUI.SetScale(this.startCountDownClock, true);
+            SetUI.SetScale(this.startCountDownClock, true, 1f, 0.5f);
         }
         else
         {

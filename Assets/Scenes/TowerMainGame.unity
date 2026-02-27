@@ -976,8 +976,8 @@ RectTransform:
   m_GameObject: {fileID: 79170180}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 181188715}
   m_Father: {fileID: 1220003938}
@@ -995,7 +995,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 79170180}
   m_Enabled: 1
-  m_Alpha: 0
+  m_Alpha: 1
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
@@ -2185,7 +2185,7 @@ GameObject:
   m_Component:
   - component: {fileID: 223913833}
   m_Layer: 5
-  m_Name: Questions
+  m_Name: Questions_SubmitArea
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16410,7 +16410,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 0}
+  m_Texture: {fileID: 2800000, guid: 4f469462d6437184481b74b2de70836e, type: 3}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -16845,7 +16845,6 @@ MonoBehaviour:
   showingPopup: 1
   leaveGame: 0
   playerPrefab: {fileID: 2199729133312583796, guid: 164f6f1d2e54b3a4584036b5892ec706, type: 3}
-  questionPrefab: {fileID: 0}
   onTopUI: {fileID: 1620153708}
   answerPrefab: {fileID: 5690817824625537194, guid: ebb2dbef36b38d341a7c17b3cc78cf60, type: 3}
   obstaclePrefab: {fileID: 3668556306711772515, guid: e6d133f5d65f37141ad7cb7804c5c253, type: 3}
@@ -17030,14 +17029,14 @@ RectTransform:
   m_GameObject: {fileID: 2031091879}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.0004, y: 1.0004, z: 1.0004}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.35, y: 0.35, z: 0.35}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 223913833}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -6253, y: -15}
+  m_AnchoredPosition: {x: -6884, y: 178}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2031091881
@@ -17985,14 +17984,14 @@ RectTransform:
   m_GameObject: {fileID: 2120989546}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.0004, y: 1.0004, z: 1.0004}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.35, y: 0.35, z: 0.35}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 223913833}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 6253, y: -15}
+  m_AnchoredPosition: {x: 6852, y: 162}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2120989548

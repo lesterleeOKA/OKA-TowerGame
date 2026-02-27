@@ -72,6 +72,12 @@ public class WS_Client : MonoBehaviour
     public event OrderChangedHandler OnOrderChanged;
     private string overrideWebsocketBaseUrl = null;
 
+    // Add this near other private fields in WS_Client
+    private int lastStartCountDown = int.MinValue;
+
+    // Event invoked when server startCountDown changes
+    public event Action<int> OnStartCountDownChanged;
+
     // 新增公共属性，作为访问私有字段的受控接口
     public UserInfo public_UserInfo
     {
@@ -79,7 +85,7 @@ public class WS_Client : MonoBehaviour
         set { userInfo = value; }
     }
     // 私有静态字段，用于实际存储数据
-    public static RoomGameData _gameData;
+    public RoomGameData _gameData;
 
     // 公共静态属性，供其他类访问
     public RoomGameData GameData
@@ -428,6 +434,8 @@ public class WS_Client : MonoBehaviour
                 WebSocketMessage message = JsonUtility.FromJson<WebSocketMessage>(jsonString);
 
                 // 现在可以安全地访问messageType属性
+
+                Debug.Log("message.messageType:" + message.messageType);
                 switch (message.messageType)
                 {
                     case "roomInfo":
@@ -444,12 +452,16 @@ public class WS_Client : MonoBehaviour
                     case "SyncRoomData":
                         debugLogPerSecond("OnMessage! " + jsonString);
                         //Debug.Log(jsonString);
-                        GameData = message.content.roomGameData;
+                        this.GameData = message.content.roomGameData;
 
-                        if(GameData != null)
+                        Debug.Log($"SyncRoomData: ready button startCountDown = {this.GameData.startCountDown}");
+                        int newCountDown = this.GameData.startCountDown;
+                        this.startCountDown = newCountDown;
+
+                        if (newCountDown != this.lastStartCountDown)
                         {
-                            this.startCountDown = GameData.startCountDown;
-                            //Debug.Log($"SyncRoomData: ready button startCountDown = {this.startCountDown}");
+                            this.lastStartCountDown = newCountDown;
+                            this.OnStartCountDownChanged?.Invoke(newCountDown);
                         }
 
                         if (!string.IsNullOrEmpty(message.content.order))
@@ -514,34 +526,12 @@ public class WS_Client : MonoBehaviour
                             //Debug.Log("Order received WS_Client: " + message.content.order);
                             OnOrderChanged?.Invoke(message.content.order);
                         }
-
-                        //if (GameData.players != null)
-                        //{
-                        // foreach (var player in GameData.players)
-                        //  {
-                        // 获取当前遍历玩家的位置坐标 [x, y]
-                        //     int index = GameData.players.IndexOf(player);
-                        //   float posX = player.position[0];
-                        //  float posY = player.position[1];
-                        //  if (player.uid == this.userInfo.uid)
-                        //  {
-                        //    this.player_id = player_id.ToString();
-                        //  }
-                        // }
-
-                        // foreach (var question in GameData.questions) {
-                        //     Debug.Log($"Question - ID: {question.id}, Content: {question.content}");
-                        // }
-
-                        // foreach (var answer in GameData.answers) {
-                        //     Debug.Log($"Answer - ID: {answer.id}, Content: {answer.content}, Question ID: {answer.question_id}, Position: [{answer.position[0]}, {answer.position[1]}], OnPlayer: {answer.isOnPlayer}, Submitted: {answer.isSubmitted}");
-                        // }
-                        //}
-
+      
                         gameDataReceived = true;
                         break;
                     case "ready":
                         this.userInfo = message.content.userInfo;
+                        //this.GameData = message.content.roomGameData;
                         break;
                     case "inPlayingRoom":
                         Debug.LogWarning("inPlayingRoom : " + jsonString);
