@@ -34659,6 +34659,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   answerId: 0
+  content: 
 --- !u!225 &4535893222528515030
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -34793,7 +34794,7 @@ MonoBehaviour:
   targetGO: {fileID: 0}
   tweenTargetIsTargetGO: 1
   delay: 0
-  duration: 1
+  duration: 0.5
   easeType: 35
   easeCurve:
     serializedVersion: 2
@@ -34835,7 +34836,7 @@ MonoBehaviour:
   autoPlay: 1
   useTargetAsV3: 0
   endValueFloat: 0
-  endValueV3: {x: 0, y: 30, z: 0}
+  endValueV3: {x: 0, y: 40, z: 0}
   endValueV2: {x: 0, y: 0}
   endValueColor: {r: 1, g: 1, b: 1, a: 1}
   endValueString: 

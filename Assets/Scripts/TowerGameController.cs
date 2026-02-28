@@ -64,6 +64,7 @@ public class TowerGameController : GameBaseController
     public CharacterSet[] characterSets;
     public GameObject[] scoreboardControllers;
     public Sprite[] playerTags;
+    public GameObject[] teamIcons;
 
 
 
@@ -71,7 +72,8 @@ public class TowerGameController : GameBaseController
     /// minmap
     /// </summary>
     public RectTransform minimapParent;
-    public RawImage minimapRawImage;              // assign the minimap RawImage in Inspector
+    public RawImage minimapRawImage;       
+    public Texture localPlayerIndicator;
     public Sprite minimapBluePlayerMarker;
     public Sprite minimapOrangePlayerMarker;
     public Sprite minimapBlueOtherMarker;
@@ -110,7 +112,7 @@ public class TowerGameController : GameBaseController
         {
             WS_Client.Instance.OnOrderChanged += HandleOrderChanged;
 
-            WS_Client.Instance.OnStartCountDownChanged += HandleStartCountDownChanged;
+            //WS_Client.Instance.OnStartCountDownChanged += HandleStartCountDownChanged;
 
             // Check if there's a pending order that arrived before we subscribed
             if (!string.IsNullOrEmpty(WS_Client.Instance.pendingOrder))
@@ -166,6 +168,27 @@ public class TowerGameController : GameBaseController
         yield return new WaitUntil(() => task2.IsCompleted);
         
         finishLoading = true;
+    }
+
+    public void showTeamGetScore(int teamId)
+    {
+        for (int i = 0; i < this.teamIcons.Length; i++)
+        {
+            if (i == teamId)
+            {
+                if (this.teamIcons[i] != null)
+                {
+                    this.teamIcons[i].SetActive(true);
+                }
+            }
+            else
+            {
+                if (this.teamIcons[i] != null)
+                {
+                    this.teamIcons[i].SetActive(false);
+                }
+            }
+        }
     }
 
     protected async Task fetchAccountCostumeId()
@@ -342,7 +365,7 @@ public class TowerGameController : GameBaseController
     private void HandleStartCountDownChanged(int newCountDown)
     {
         // Use existing method to update UI; it reads WS_Client.Instance.startCountDown internally
-        controlReadyCountDown();
+        controlReadyCountDown(newCountDown);
     }
 
     private void OnDestroy()
@@ -430,25 +453,82 @@ public class TowerGameController : GameBaseController
         SetUI.Set(this.readyTeamsUI, show);
         this.readyBtn?.SetActive(show);
         this.cancelBtn?.SetActive(!show);
+
+        SetUI.SetScale(this.startCountDownClock, false);
+        if (this.startCountDownText != null)
+        {
+            this.startCountDownText.text = "";
+            this.startCountDownText.ForceMeshUpdate();
+            Canvas.ForceUpdateCanvases();
+        }
     }
 
-    void controlReadyCountDown()
+    // Replace existing controlReadyCountDown() with this implementation
+    public void controlReadyCountDown(int countDown)
     {
-        if(this.readyUI.alpha == 0) {
+        // Defensive checks
+        if (this.readyUI == null || this.startCountDownClock == null)
+            return;
+
+        // If ready UI is hidden, always hide the clock
+        if (this.readyUI.alpha == 0)
+        {
             SetUI.SetScale(this.startCountDownClock, false);
+            if (this.startCountDownText != null)
+            {
+                this.startCountDownText.text = "";
+                this.startCountDownText.ForceMeshUpdate(); // ensure TMP redraw
+                Canvas.ForceUpdateCanvases();
+            }
             return;
         }
-        int startCountDown = WS_Client.Instance.startCountDown;
-        Debug.Log("WS_Client.Instance.GameData.startCountDown: " + startCountDown);
-        if (startCountDown > -1)
+
+        var client = WS_Client.Instance;
+        // Determine whether any player (including local) is currently "ready"
+        bool allPlayersReady = true;
+        try
+        {
+            var players = client.GameData?.players;
+            if (players != null)
+            {
+                foreach (var p in players)
+                {
+                    if (p == null) continue;
+                    if (!string.IsNullOrEmpty(p.status) && !p.status.Equals("ready", StringComparison.OrdinalIgnoreCase))
+                    {
+                        allPlayersReady = false;
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogController.Instance?.debugError($"controlReadyCountDown: failed to inspect player statuses: {ex.Message}");
+            allPlayersReady = false;
+        }
+
+        // Show clock only when countdown is active AND at least one player is ready.
+        if (countDown > -1 && allPlayersReady)
         {
             if (this.startCountDownText != null)
-                this.startCountDownText.text = startCountDown.ToString();
+            {
+                this.startCountDownText.text = countDown.ToString();
+                this.startCountDownText.ForceMeshUpdate();
+                Canvas.ForceUpdateCanvases();
+            }
 
             SetUI.SetScale(this.startCountDownClock, true, 1f, 0.5f);
         }
         else
         {
+            // Hide and clear text when nobody is ready or countdown not active
+            if (this.startCountDownText != null)
+            {
+                this.startCountDownText.text = "";
+                this.startCountDownText.ForceMeshUpdate();
+                Canvas.ForceUpdateCanvases();
+            }
             SetUI.SetScale(this.startCountDownClock, false);
         }
     }
@@ -678,6 +758,18 @@ public class TowerGameController : GameBaseController
                         subIcon.sizeDelta = new Vector2(12f, 12f);
                         RawImage iconImage = subIcon.gameObject.AddComponent<RawImage>();
                         iconImage.raycastTarget = false;
+
+                        RectTransform subIconIndicator = new GameObject("Indicator").AddComponent<RectTransform>();
+                        subIconIndicator.SetParent(subIcon, false);
+                        subIconIndicator.anchorMin = new Vector2(0.5f, 0.5f);
+                        subIconIndicator.anchorMax = new Vector2(0.5f, 0.5f);
+                        subIconIndicator.pivot = new Vector2(0.5f, 0.5f);
+                        subIconIndicator.localScale = Vector3.one * 0.4f;
+                        subIconIndicator.anchoredPosition = new Vector3(0f, 60f, 0f);
+                        subIconIndicator.sizeDelta = new Vector2(localPlayerIndicator.width, localPlayerIndicator.height);
+                        RawImage subIconIndicatorImage = subIconIndicator.gameObject.AddComponent<RawImage>();
+                        subIconIndicatorImage.raycastTarget = false;
+                        subIconIndicatorImage.texture = localPlayerIndicator;
 
                         Texture iconTex = null;
                         if (!string.IsNullOrEmpty(player.costume_id) && int.TryParse(player.costume_id, out int costumeId))

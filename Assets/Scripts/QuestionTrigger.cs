@@ -1,11 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public enum Team
 {
-    BlueTeam = 0,
-    OrangeTeam = 1
+    FirstTeam = 0,
+    SecondTeam = 1
 }
 
 public class QuestionTrigger : MonoBehaviour
@@ -13,28 +12,8 @@ public class QuestionTrigger : MonoBehaviour
     public int questionId;
     [SerializeField]
     private Team team;
-    
-    // To get the integer value from the enum, use: (int)team
-    // Example: int teamValue = (int)team; // Returns 1 for BlueTeam, 2 for OrangeTeam
-    
-    // public WS_Client.QuestionData questionData;
+    public TextMeshProUGUI correctAnswerText;    
 
-    // void Update()
-    // {
-    //     // Look up current question data from GameData (not the cached copy)
-    //     WS_Client.QuestionData currentQuestionData = WS_Client.Instance.GameData?.questions?.Find(q => q.id == questionId);
-        
-    //     if (currentQuestionData != null)
-    //     {
-    //         // Update the cached questionData reference
-    //         questionData = currentQuestionData;
-            
-    //         // Debug.Log($"Question {questionId} content: {currentQuestionData.content}");
-            
-    //         // You can add logic here to show/hide question based on game state
-    //         // gameObject.SetActive(someCondition);
-    //     }
-    // }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -88,12 +67,17 @@ public class QuestionTrigger : MonoBehaviour
 
                         if (clientPlayerIndex != -1 && clientPlayerIndex % 2 == (int)this.team)
                         {
+                            if (this.correctAnswerText != null)
+                            {
+                                this.correctAnswerText.text = clientPlayer.answerContent;
+                            }
+
+                            TowerGameController.Instance?.showTeamGetScore((int)team);
                             clientPlayer.answer_id = 0;
                             clientPlayer.answerContent = "";
                             clientPlayer.isAnswerVisible = 0;
 
                             _ = client.submitAnswer(answerId);
-
                             characterController.showAnswerBubble(0, "");
                         }
 

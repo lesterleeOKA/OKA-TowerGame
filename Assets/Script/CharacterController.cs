@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -415,6 +414,7 @@ public class CharacterController : UserData
             this.answerText.text = _answer;
         }   
         if(show==1) AudioController.Instance?.PlayAudio(9);
+        if (show == 0) this.answerId = -1;
     }
 
     // Add these methods near the bottom of the class (before showAnswerBubble)

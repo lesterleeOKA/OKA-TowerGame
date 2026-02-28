@@ -1,10 +1,11 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
 using NativeWebSocket;
-using System.Threading.Tasks;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using UnityEngine;
 
 public class WS_Client : MonoBehaviour
 {
@@ -40,6 +41,7 @@ public class WS_Client : MonoBehaviour
     public string pendingOrder = "";
     public int pendingReconnectUid = -1;
     public int startCountDown = 0;
+    public float currentCountDown = 0;
 
     // const string WEBSHOCKET_URL = "wss://ws.openknowledge.hk:8084";//dev : "wss://ws.openknowledge.hk:8084";  // prod : "wss://ws.openknowledge.hk";
     public string localhostUrl = "ws://localhost:8000/";
@@ -72,11 +74,9 @@ public class WS_Client : MonoBehaviour
     public event OrderChangedHandler OnOrderChanged;
     private string overrideWebsocketBaseUrl = null;
 
-    // Add this near other private fields in WS_Client
-    private int lastStartCountDown = int.MinValue;
-
     // Event invoked when server startCountDown changes
     public event Action<int> OnStartCountDownChanged;
+    public bool isAllPlayersReady;
 
     // 新增公共属性，作为访问私有字段的受控接口
     public UserInfo public_UserInfo
@@ -386,6 +386,7 @@ public class WS_Client : MonoBehaviour
         }
 
         Debug.Log("Connect: " + GetCurrentUrl);
+        this.currentCountDown = this.startCountDown;
 
         // Cancel any existing repeating invokes to prevent duplicates
         try { CancelInvoke("SendTest"); } catch { }
@@ -434,8 +435,6 @@ public class WS_Client : MonoBehaviour
                 WebSocketMessage message = JsonUtility.FromJson<WebSocketMessage>(jsonString);
 
                 // 现在可以安全地访问messageType属性
-
-                Debug.Log("message.messageType:" + message.messageType);
                 switch (message.messageType)
                 {
                     case "roomInfo":
@@ -454,14 +453,11 @@ public class WS_Client : MonoBehaviour
                         //Debug.Log(jsonString);
                         this.GameData = message.content.roomGameData;
 
-                        Debug.Log($"SyncRoomData: ready button startCountDown = {this.GameData.startCountDown}");
-                        int newCountDown = this.GameData.startCountDown;
-                        this.startCountDown = newCountDown;
-
-                        if (newCountDown != this.lastStartCountDown)
+                        //Debug.Log($"SyncRoomData: ready button startCountDown = {this.GameData.startCountDown}");
+                        if(this.GameData.startCountDown > 0)
                         {
-                            this.lastStartCountDown = newCountDown;
-                            this.OnStartCountDownChanged?.Invoke(newCountDown);
+                            this.startCountDown = this.GameData.startCountDown;
+                            this.currentCountDown = this.startCountDown;
                         }
 
                         if (!string.IsNullOrEmpty(message.content.order))
@@ -660,8 +656,42 @@ public class WS_Client : MonoBehaviour
                 }
             }
         }
-        
-  }
+
+        if (this.IsAllPlayersReady)
+        {
+            if (this.currentCountDown > 0)
+            {
+                this.currentCountDown -= Time.deltaTime;
+                this.OnStartCountDownChanged?.Invoke((int)Math.Ceiling(this.currentCountDown));
+            }
+            else
+            {
+                this.OnStartCountDownChanged?.Invoke(0);
+            }
+        }
+        else
+        {
+            this.startCountDown = 5;
+            this.currentCountDown = this.startCountDown;
+            this.OnStartCountDownChanged?.Invoke(-1);
+        }
+
+    }
+
+    public bool IsAllPlayersReady
+    {
+        get
+        {
+            if (GameData?.players == null || GameData.players.Count == 0)
+            {
+                this.isAllPlayersReady = false;
+                return false;
+            }
+
+            this.isAllPlayersReady = GameData.players.All(p => p.status == "ready");
+            return this.isAllPlayersReady;
+        }
+    }
 
     public void printGameData()
     {
@@ -726,6 +756,7 @@ public class WS_Client : MonoBehaviour
         };
 
         string jsonString = JsonUtility.ToJson(msg);
+
         await websocket.SendText(jsonString);
     }
 
@@ -832,7 +863,6 @@ public class WS_Client : MonoBehaviour
 
             if (myPlayer == null)
             {
-                // Debug.Log($"在GameData中未找到UID为{currentPlayerUid}的玩家");
                 return;
             }
             
@@ -1068,11 +1098,17 @@ public class WS_Client : MonoBehaviour
     public Task ready()
     {
         _ = sendAction("ready");
+        this.SetLocalReady(true);
+        this.startCountDown = 5;
+        this.currentCountDown = this.startCountDown;
         return Task.CompletedTask;
     }
     public Task cancelReady()
     {
         _ = sendAction("cancelReady");
+        this.SetLocalReady(false);
+        this.startCountDown = 5;
+        this.currentCountDown = this.startCountDown;
         return Task.CompletedTask;
     }
     public Task startGame()
@@ -1090,6 +1126,29 @@ public class WS_Client : MonoBehaviour
     {
         _ = sendAction("resetGame");
         return Task.CompletedTask;
+    }
+
+    private void SetLocalReady(bool ready)
+    {
+        try
+        {
+            if (GameData?.players == null || public_UserInfo == null) return;
+
+            var localPlayer = GameData.players.Find(p => p.uid == public_UserInfo.uid);
+            if (localPlayer != null)
+            {
+                localPlayer.status = ready ? "ready" : "waiting";
+            }
+
+            // Notify UI listeners immediately
+            try { OnOrderChanged?.Invoke(ready ? "localReady" : "localCancelReady"); } catch { }
+            // If you have a StartCountDown listener, fire it so countdown UI refreshes immediately
+            try { OnStartCountDownChanged?.Invoke(startCountDown); } catch { }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"SetLocalReady failed: {ex.Message}");
+        }
     }
 
     async void SendWebSocketMessage()

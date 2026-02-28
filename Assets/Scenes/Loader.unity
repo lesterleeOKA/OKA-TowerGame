@@ -700,7 +700,8 @@ MonoBehaviour:
   pendingReconnectRoomId: 
   pendingOrder: 
   pendingReconnectUid: -1
-  startCountDown: 0
+  startCountDown: 5
+  currentCountDown: 0
   localhostUrl: wss://ws.openknowledge.hk:8084
   localhostUrl_copy: ws://localhost:8000/
   developmentUrl: wss://ws.openknowledge.hk:8084
@@ -718,6 +719,17 @@ MonoBehaviour:
     wsId: 
     channelId: 
     roomIds: []
+  isAllPlayersReady: 0
+  _gameData:
+    players: []
+    questions: []
+    answers: []
+    obstacles: []
+    teamScore: 
+    status: 
+    gameTimer: 0
+    round: 0
+    startCountDown: 0
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -828,7 +840,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_Text
-      value: v1.15
+      value: v1.16
       objectReference: {fileID: 0}
     - target: {fileID: 1761761257498461912, guid: bc74bb1d218bbcc4daf665d7ff132001, type: 3}
       propertyPath: m_FontData.m_Font
