@@ -43,6 +43,10 @@ public class WS_Client : MonoBehaviour
     public int startCountDown = 0;
     public float currentCountDown = 0;
 
+    // New: flag set when server informs same-account connection (another device)
+    // Consumers (UI/controllers) can read this to block actions or show UI.
+    public bool IsLoggedInElsewhere = false;
+
     // const string WEBSHOCKET_URL = "wss://ws.openknowledge.hk:8084";//dev : "wss://ws.openknowledge.hk:8084";  // prod : "wss://ws.openknowledge.hk";
     public string localhostUrl = "ws://localhost:8000/";
     public string localhostUrl_copy = "ws://localhost:8000/";
@@ -77,6 +81,7 @@ public class WS_Client : MonoBehaviour
     // Event invoked when server startCountDown changes
     public event Action<int> OnStartCountDownChanged;
     public bool isAllPlayersReady;
+    public CanvasGroup duplicatedLoginBox;
 
     // 新增公共属性，作为访问私有字段的受控接口
     public UserInfo public_UserInfo
@@ -533,6 +538,56 @@ public class WS_Client : MonoBehaviour
                         Debug.LogWarning("inPlayingRoom : " + jsonString);
                         pendingReconnectRoomId = message.content.roomId;
                         break;
+                    case "connectionClose":
+                        // Server can send this when the same account connects from another device:
+                        // member.sendMsg({ fromWsId: member.userInfo.wsId, messageType: 'connectionClose', content: { message: `same account connected to server` } });
+                        Debug.Log("connectionClose : " + jsonString);
+                        try
+                        {
+                            // Defensive checks and simple pattern match for server's text
+                            if (message.content != null && !string.IsNullOrEmpty(message.content.message))
+                            {
+                                string txt = message.content.message.ToLowerInvariant();
+                                Debug.Log("connectionClose message content: " + txt);
+                                if (txt.Contains("same account") || txt.Contains("same account connected") || txt.Contains("connected to server"))
+                                {
+                                    IsLoggedInElsewhere = true;
+                                    pendingOrder = "connectionClose";
+                                    if(this.duplicatedLoginBox != null)
+                                    {
+                                        this.duplicatedLoginBox.alpha = 1;
+                                        this.duplicatedLoginBox.interactable = true;
+                                        this.duplicatedLoginBox.blocksRaycasts = true;
+                                    }
+
+                                    try
+                                    {
+                                        OnOrderChanged?.Invoke("connectionClose");
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Debug.Log("OnOrderChanged invoke failed: " + ex.Message);
+                                    }
+
+                                    // Optionally close local socket to match server intent.
+                                    // Fire-and-forget close so we don't block message processing.
+                                    //try { _ = websocket?.Close(); } catch { }
+                                }
+                                else
+                                {
+                                    Debug.Log("connectionClose received (unrecognized text): " + message.content.message);
+                                }
+                            }
+                            else
+                            {
+                                Debug.Log("connectionClose received with empty content.message");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.LogWarning("Error handling connectionClose: " + ex.Message);
+                        }
+                        break;
                     case "test":
                         testReceived = true;                        
                         break;
@@ -566,6 +621,28 @@ public class WS_Client : MonoBehaviour
 
 
         onConnectCompleted?.Invoke();
+    }
+
+    public void BackToLogin()
+    {
+        try
+        {
+            Debug.Log(GetCurrentDomainName);
+#if !UNITY_EDITOR
+            string login_url = $"https://{GetCurrentDomainName}/login";
+            string javascript = $@"
+                    window.location.replace('{login_url}');
+                ";
+            Application.ExternalEval(javascript);
+            return;
+#else
+            Debug.Log("Exit editor: Close the Editor to change another jwt account");
+#endif
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("BackToLogin failed: " + ex.Message);
+        }
     }
 
 
