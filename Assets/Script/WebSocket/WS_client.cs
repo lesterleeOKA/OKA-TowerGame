@@ -284,11 +284,15 @@ public class WS_Client : MonoBehaviour
     {
         get
         {
+#if UNITY_EDITOR
+            return "dev";
+#else
             string absoluteUrl = Application.absoluteURL;
             Uri url = new Uri(absoluteUrl);
             // if (LogController.Instance != null) LogController.Instance.debug("Host Name:" + url.Host);
             Debug.Log("Host : " + url.Host);
             return url.Host;
+#endif
         }
     }
 
