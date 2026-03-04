@@ -1,6 +1,5 @@
 using NativeWebSocket;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -82,6 +81,7 @@ public class WS_Client : MonoBehaviour
     public event Action<int> OnStartCountDownChanged;
     public bool isAllPlayersReady;
     public CanvasGroup duplicatedLoginBox;
+
 
     // 新增公共属性，作为访问私有字段的受控接口
     public UserInfo public_UserInfo
@@ -656,47 +656,46 @@ public class WS_Client : MonoBehaviour
             websocket.DispatchMessageQueue();
         }
 #endif
-        if (Input.GetKeyDown(KeyCode.G))
+        if (GetCurrentDomainName.StartsWith("dev"))
         {
-           _ = updateAnswerOnPlayer(1); // 玩家拾取答案
+            if (Input.GetKeyDown(KeyCode.G))
+            {
+                _ = updateAnswerOnPlayer(1); // 玩家拾取答案
+            }
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                _ = submitAnswer(4); // 玩家提交答案
+            }
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                _ = ready(); // 玩家準備
+            }
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                _ = cancelReady(); // 取消準備
+            }
+            if (Input.GetKeyDown(KeyCode.T))
+            {
+                _ = setTimer(3);
+            }
+            if (Input.GetKeyDown(KeyCode.M))
+            {
+                _ = resetGame(); // for DEV 重置遊戲
+            }
+            if (Input.GetKeyDown(KeyCode.N))
+            {
+                _ = nextRound(); // for DEV 下一回合
+            }
+            if (Input.GetKeyDown(KeyCode.B))
+            {
+                _ = startGame(); // for DEV 開始遊戲
+            }
+            if (Input.GetKeyDown(KeyCode.J))
+            {
+                JoinGameRoom(1); // for DEV JoinRoom
+            }
         }
-        if (Input.GetKeyDown(KeyCode.S))
-        {
-            _ = submitAnswer(4); // 玩家提交答案
-        }
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            _ = ready(); // 玩家準備
-        }
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            _ = cancelReady(); // 取消準備
-        }
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            _ = setTimer(3);
-        }
-        if (Input.GetKeyDown(KeyCode.M))
-        {
-            _ = resetGame(); // for DEV 重置遊戲
-        }
-        if (Input.GetKeyDown(KeyCode.N))
-        {
-            _ = nextRound(); // for DEV 下一回合
-        }
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            _ = startGame(); // for DEV 開始遊戲
-        }
-        if (Input.GetKeyDown(KeyCode.J))
-        {
-            JoinGameRoom(1); // for DEV JoinRoom
-        }
-        if (Input.GetKeyDown(KeyCode.P))
-        {
-        //    printGameData(); // for DEV printGameData
-        }
-
+        
         // Auto-reconnect logic - only try to reconnect if we're in the game scene (not lobby)
         bool needsReconnect = false;
         
