@@ -12,7 +12,6 @@ public class QuestionTrigger : MonoBehaviour
     public int questionId;
     [SerializeField]
     private Team team;
-    public TextMeshProUGUI correctAnswerText;    
 
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -35,54 +34,49 @@ public class QuestionTrigger : MonoBehaviour
 
     private void OnPlayerEnterQuestion(GameObject player)
     {
-        
-        // Get CharacterController component
+
         var client = WS_Client.Instance;
         var gameController = TowerGameController.Instance;
         CharacterController characterController = player.GetComponent<CharacterController>();
-        if (characterController != null)
+        if (characterController == null || client == null || gameController == null) return;
+
+        int answerId = characterController.answerId;
+
+        // Find corresponding PlayerData for the character that entered the trigger
+        WS_Client.PlayerData targetPlayer = null;
+        if (client.GameData?.players != null)
         {
-            // Check if player has an answer
-            if (characterController != null && gameController != null)
+            targetPlayer = client.GameData.players.Find(p => p.uid == characterController.UserId);
+        }
+
+        if (targetPlayer == null)
+        {
+            Debug.LogWarning($"QuestionTrigger: no PlayerData for uid={characterController.UserId}");
+            return;
+        }
+
+        // Find the index of the scoreboard matching this player's key
+        int playerIndex = -1;
+        for (int i = 0; i < gameController.scoreboardControllers.Length; i++)
+        {
+            scoreboardController sb = gameController.scoreboardControllers[i].GetComponent<scoreboardController>();
+            if (sb != null && sb.key == targetPlayer.player_id)
             {
-                // Get the AnswerTrigger component from the answer GameObject
-                int answerId = characterController.answerId;
-                if (client.GameData.players != null)
-                {
-                    WS_Client.PlayerData clientPlayer = client.GameData.players.Find(p => p.uid == client.public_UserInfo.uid);
-                    if (clientPlayer != null)
-                    {
+                playerIndex = i;
+                break;
+            }
+        }
 
-                        // Find the index of the scoreboard matching the client player's key
-                        int clientPlayerIndex = -1;
-                        for (int i = 0; i < gameController.scoreboardControllers.Length; i++)
-                        {
-                            scoreboardController sb = gameController.scoreboardControllers[i].GetComponent<scoreboardController>();
-                            if (sb != null && sb.key == clientPlayer.player_id)
-                            {
-                                clientPlayerIndex = i;
-                                break;
-                            }
-                        }
+        if (playerIndex != -1 && playerIndex % 2 == (int)this.team)
+        {
+            // Only submit from the owner. DO NOT clear GameData here ¡X wait for server broadcast.
+            if (characterController.IsLocalPlayer)
+            {
+                Debug.Log($"QuestionTrigger: local submit uid={characterController.UserId} answerId={answerId}");
+                _ = client.submitAnswer(answerId);
 
-                        if (clientPlayerIndex != -1 && clientPlayerIndex % 2 == (int)this.team)
-                        {
-                            if (this.correctAnswerText != null)
-                            {
-                                this.correctAnswerText.text = clientPlayer.answerContent;
-                            }
-
-                            TowerGameController.Instance?.showTeamGetScore((int)team);
-                            clientPlayer.answer_id = 0;
-                            clientPlayer.answerContent = "";
-                            clientPlayer.isAnswerVisible = 0;
-
-                            _ = client.submitAnswer(answerId);
-                            characterController.showAnswerBubble(0, "");
-                        }
-
-                    }
-                }
+                // Hide local bubble immediately for visual feedback if desired
+                characterController.showAnswerBubble(0, "");
             }
         }
     }

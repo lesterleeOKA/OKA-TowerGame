@@ -20,8 +20,9 @@ public class roomListController : MonoBehaviour
         joinButton.onClick.AddListener(JoinRoom);
         roomNoText.text = "Room " + roomId.ToString();
         if (this.indicator == null) this.indicator.SetActive(true);
-        if (this.buttonIndicator == null) this.buttonIndicator.SetActive(true);
+        if (this.buttonIndicator == null) this.buttonIndicator.SetActive(true);    
         roomListRefresh();
+        //if(room == null) InstructionSlideShow.Instance?.ShowInstructionPopup(true);
     }
 
     void Update()

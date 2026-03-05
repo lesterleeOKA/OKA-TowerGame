@@ -65,6 +65,8 @@ public class TowerGameController : GameBaseController
     public GameObject[] scoreboardControllers;
     public Sprite[] playerTags;
     public GameObject[] teamIcons;
+    public TextMeshProUGUI correctAnswerText;
+    public bool allPlayersReady = false;
 
 
 
@@ -92,6 +94,7 @@ public class TowerGameController : GameBaseController
 
     public float clientMapScale = 1.0f;
     private bool suppressSyncPlayers = false;
+    private int[] previous = new int[2] { -1, -1 };
 
     protected override void Awake()
     {
@@ -107,19 +110,25 @@ public class TowerGameController : GameBaseController
     {
         base.Start();
         this.GetComponent<AudioControl>().starBGMStatusAutoTrue();
+        var client = WS_Client.Instance;
         // Subscribe to the order changed event
-        if (WS_Client.Instance != null)
+        if (client != null)
         {
-            WS_Client.Instance.OnOrderChanged += HandleOrderChanged;
-
-            //WS_Client.Instance.OnStartCountDownChanged += HandleStartCountDownChanged;
+            client.OnStartCountDownChanged += HandleStartCountDownChanged;
+            client.OnOrderChanged += HandleOrderChanged;
 
             // Check if there's a pending order that arrived before we subscribed
-            if (!string.IsNullOrEmpty(WS_Client.Instance.pendingOrder))
+            if (!string.IsNullOrEmpty(client.pendingOrder))
             {
-                HandleOrderChanged(WS_Client.Instance.pendingOrder);
-                WS_Client.Instance.pendingOrder = ""; // Clear after processing
+                HandleOrderChanged(client.pendingOrder);
+                client.pendingOrder = ""; // Clear after processing
             }
+        }
+
+        if (client?.GameData?.teamScore != null && client.GameData.teamScore.Count >= 2)
+        {
+            previous[0] = client.GameData.teamScore[0];
+            previous[1] = client.GameData.teamScore[1];
         }
 
         if (this.minimapParent == null)
@@ -443,8 +452,71 @@ public class TowerGameController : GameBaseController
             case "disconnected":
                 disconnectedUI.SetActive(true);
                 break;
+            case "reconnected":
+                // Start background sync: wait for server SyncRoomData then refresh local game state
+                StartCoroutine(HandleReconnectedSync());
+                break;
+            case "localCancelReady":
+                this.allPlayersReady = false;
+                break;
             default:
                 break;
+        }
+    }
+
+
+    private IEnumerator HandleReconnectedSync()
+    {
+        // Keep UI visible while we try to sync (optional)
+        // disconnectedUI.SetActive(true);
+
+        var client = WS_Client.Instance;
+        float timeout = 5f;
+        float elapsed = 0f;
+        // Wait until GameData is populated or timeout
+        while ((client == null || client.GameData == null) && elapsed < timeout)
+        {
+            yield return new WaitForSeconds(0.1f);
+            elapsed += 0.1f;
+            client = WS_Client.Instance;
+        }
+
+        if (client == null || client.GameData == null)
+        {
+            LogController.Instance.debug("HandleReconnectedSync: GameData not available after reconnect.");
+            // keep disconnected UI or show alternative message
+            disconnectedUI.SetActive(true);
+            yield break;
+        }
+
+        try
+        {
+            // Hide disconnected UI now that we have data
+            disconnectedUI.SetActive(false);
+
+            // Recreate / resync players and UI from authoritative GameData
+            // This will create missing player controllers and set positions
+            resetStartingPos();
+
+            // Immediately sync UI pieces: scores, question, answers, minimap, answer visibility
+            StartCoroutine(updateScoreUI());
+            StartCoroutine(updateQuestionUI(true));
+            checkAnswerVisibility();
+
+            // Force an immediate players sync (updates destinations, minimap markers, answer bubbles)
+            SyncPlayers();
+
+            // Ensure countdown/timer UI updates (server's startCountDown is fired in WS_Client when SyncRoomData arrived,
+            // but call handler here to be safe)
+            HandleStartCountDownChanged(client.GameData.startCountDown);
+
+            LogController.Instance.debug("HandleReconnectedSync: sync completed.");
+        }
+        catch (Exception ex)
+        {
+            LogController.Instance.debugError($"HandleReconnectedSync error: {ex.Message}\n{ex.StackTrace}");
+            // If anything went wrong, show disconnected UI so user knows state is not clean
+            disconnectedUI.SetActive(true);
         }
     }
 
@@ -466,6 +538,7 @@ public class TowerGameController : GameBaseController
     // Replace existing controlReadyCountDown() with this implementation
     public void controlReadyCountDown(int countDown)
     {
+        //Debug.Log($"controlReadyCountDown called with countDown={countDown}");  
         // Defensive checks
         if (this.readyUI == null || this.startCountDownClock == null)
             return;
@@ -473,7 +546,7 @@ public class TowerGameController : GameBaseController
         // If ready UI is hidden, always hide the clock
         if (this.readyUI.alpha == 0)
         {
-            SetUI.SetScale(this.startCountDownClock, false);
+            this.allPlayersReady = false;
             if (this.startCountDownText != null)
             {
                 this.startCountDownText.text = "";
@@ -485,7 +558,7 @@ public class TowerGameController : GameBaseController
 
         var client = WS_Client.Instance;
         // Determine whether any player (including local) is currently "ready"
-        bool allPlayersReady = true;
+        this.allPlayersReady = true;
         try
         {
             var players = client.GameData?.players;
@@ -496,7 +569,7 @@ public class TowerGameController : GameBaseController
                     if (p == null) continue;
                     if (!string.IsNullOrEmpty(p.status) && !p.status.Equals("ready", StringComparison.OrdinalIgnoreCase))
                     {
-                        allPlayersReady = false;
+                        this.allPlayersReady = false;
                         break;
                     }
                 }
@@ -505,11 +578,11 @@ public class TowerGameController : GameBaseController
         catch (Exception ex)
         {
             LogController.Instance?.debugError($"controlReadyCountDown: failed to inspect player statuses: {ex.Message}");
-            allPlayersReady = false;
+            this.allPlayersReady = false;
         }
 
         // Show clock only when countdown is active AND at least one player is ready.
-        if (countDown > -1 && allPlayersReady)
+        if (countDown > -1 && this.allPlayersReady)
         {
             if (this.startCountDownText != null)
             {
@@ -517,8 +590,7 @@ public class TowerGameController : GameBaseController
                 this.startCountDownText.ForceMeshUpdate();
                 Canvas.ForceUpdateCanvases();
             }
-
-            SetUI.SetScale(this.startCountDownClock, true, 1f, 0.5f);
+            this.controlStartCountDown(true);
         }
         else
         {
@@ -529,6 +601,17 @@ public class TowerGameController : GameBaseController
                 this.startCountDownText.ForceMeshUpdate();
                 Canvas.ForceUpdateCanvases();
             }
+        }
+    }
+
+    public void controlStartCountDown(bool status)
+    {
+        if (status)
+        {
+            SetUI.SetScale(this.startCountDownClock, true);
+        }
+        else
+        {
             SetUI.SetScale(this.startCountDownClock, false);
         }
     }
@@ -576,6 +659,39 @@ public class TowerGameController : GameBaseController
             this.endGamePage.updateFinalScore(0, teamScores[0]);
             this.endGamePage.updateFinalScore(1, teamScores[1]);
             onTopUI.GetComponent<CanvasGroup>().alpha = 0;
+
+            try
+            {
+                int localUid = client.public_UserInfo != null ? client.public_UserInfo.uid : -1;
+                int localIndex = -1;
+                for (int i = 0; i < client.GameData.players.Count; i++)
+                {
+                    var p = client.GameData.players[i];
+                    if (p != null && p.uid == localUid)
+                    {
+                        localIndex = i;
+                        break;
+                    }
+                }
+
+                if (localIndex != -1)
+                {
+                    int localTeam = localIndex % 2;
+                    int otherTeam = 1 - localTeam;
+                    bool localTeamWins = teamScores[localTeam] > teamScores[otherTeam];
+
+                    if (localTeamWins)
+                    {
+                        // Show end game page with success true for winner
+                        this.endGamePage.setStatus(true, true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogController.Instance.debugError($"EndGame: failed to compute local team or set end page: {ex.Message}\n{ex.StackTrace}");
+            }
+
             base.endGame();
         }));
         //showReadyUI(false);
@@ -612,14 +728,15 @@ public class TowerGameController : GameBaseController
         }
     }
 
+
     private void SyncPlayers()
     {
         try
         {
             if (suppressSyncPlayers) return;
-            // Defensive checks
-            if (WS_Client.Instance == null || WS_Client.Instance.GameData == null) return;
-            var players = WS_Client.Instance.GameData.players;
+            var client = WS_Client.Instance;
+            if (client == null || client.GameData == null || client.GameData.teamScore == null) return;
+            var players = client.GameData.players;
             if (players == null) return;
             
             // Clear currentKeys so we rebuild it from the authoritative GameData
@@ -632,192 +749,214 @@ public class TowerGameController : GameBaseController
                 localUid = WS_Client.Instance.public_UserInfo.uid;
             }
 
-        // Track minimap presence while iterating players (reuse currentKeys)
-        foreach (var player in players)
-        {
-            string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
-
-            bool isLocal = (player.uid == localUid);
-            if (!playerControllersByKey.ContainsKey(key))
+            // Track minimap presence while iterating players (reuse currentKeys)
+            foreach (var player in players)
             {
-                Vector3 location = Vector3.zero;
+                string key = !string.IsNullOrEmpty(player.player_id) ? player.player_id : player.uid.ToString();
 
-                LogController.Instance.debug("CreatePlayerFromData 1: " + location + " - " + key + " - " + isLocal);
+                if(!string.IsNullOrEmpty(player.answerContent)) this.correctAnswerText.text = player.answerContent;
 
-                    if (player.position != null && player.position.Length >= 2)
-                    {
-                        var originalPosition = new Vector2(player.position[0], player.position[1]);
-                        this.CreatePlayerFromData(player, originalPosition, key, isLocal);
-                    }
-            }
-
-            // mark as present for this cycle (used for player removal and minimap cleanup)
-            currentKeys.Add(key);
-
-            // update non-local players' destination
-            if (!isLocal)
-            {
-                if (playerControllersByKey.TryGetValue(key, out var cc))
+                bool isLocal = (player.uid == localUid);
+                if (!playerControllersByKey.ContainsKey(key))
                 {
-                    if (cc != null)
-                    {
-                        Vector2 otherPlayerPos = Vector3.zero;
+                    Vector3 location = Vector3.zero;
+
+                    LogController.Instance.debug("CreatePlayerFromData 1: " + location + " - " + key + " - " + isLocal);
+
                         if (player.position != null && player.position.Length >= 2)
                         {
-                            //otherPlayerPos = MapServerToLocal();
-                            otherPlayerPos = new Vector2(player.position[0], player.position[1]);
-                            cc.setLocalDestination(otherPlayerPos);
+                            var originalPosition = new Vector2(player.position[0], player.position[1]);
+                            this.CreatePlayerFromData(player, originalPosition, key, isLocal);
                         }
-                    }
-                }
-            }
-
-            // --- Minimap marker update (merged here to avoid a second players pass) ---
-            if (minimapRawImage != null && minimapMarkersParent != null)
-            {
-                // Determine world position for marker (prefer authoritative server position)
-                Vector2 worldPos = Vector2.zero;
-                if (player.position != null && player.position.Length >= 2)
-                {
-                    worldPos = new Vector2(player.position[0], player.position[1]);
-                }
-                else if (playerControllersByKey.TryGetValue(key, out var fallbackCc) && fallbackCc != null)
-                {
-                    Vector3 t = fallbackCc.transform.position; // use world-space position
-                    worldPos = new Vector2(t.x, t.y);
                 }
 
-                Vector2 anchoredPos = WorldToMinimapAnchoredPosition(worldPos);
+                // mark as present for this cycle (used for player removal and minimap cleanup)
+                currentKeys.Add(key);
 
-                if (!minimapMarkersByKey.TryGetValue(key, out var marker) || marker == null)
+                // update non-local players' destination
+                if (!isLocal)
                 {
-                    // Determine team first (needed to select correct sprite)
-                    int team = -1;
-                    if (!string.IsNullOrEmpty(player.player_id))
+                    if (playerControllersByKey.TryGetValue(key, out var cc))
                     {
-                        // parse "playerN" safely
-                        string idDigits = player.player_id.StartsWith("player", StringComparison.OrdinalIgnoreCase)
-                            ? player.player_id.Substring(6)
-                            : player.player_id;
-                        if (int.TryParse(idDigits, out int parsedIndex))
+                        if (cc != null)
                         {
-                            team = Mathf.Max(0, (parsedIndex - 1) % 2);
-                        }
-                    }
-                    if (team == -1)
-                    {
-                        team = (player.uid % 2 == 0) ? 0 : 1;
-                    }
-
-                    // Determine if local player
-                    bool isLocalPlayer = false;
-                    if (playerControllersByKey.TryGetValue(key, out var cc) && cc != null)
-                    {
-                        isLocalPlayer = cc.IsLocalPlayer;
-                    }
-
-                    // Select appropriate sprite based on team and local player status
-                    Sprite spriteToUse = null;
-                    if (team == 0) // Blue team
-                    {
-                        spriteToUse = isLocalPlayer ? minimapBluePlayerMarker : minimapBlueOtherMarker;
-                    }
-                    else // Red team
-                    {
-                        spriteToUse = isLocalPlayer ? minimapOrangePlayerMarker : minimapOrangeOtherMarker;
-                    }
-
-                    // Create new GameObject with Image component as child of minimapRawImage.rectTransform
-                    RectTransform parentRT = minimapRawImage.rectTransform;
-                    GameObject markerObj = new GameObject($"MinimapMarker_{key}");
-                    markerObj.transform.SetParent(parentRT, false);
-                    
-                    RectTransform instance = markerObj.AddComponent<RectTransform>();
-                    Image markerImage = markerObj.AddComponent<Image>();
-                    markerImage.sprite = spriteToUse;
-                    markerImage.raycastTarget = false; // Disable raycasting for performance
-
-                    // Ensure marker uses centered anchors/pivot and neutral scale so anchoredPosition behaves predictably
-                    instance.anchorMin = new Vector2(0.5f, 0.5f);
-                    instance.anchorMax = new Vector2(0.5f, 0.5f);
-                    instance.pivot = new Vector2(0.5f, 0.5f);
-                    instance.localScale = Vector3.one;
-                    
-                    // Set size (adjust these values based on your sprite size preferences)
-                    if (!isLocalPlayer) { 
-                        instance.sizeDelta = new Vector2(30f, 30f);
-                    }
-                    else { 
-                        RectTransform subIcon = new GameObject("Icon").AddComponent<RectTransform>();
-                        subIcon.SetParent(instance, false);
-                        subIcon.anchorMin = new Vector2(0.5f, 0.5f);
-                        subIcon.anchorMax = new Vector2(0.5f, 0.5f);
-                        subIcon.pivot = new Vector2(0.5f, 0.5f);
-                        subIcon.localScale = Vector3.one;
-                        subIcon.anchoredPosition = Vector2.zero;
-                        subIcon.sizeDelta = new Vector2(12f, 12f);
-                        RawImage iconImage = subIcon.gameObject.AddComponent<RawImage>();
-                        iconImage.raycastTarget = false;
-
-                        RectTransform subIconIndicator = new GameObject("Indicator").AddComponent<RectTransform>();
-                        subIconIndicator.SetParent(subIcon, false);
-                        subIconIndicator.anchorMin = new Vector2(0.5f, 0.5f);
-                        subIconIndicator.anchorMax = new Vector2(0.5f, 0.5f);
-                        subIconIndicator.pivot = new Vector2(0.5f, 0.5f);
-                        subIconIndicator.localScale = Vector3.one * 0.4f;
-                        subIconIndicator.anchoredPosition = new Vector3(0f, 60f, 0f);
-                        subIconIndicator.sizeDelta = new Vector2(localPlayerIndicator.width, localPlayerIndicator.height);
-                        RawImage subIconIndicatorImage = subIconIndicator.gameObject.AddComponent<RawImage>();
-                        subIconIndicatorImage.raycastTarget = false;
-                        subIconIndicatorImage.texture = localPlayerIndicator;
-
-                        Texture iconTex = null;
-                        if (!string.IsNullOrEmpty(player.costume_id) && int.TryParse(player.costume_id, out int costumeId))
-                        {
-                            int csIndex = costumeId - 1;
-                            if (characterSets != null && csIndex >= 0 && csIndex < characterSets.Length && characterSets[csIndex] != null)
+                            Vector2 otherPlayerPos = Vector3.zero;
+                            if (player.position != null && player.position.Length >= 2)
                             {
-                                // characterSets[].defaultIcon is expected to be a Texture2D or Texture
-                                iconTex = characterSets[csIndex].defaultIcon;
-                                if (iconTex == null && characterSets[csIndex].defaultIcon != null)
-                                {
-                                    // fallback if defaultIcon is a Sprite
-                                    iconImage.texture = iconTex;
-                                }
+                                //otherPlayerPos = MapServerToLocal();
+                                otherPlayerPos = new Vector2(player.position[0], player.position[1]);
+                                cc.setLocalDestination(otherPlayerPos);
                             }
                         }
-
-                        if (iconTex != null)
-                        {
-                            iconImage.texture = iconTex;
-                            // optional: preserve aspect by adjusting size (keeps icon readable)
-                            float aspect = (iconTex.width > 0 && iconTex.height > 0) ? (float)iconTex.width / iconTex.height : 1f;
-                            if (aspect >= 1f)
-                                subIcon.sizeDelta = new Vector2(75f, 75f / aspect);
-                            else
-                                subIcon.sizeDelta = new Vector2(75f * aspect, 75f);
-                        }
-                        else
-                        {
-                            // No icon — hide child to avoid empty visuals
-                            iconImage.enabled = false;
-                        }
                     }
-                    minimapMarkersByKey[key] = instance;
-                    marker = instance;
                 }
 
-                // Update marker position using the function that returns local map coords when markers are children
-                if (marker != null)
+                // --- Minimap marker update (merged here to avoid a second players pass) ---
+                if (minimapRawImage != null && minimapMarkersParent != null)
                 {
-                    marker.anchoredPosition = anchoredPos;
+                    // Determine world position for marker (prefer authoritative server position)
+                    Vector2 worldPos = Vector2.zero;
+                    if (player.position != null && player.position.Length >= 2)
+                    {
+                        worldPos = new Vector2(player.position[0], player.position[1]);
+                    }
+                    else if (playerControllersByKey.TryGetValue(key, out var fallbackCc) && fallbackCc != null)
+                    {
+                        Vector3 t = fallbackCc.transform.position; // use world-space position
+                        worldPos = new Vector2(t.x, t.y);
+                    }
+
+                    Vector2 anchoredPos = WorldToMinimapAnchoredPosition(worldPos);
+
+                    if (!minimapMarkersByKey.TryGetValue(key, out var marker) || marker == null)
+                    {
+                        // Determine team first (needed to select correct sprite)
+                        int team = -1;
+                        if (!string.IsNullOrEmpty(player.player_id))
+                        {
+                            // parse "playerN" safely
+                            string idDigits = player.player_id.StartsWith("player", StringComparison.OrdinalIgnoreCase)
+                                ? player.player_id.Substring(6)
+                                : player.player_id;
+                            if (int.TryParse(idDigits, out int parsedIndex))
+                            {
+                                team = Mathf.Max(0, (parsedIndex - 1) % 2);
+                            }
+                        }
+                        if (team == -1)
+                        {
+                            team = (player.uid % 2 == 0) ? 0 : 1;
+                        }
+
+                        // Determine if local player
+                        bool isLocalPlayer = false;
+                        if (playerControllersByKey.TryGetValue(key, out var cc) && cc != null)
+                        {
+                            isLocalPlayer = cc.IsLocalPlayer;
+                        }
+
+                        // Select appropriate sprite based on team and local player status
+                        Sprite spriteToUse = null;
+                        if (team == 0) // Blue team
+                        {
+                            spriteToUse = minimapBluePlayerMarker;
+                        }
+                        else // Red team
+                        {
+                            spriteToUse = minimapOrangePlayerMarker;
+                        }
+
+                        // Create new GameObject with Image component as child of minimapRawImage.rectTransform
+                        RectTransform parentRT = minimapRawImage.rectTransform;
+                        GameObject markerObj = new GameObject($"MinimapMarker_{key}");
+                        markerObj.transform.SetParent(parentRT, false);
+                    
+                        RectTransform instance = markerObj.AddComponent<RectTransform>();
+                        Image markerImage = markerObj.AddComponent<Image>();
+                        markerImage.sprite = spriteToUse;
+                        markerImage.raycastTarget = false; // Disable raycasting for performance
+
+                        // Ensure marker uses centered anchors/pivot and neutral scale so anchoredPosition behaves predictably
+                        instance.anchorMin = new Vector2(0.5f, 0.5f);
+                        instance.anchorMax = new Vector2(0.5f, 0.5f);
+                        instance.pivot = new Vector2(0.5f, 0.5f);
+                        instance.localScale = Vector3.one;
+
+                            // Set size (adjust these values based on your sprite size preferences)
+                            RectTransform subIcon = new GameObject("Icon").AddComponent<RectTransform>();
+                            subIcon.SetParent(instance, false);
+                            subIcon.anchorMin = new Vector2(0.5f, 0.5f);
+                            subIcon.anchorMax = new Vector2(0.5f, 0.5f);
+                            subIcon.pivot = new Vector2(0.5f, 0.5f);
+                            subIcon.localScale = Vector3.one;
+                            subIcon.anchoredPosition = Vector2.zero;
+                            subIcon.sizeDelta = new Vector2(12f, 12f);
+                            RawImage iconImage = subIcon.gameObject.AddComponent<RawImage>();
+                            iconImage.raycastTarget = false;
+
+                            if (isLocalPlayer)
+                            {
+                                RectTransform subIconIndicator = new GameObject("Indicator").AddComponent<RectTransform>();
+                                subIconIndicator.SetParent(subIcon, false);
+                                subIconIndicator.anchorMin = new Vector2(0.5f, 0.5f);
+                                subIconIndicator.anchorMax = new Vector2(0.5f, 0.5f);
+                                subIconIndicator.pivot = new Vector2(0.5f, 0.5f);
+                                subIconIndicator.localScale = Vector3.one * 0.4f;
+                                subIconIndicator.anchoredPosition = new Vector3(0f, 60f, 0f);
+                                subIconIndicator.sizeDelta = new Vector2(localPlayerIndicator.width, localPlayerIndicator.height);
+                                RawImage subIconIndicatorImage = subIconIndicator.gameObject.AddComponent<RawImage>();
+                                subIconIndicatorImage.raycastTarget = false;
+                                subIconIndicatorImage.texture = localPlayerIndicator;
+                            }
+
+                            Texture iconTex = null;
+                            if (!string.IsNullOrEmpty(player.costume_id) && int.TryParse(player.costume_id, out int costumeId))
+                            {
+                                int csIndex = costumeId - 1;
+                                if (characterSets != null && csIndex >= 0 && csIndex < characterSets.Length && characterSets[csIndex] != null)
+                                {
+                                    // characterSets[].defaultIcon is expected to be a Texture2D or Texture
+                                    iconTex = characterSets[csIndex].defaultIcon;
+                                    if (iconTex == null && characterSets[csIndex].defaultIcon != null)
+                                    {
+                                        // fallback if defaultIcon is a Sprite
+                                        iconImage.texture = iconTex;
+                                    }
+                                }
+                            }
+
+                            if (iconTex != null)
+                            {
+                                iconImage.texture = iconTex;
+                                // optional: preserve aspect by adjusting size (keeps icon readable)
+                                float aspect = (iconTex.width > 0 && iconTex.height > 0) ? (float)iconTex.width / iconTex.height : 1f;
+                                if (aspect >= 1f)
+                                    subIcon.sizeDelta = new Vector2(75f, 75f / aspect);
+                                else
+                                    subIcon.sizeDelta = new Vector2(75f * aspect, 75f);
+                            }
+                            else
+                            {
+                                // No icon — hide child to avoid empty visuals
+                                iconImage.enabled = false;
+                            }
+                        minimapMarkersByKey[key] = instance;
+                        marker = instance;
+                    }
+
+                    // Update marker position using the function that returns local map coords when markers are children
+                    if (marker != null)
+                    {
+                        marker.anchoredPosition = anchoredPos;
+                    }
                 }
             }
-        }
 
-        // Remove controllers for players who left (keys not present in currentKeys)
-        // Collect keys to remove to avoid modifying dictionary during iteration
-        var toRemove = new List<string>();
+            int team0 = client.GameData.teamScore.Count > 0 ? client.GameData.teamScore[0] : 0;
+            int team1 = client.GameData.teamScore.Count > 1 ? client.GameData.teamScore[1] : 0;
+
+            if (previous[0] == -1 && previous[1] == -1)
+            {
+                previous[0] = team0;
+                previous[1] = team1;
+                return;
+            }
+
+            if (team0 > previous[0])
+            {
+                this.showTeamGetScore(0);
+            }
+            else if (team1 > previous[1])
+            {
+                this.showTeamGetScore(1);
+            }
+
+            previous[0] = team0;
+            previous[1] = team1;
+
+            // Remove controllers for players who left (keys not present in currentKeys)
+            // Collect keys to remove to avoid modifying dictionary during iteration
+            var toRemove = new List<string>();
         foreach (var kv in playerControllersByKey)
         {
             if (!currentKeys.Contains(kv.Key))
@@ -852,6 +991,7 @@ public class TowerGameController : GameBaseController
         }
     }
 
+
     // Update is called once per frame
     void Update()
     {
@@ -862,6 +1002,11 @@ public class TowerGameController : GameBaseController
             {
                 lastSyncPlayersTime = Time.time;
                 SyncPlayers();
+
+                if(!this.allPlayersReady)
+                {
+                    this.controlStartCountDown(false);
+                }
             }   
 
             if (Input.GetKeyDown(KeyCode.P))

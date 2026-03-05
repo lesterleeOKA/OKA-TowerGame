@@ -62,7 +62,7 @@ public class QuestionController : MonoBehaviour
                     this.questiontype = QuestionType.Text;
                     SetUI.SetGroup(this.questionBgs, 2, 0f);
                     this.questionText = this.questionBgs[2].GetComponentInChildren<TextMeshProUGUI>();
-                    if (this.questionText != null)
+                    if (this.questionText != null && this.questionText.gameObject.tag != "Ignore")
                     {
                         switch (LoaderConfig.Instance.gameSetup.qa_font_alignment)
                         {
@@ -88,7 +88,7 @@ public class QuestionController : MonoBehaviour
                     SetUI.SetGroup(this.questionBgs, 0, 0f);
                     this.questionImage = this.questionBgs[0].GetComponentInChildren<RawImage>();
                     this.questionText = this.questionBgs[0].GetComponentInChildren<TextMeshProUGUI>();
-                    if (this.questionText != null) this.questionText.text = this.currentQuestion.content;
+                    if (this.questionText != null && this.questionText.gameObject.tag != "Ignore") this.questionText.text = this.currentQuestion.content;
 
                     var imageUrl = this.currentQuestion.media[0];
 
@@ -128,7 +128,7 @@ public class QuestionController : MonoBehaviour
                     this.questiontype = QuestionType.Audio;
                     SetUI.SetGroup(this.questionBgs, 1, 0f);
                     this.questionText = this.questionBgs[1].GetComponentInChildren<TextMeshProUGUI>();
-                    if (this.questionText != null) this.questionText.text = this.currentQuestion.content;
+                    if (this.questionText != null && this.questionText.gameObject.tag != "Ignore") this.questionText.text = this.currentQuestion.content;
                     this.audioPlayBtn = this.questionBgs[1].GetComponentInChildren<CanvasGroup>();
                     if (this.audioPlayBtn != null)
                     {
@@ -150,7 +150,7 @@ public class QuestionController : MonoBehaviour
                     this.questiontype = QuestionType.FillInBlank;
                     SetUI.SetGroup(this.questionBgs, 3, 0f);
                     this.questionText = this.questionBgs[3].GetComponentInChildren<TextMeshProUGUI>();
-                    if (this.questionText != null)
+                    if (this.questionText != null && this.questionText.gameObject.tag != "Ignore")
                     {
                         switch (LoaderConfig.Instance.gameSetup.qa_font_alignment)
                         {

@@ -56,6 +56,11 @@ public class MainMenu : MonoBehaviour
         SetUI.SetMove(this.gameStartPanel, false, new Vector2(0f, this.instructionPanelStartPosY), 0.5f, ()=> this.gameStart());
     }
 
+    public void playAudioClick()
+    {
+        AudioController.Instance?.PlayAudio(0);
+    }
+
     public void gameStart()
     {
         LogController.Instance?.debug("Start Game.");

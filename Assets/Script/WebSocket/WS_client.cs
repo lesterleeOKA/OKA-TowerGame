@@ -39,8 +39,6 @@ public class WS_Client : MonoBehaviour
     public string pendingReconnectRoomId = "";
     public string pendingOrder = "";
     public int pendingReconnectUid = -1;
-    public int startCountDown = 0;
-    public float currentCountDown = 0;
 
     // New: flag set when server informs same-account connection (another device)
     // Consumers (UI/controllers) can read this to block actions or show UI.
@@ -79,6 +77,7 @@ public class WS_Client : MonoBehaviour
 
     // Event invoked when server startCountDown changes
     public event Action<int> OnStartCountDownChanged;
+    public event Action<bool> CancelStartCountDown;
     public bool isAllPlayersReady;
     public CanvasGroup duplicatedLoginBox;
 
@@ -395,8 +394,6 @@ public class WS_Client : MonoBehaviour
         }
 
         Debug.Log("Connect: " + GetCurrentUrl);
-        this.currentCountDown = this.startCountDown;
-
         // Cancel any existing repeating invokes to prevent duplicates
         try { CancelInvoke("SendTest"); } catch { }
         try { CancelInvoke("ConstantSyncData"); } catch { }
@@ -431,6 +428,14 @@ public class WS_Client : MonoBehaviour
         websocket.OnClose += (e) =>
         {
             Debug.Log("Connection closed!");
+            try
+            {
+                disconnected();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("Error invoking disconnected handler: " + ex.Message);
+            }
         };
 
         websocket.OnMessage += (bytes) =>
@@ -461,14 +466,8 @@ public class WS_Client : MonoBehaviour
                         debugLogPerSecond("OnMessage! " + jsonString);
                         //Debug.Log(jsonString);
                         this.GameData = message.content.roomGameData;
-
+                        this.OnStartCountDownChanged?.Invoke(this.GameData.startCountDown);
                         //Debug.Log($"SyncRoomData: ready button startCountDown = {this.GameData.startCountDown}");
-                        if(this.GameData.startCountDown > 0)
-                        {
-                            this.startCountDown = this.GameData.startCountDown;
-                            this.currentCountDown = this.startCountDown;
-                        }
-
                         if (!string.IsNullOrEmpty(message.content.order))
                         {
                             //Debug.LogWarning("Order received: " + message.content.order);
@@ -536,6 +535,11 @@ public class WS_Client : MonoBehaviour
                         break;
                     case "ready":
                         this.userInfo = message.content.userInfo;
+                        //this.GameData = message.content.roomGameData;
+                        break;
+                    case "cancelReady":
+                        this.userInfo = message.content.userInfo;
+                        this.CancelStartCountDown?.Invoke(false);
                         //this.GameData = message.content.roomGameData;
                         break;
                     case "inPlayingRoom":
@@ -608,6 +612,15 @@ public class WS_Client : MonoBehaviour
 
         // // waiting for messages\
         await websocket.Connect();
+
+        try
+        {
+            OnOrderChanged?.Invoke("reconnected");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("Failed to invoke reconnected order: " + ex.Message);
+        }
 
         if (!isQuitting && this != null && gameObject != null)
         {
@@ -736,26 +749,6 @@ public class WS_Client : MonoBehaviour
                 }
             }
         }
-
-        if (this.IsAllPlayersReady)
-        {
-            if (this.currentCountDown > 0)
-            {
-                this.currentCountDown -= Time.deltaTime;
-                this.OnStartCountDownChanged?.Invoke((int)Math.Ceiling(this.currentCountDown));
-            }
-            else
-            {
-                this.OnStartCountDownChanged?.Invoke(0);
-            }
-        }
-        else
-        {
-            this.startCountDown = 5;
-            this.currentCountDown = this.startCountDown;
-            this.OnStartCountDownChanged?.Invoke(-1);
-        }
-
     }
 
     public bool IsAllPlayersReady
@@ -1179,16 +1172,12 @@ public class WS_Client : MonoBehaviour
     {
         _ = sendAction("ready");
         this.SetLocalReady(true);
-        this.startCountDown = 5;
-        this.currentCountDown = this.startCountDown;
         return Task.CompletedTask;
     }
     public Task cancelReady()
     {
         _ = sendAction("cancelReady");
         this.SetLocalReady(false);
-        this.startCountDown = 5;
-        this.currentCountDown = this.startCountDown;
         return Task.CompletedTask;
     }
     public Task startGame()
@@ -1222,8 +1211,6 @@ public class WS_Client : MonoBehaviour
 
             // Notify UI listeners immediately
             try { OnOrderChanged?.Invoke(ready ? "localReady" : "localCancelReady"); } catch { }
-            // If you have a StartCountDown listener, fire it so countdown UI refreshes immediately
-            try { OnStartCountDownChanged?.Invoke(startCountDown); } catch { }
         }
         catch (Exception ex)
         {
