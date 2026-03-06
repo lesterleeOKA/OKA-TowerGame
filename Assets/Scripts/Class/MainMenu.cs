@@ -28,11 +28,13 @@ public class MainMenu : MonoBehaviour
         {
             this.audioOnOffPanel.Init(true);
             SetUI.SetMove(this.gameStartPanel, false, new Vector2(0f, this.instructionPanelStartPosY), 0f);
+            InstructionSlideShow.Instance?.ShowInstructionPopup(true);
             LoaderConfig.Instance.skipAudioPanel = true;
         }
         else
         {
             this.audioOnOffPanel.Init(false);
+            InstructionSlideShow.Instance?.ShowInstructionPopup(false);
             SetUI.SetMove(this.gameStartPanel, true, Vector2.zero, 0.5f);
         }
     }

@@ -22,7 +22,6 @@ public class roomListController : MonoBehaviour
         if (this.indicator == null) this.indicator.SetActive(true);
         if (this.buttonIndicator == null) this.buttonIndicator.SetActive(true);    
         roomListRefresh();
-        //if(room == null) InstructionSlideShow.Instance?.ShowInstructionPopup(true);
     }
 
     void Update()

@@ -374,7 +374,7 @@ public class TowerGameController : GameBaseController
     private void HandleStartCountDownChanged(int newCountDown)
     {
         // Use existing method to update UI; it reads WS_Client.Instance.startCountDown internally
-        controlReadyCountDown(newCountDown);
+        this.controlReadyCountDown(newCountDown);
     }
 
     private void OnDestroy()
@@ -581,8 +581,11 @@ public class TowerGameController : GameBaseController
             this.allPlayersReady = false;
         }
 
+        int playersCount = client?.GameData?.players?.Count ?? 0;
+        bool validMatchSize = (playersCount == 2 || playersCount == 4 || playersCount == 6);
+
         // Show clock only when countdown is active AND at least one player is ready.
-        if (countDown > -1 && this.allPlayersReady)
+        if (countDown > -1 && this.allPlayersReady && validMatchSize)
         {
             if (this.startCountDownText != null)
             {

@@ -81,59 +81,92 @@ public class CharacterController : UserData
     //Fixed the touch and mouse click conflict with UI Buttons
     private bool IsPointerOverUIButton()
     {
+        // Return true if pointer (mouse or any touch) is over UI element that should block movement.
+        // Uses EventSystem raycast and considers common UI elements (Graphic raycast targets, Selectable, TMP input, and handlers).
         if (EventSystem.current == null) return false;
 
-        // Reuse static PointerEventData and results to avoid allocations
         if (s_pointerEventData == null) s_pointerEventData = new PointerEventData(EventSystem.current);
 
-        // Check touches first (multi-touch safe)
-        for (int i = 0; i < Input.touchCount; ++i)
+        int touchCount = Input.touchCount;
+        // Check all touches first
+        for (int i = 0; i < touchCount; ++i)
         {
             Touch t = Input.GetTouch(i);
-
             s_pointerEventData.pointerId = t.fingerId;
             s_pointerEventData.position = t.position;
 
             s_raycastResults.Clear();
             EventSystem.current.RaycastAll(s_pointerEventData, s_raycastResults);
-
-            for (int r = 0; r < s_raycastResults.Count; ++r)
-            {
-                var go = s_raycastResults[r].gameObject;
-                if (go == null) continue;
-
-                // treat as UI only if it, or a parent, has a Button component
-                if (go.GetComponent<Button>() != null && !go.CompareTag("Ignore")) return true;
-                Transform tt = go.transform;
-                while (tt.parent != null)
-                {
-                    tt = tt.parent;
-                    if (tt.GetComponent<Button>() != null && !go.CompareTag("Ignore")) return true;
-                }
-            }
+            if (IsTopRaycastInteractive(s_raycastResults)) return true;
         }
 
-        // Mouse fallback: raycast at mouse position and look specifically for Buttons.
-        // Avoid EventSystem.current.IsPointerOverGameObject() because it often returns true for full-screen canvases/blocks.
+        // Mouse fallback
         s_pointerEventData.pointerId = -1;
         s_pointerEventData.position = Input.mousePosition;
-
         s_raycastResults.Clear();
         EventSystem.current.RaycastAll(s_pointerEventData, s_raycastResults);
+        if (IsTopRaycastInteractive(s_raycastResults)) return true;
 
-        for (int r = 0; r < s_raycastResults.Count; ++r)
+        return false;
+    }
+
+    // Only consider the top-most raycast result (closest) interactive by default.
+    // Walk up parents from that top result checking for interactive components.
+    private bool IsTopRaycastInteractive(List<RaycastResult> results)
+    {
+        if (results == null || results.Count == 0) return false;
+
+        // Top-most result is results[0]
+        var top = results[0].gameObject;
+        if (top == null) return false;
+
+        // If the top-most is clearly interactive, block.
+        if (IsGameObjectBlockingUI(top)) return true;
+
+        // Otherwise check parents for interactive components (common pattern)
+        Transform t = top.transform.parent;
+        while (t != null)
         {
-            var go = s_raycastResults[r].gameObject;
-            if (go == null) continue;
-
-            if (go.GetComponent<Button>() != null && !go.CompareTag("Ignore")) return true;
-            Transform tt = go.transform;
-            while (tt.parent != null)
-            {
-                tt = tt.parent;
-                if (tt.GetComponent<Button>() != null && !go.CompareTag("Ignore")) return true;
-            }
+            if (IsGameObjectBlockingUI(t.gameObject)) return true;
+            t = t.parent;
         }
+
+        // Not interactive — let the click pass through
+        return false;
+    }
+
+
+    // Helper: heuristics for deciding if a GameObject should block gameplay input
+    private bool IsGameObjectBlockingUI(GameObject go)
+    {
+        if (go == null) return false;
+
+        // Only treat truly interactive UI as blocking:
+        // 1) Any Selectable (Button, Toggle, Slider, Dropdown, ScrollRect, etc.) -> block
+        var selectable = go.GetComponent<Selectable>();
+        if (selectable != null) return true;
+
+        // 2) Input fields -> block (user typing / focusing)
+        var tmpInput = go.GetComponent<TMPro.TMP_InputField>();
+        if (tmpInput != null) return true;
+        var inputField = go.GetComponent<InputField>();
+        if (inputField != null) return true;
+
+        // 3) If this GameObject implements pointer/drag/scroll/submit handlers -> block
+        var monos = go.GetComponents<MonoBehaviour>();
+        for (int j = 0; j < monos.Length; ++j)
+        {
+            var m = monos[j];
+            if (m is IPointerClickHandler) return true;
+            if (m is IBeginDragHandler) return true;
+            if (m is IDragHandler) return true;
+            if (m is IEndDragHandler) return true;
+            if (m is IScrollHandler) return true;
+            if (m is ISubmitHandler) return true;
+        }
+
+        // Do NOT treat plain Graphics or CanvasGroups as blocking here — that was too aggressive.
+        // Plain decorative images/text should not prevent gameplay clicks.
 
         return false;
     }

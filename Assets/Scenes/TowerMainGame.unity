@@ -15147,7 +15147,7 @@ GameObject:
   - component: {fileID: 1543322581}
   m_Layer: 5
   m_Name: stayButton
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -17143,7 +17143,7 @@ GameObject:
   - component: {fileID: 1807675669}
   m_Layer: 5
   m_Name: AudioPlayBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -20525,7 +20525,7 @@ GameObject:
   - component: {fileID: 2108537386}
   m_Layer: 5
   m_Name: exitButton
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -23671,7 +23671,7 @@ GameObject:
   - component: {fileID: 8411061314051271451}
   m_Layer: 5
   m_Name: RetryBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -29226,7 +29226,7 @@ GameObject:
   - component: {fileID: 8506913535090613355}
   m_Layer: 5
   m_Name: NoBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -29917,7 +29917,7 @@ GameObject:
   - component: {fileID: 8292484050159036676}
   m_Layer: 5
   m_Name: Close
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -30131,10 +30131,10 @@ RectTransform:
   - {fileID: 4699364457401337557}
   m_Father: {fileID: 1998527767390264370}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1300, y: 0}
-  m_SizeDelta: {x: 400, y: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 400, y: 266.3883}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &6261288151385496752
 GameObject:
@@ -31717,7 +31717,7 @@ GameObject:
   - component: {fileID: 8434109296132649612}
   m_Layer: 5
   m_Name: YesBtn
-  m_TagString: Untagged
+  m_TagString: Ignore
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -33898,10 +33898,10 @@ RectTransform:
   - {fileID: 2817066278173172057}
   m_Father: {fileID: 1998527767390264370}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 200, y: 0}
-  m_SizeDelta: {x: 400, y: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 400, y: 266.3883}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &8902187291912405004
 GameObject:
